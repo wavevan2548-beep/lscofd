@@ -1503,13 +1503,12 @@ function unitsView(c){
 }
 function renderCrew(){
   const g=$('#unitList'); if(!g) return;
-  const author=caseEditing?caseEditing.author:myRef();
-  const taken=new Set([...caseUnits.flatMap(u=>u.members.map(m=>m.badge)),author&&author.badge].filter(Boolean));
+  const taken=new Set(caseUnits.flatMap(u=>u.members.map(m=>m.badge)));
   const pool=officerPool.filter(o=>!taken.has(o.badge));
   g.innerHTML=caseUnits.length?caseUnits.map((u,ui)=>`<div class="unit-card">
     <div class="unit-h">${u.callSign?`<span class="callsign">${esc(u.callSign)}</span>`:`<input class="unit-cs" data-ui="${ui}" maxlength="16" placeholder="ใส่ Call Sign ของยูนิตนี้" aria-label="Call Sign">`}<button type="button" class="btn sm danger" data-unitdel="${ui}">ลบยูนิต</button></div>
     <div class="chips-row">${u.members.length?u.members.map((x,mi)=>`<span class="who-chip">${esc(x.name)} <span class="mono">#${esc(x.badge)}</span><button type="button" data-memdel="${ui}:${mi}" aria-label="เอา ${esc(x.name)} ออก">×</button></span>`).join(''):'<span class="hint">ยังไม่ได้เพิ่มเจ้าหน้าที่ในยูนิตนี้</span>'}</div>
-    <select class="unitSel" data-ui="${ui}" aria-label="เพิ่มเจ้าหน้าที่ใน ${esc(u.callSign||'ยูนิต')}"><option value="">+ เพิ่มเจ้าหน้าที่ใน ${esc(u.callSign||'ยูนิตนี้')}</option>${pool.map(o=>`<option value="${esc(o.badge)}">#${esc(o.badge)} ${esc(o.name)} · ${esc(o.rank)}</option>`).join('')}</select>
+    <select class="unitSel" data-ui="${ui}" aria-label="เพิ่มเจ้าหน้าที่ใน ${esc(u.callSign||'ยูนิต')}"><option value="">+ เพิ่มเจ้าหน้าที่ใน ${esc(u.callSign||'ยูนิตนี้')}</option>${pool.map(o=>`<option value="${esc(o.badge)}">#${esc(o.badge)} ${esc(o.name)} · ${esc(o.rank)}${o.badge===myBadge?' (ฉัน)':''}</option>`).join('')}</select>
   </div>`).join(''):'<span class="hint">ยังไม่ได้เพิ่มยูนิต</span>';
 }
 async function loadPool(){
