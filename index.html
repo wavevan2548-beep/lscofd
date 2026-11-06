@@ -302,6 +302,14 @@ textarea{font:inherit;color:inherit;resize:vertical}
 .case-detail{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 .case-sec .table-wrap{border:1px solid var(--line);border-radius:8px}
 .vit{font-weight:600}
+.inj-grid{display:flex;flex-wrap:wrap;gap:6px}
+.inj{display:inline-flex;align-items:center;gap:0;cursor:pointer;margin:0}
+.inj input{position:absolute;opacity:0;pointer-events:none}
+.inj span{display:inline-block;padding:4px 12px;border:1px solid var(--line,#ccc);border-radius:999px;font-weight:700;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;background:transparent;color:inherit}
+.inj input:checked+span{background:var(--red,#C1121F);border-color:var(--red,#C1121F);color:#fff}
+.inj input:focus-visible+span{outline:2px solid var(--red,#C1121F);outline-offset:2px}
+.inj-tag{display:inline-block;padding:1px 9px;margin:0 4px 2px 0;border-radius:999px;background:var(--red,#C1121F);color:#fff;font-size:12px;font-weight:700;font-family:ui-monospace,Menlo,Consolas,monospace}
+.inj-line{margin:4px 0 10px}
 .vit.high{color:var(--red)} .vit.normal{color:var(--ok)} .vit.low{color:var(--t-work)}
 .chips-row{display:flex;gap:6px;flex-wrap:wrap}
 .who-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--surface)}
@@ -937,11 +945,68 @@ function renderMe(){
   $('#histEmpty').hidden=myShifts.length>0;
   $('#histCount').textContent=(myShifts.length?myShifts.length+' รายการ · ':'')+(periodStart?'รอบเริ่ม '+fDate(periodStart):'รอบปัจจุบัน');
 }
+let shEditId=null;
+function shiftEditRow(s){
+  const live=!s.end;
+  return `<tr class="shedit"><td colspan="7"><form class="editform" id="shEditForm" data-id="${esc(s.id)}" style="margin:6px 0">
+    <b>แก้ไขเวลาเวร</b> <span class="hint">· ${esc(s.name||'')} #${esc(s.badge)}${live?' · กำลังปฏิบัติ (ยังไม่ออกเวร)':''}</span>
+    <div class="row2">
+      <label>วันที่เข้าเวร<input type="date" id="shInD" value="${ymdOf(s.start)}" required></label>
+      <label>เวลาเข้าเวร (เวลาไทย)<input type="time" id="shInT" value="${hhmmOf(s.start)}" required></label>
+    </div>
+    ${live?'<div class="hint">เจ้าหน้าที่ยังไม่ได้ออกเวร แก้ได้เฉพาะเวลาเข้าเวร (หรือกด “บังคับออกเวร” แล้วค่อยแก้เวลาออก)</div>':`<div class="row2">
+      <label>วันที่ออกเวร<input type="date" id="shOutD" value="${ymdOf(s.end)}" required></label>
+      <label>เวลาออกเวร (เวลาไทย)<input type="time" id="shOutT" value="${hhmmOf(s.end)}" required></label>
+    </div>`}
+    <label>หมายเหตุ (ไม่บังคับ)<input id="shNote" maxlength="120" value="${esc(s.note||'')}" placeholder="เช่น เจ้าหน้าที่ลืมกดออกเวร Admin แก้ไขให้"></label>
+    <div class="hint" id="shPv"></div>
+    <div id="shMsg" class="msg err" hidden></div>
+    <div class="acts"><button class="btn primary sm" type="submit" id="shSave">บันทึกเวลา</button><button class="btn sm" type="button" data-act="editshift" data-id="${esc(s.id)}">ยกเลิก</button></div>
+  </form></td></tr>`;
+}
+function shPreview(){
+  const f=$('#shEditForm'); if(!f) return; const s=rawAll.find(x=>x.id===f.dataset.id); if(!s) return;
+  const st=tsOf($('#shInD').value,$('#shInT').value);
+  const en=s.end?tsOf($('#shOutD').value,$('#shOutT').value):null;
+  const pv=$('#shPv');
+  if(isNaN(st)||(s.end&&isNaN(en))){pv.textContent='';return}
+  pv.textContent=s.end?(en>st?'ระยะเวลาใหม่ '+hm((en-st)/60000)+' · '+shiftPoints(st,en)+' แต้ม (เดิม '+hm(s.minutes||0)+' · '+(s.points||0)+' แต้ม)':'เวลาออกต้องอยู่หลังเวลาเข้า'):'เวลาเข้าเวรใหม่ '+fDate(st)+' '+fTime(st)+' น.';
+}
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#shEditForm'))shPreview()});
+document.addEventListener('submit',async e=>{
+  const f=e.target; if(f.id!=='shEditForm') return; e.preventDefault();
+  const m=$('#shMsg'); m.hidden=true;
+  const fail=t=>{m.textContent=t;m.hidden=false};
+  if(mode!=='admin') return fail('เฉพาะ Admin เท่านั้น');
+  const s=rawAll.find(x=>x.id===f.dataset.id); if(!s) return fail('ไม่พบรายการเวร');
+  const st=tsOf($('#shInD').value,$('#shInT').value);
+  if(isNaN(st)) return fail('กรุณาระบุวันที่และเวลาเข้าเวร');
+  if(st>Date.now()) return fail('เวลาเข้าเวรต้องไม่เกินเวลาปัจจุบัน');
+  const note=$('#shNote').value.trim();
+  const upd={start:st,manual:true,editedByAdmin:true,editedAt:Date.now()};
+  if(note) upd.note=note;
+  if(s.end){
+    const en=tsOf($('#shOutD').value,$('#shOutT').value);
+    if(isNaN(en)) return fail('กรุณาระบุวันที่และเวลาออกเวร');
+    if(en<=st) return fail('เวลาออกเวรต้องอยู่หลังเวลาเข้าเวร');
+    if(en>Date.now()+60000) return fail('เวลาออกเวรต้องไม่เกินเวลาปัจจุบัน');
+    if(en-st>MAX_SHIFT) return fail('กะเดียวยาวเกิน 24 ชั่วโมง');
+    upd.end=en; upd.manualEnd=true; upd.minutes=Math.round((en-st)/60000); upd.points=shiftPoints(st,en);
+  }
+  const clash=rawAll.find(x=>x.id!==s.id&&x.badge===s.badge&&st<(x.end||Date.now())&&(s.end?upd.end:Date.now())>x.start);
+  if(clash) return fail('ช่วงเวลานี้ทับกับกะวันที่ '+fDate(clash.start)+' '+fTime(clash.start)+'–'+(clash.end?fTime(clash.end):'ปัจจุบัน'));
+  const btn=$('#shSave'); btn.disabled=true;
+  try{
+    await db.doc('shifts/'+s.id).update(upd);
+    if(!s.end){const ow=allOfficers.find(x=>x.badge===s.badge);if(ow&&ow.activeShiftId===s.id)await db.doc('officers/'+s.badge).update({activeStart:st})}
+    shEditId=null; toast('แก้ไขเวลาเวรแล้ว'); renderAdmin();
+  }catch(x){fail(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase':(x.message||'บันทึกไม่สำเร็จ'));btn.disabled=false}
+});
 function rowHtml(s,adminDel){
   const night=pointsFor(s.start)===2;
   const dur=s.end?hm(s.minutes||0):'<span class="pill live">กำลังปฏิบัติ</span>';
   const mk='<span class="pill man" title="ระบุเวลาเอง">ระบุเอง</span>';
-  return `<tr><td class="mono">${fDate(s.start)}</td><td class="mono">${fTime(s.start)}${s.manual?' '+mk:''}</td><td class="mono">${s.end?fTime(s.end)+(fDate(s.end)!==fDate(s.start)?' <span class="hint">(+1)</span>':'')+(s.manualEnd?' '+mk:''):'—'}</td><td class="num">${dur}</td><td><span class="pill ${night?'night':''}">${night?'กลางคืน':'กลางวัน'}</span></td><td class="num mono">${s.end?'+'+s.points:'('+shiftPoints(s.start,Date.now())+')'}</td>${adminDel?`<td><button class="btn sm danger" data-act="delshift" data-id="${esc(s.id)}">ลบ</button></td>`:''}</tr>`;
+  return `<tr><td class="mono">${fDate(s.start)}</td><td class="mono">${fTime(s.start)}${s.manual?' '+mk:''}</td><td class="mono">${s.end?fTime(s.end)+(fDate(s.end)!==fDate(s.start)?' <span class="hint">(+1)</span>':'')+(s.manualEnd?' '+mk:''):'—'}</td><td class="num">${dur}</td><td><span class="pill ${night?'night':''}">${night?'กลางคืน':'กลางวัน'}</span></td><td class="num mono">${s.end?'+'+s.points:'('+shiftPoints(s.start,Date.now())+')'}</td>${adminDel?`<td style="white-space:nowrap"><button class="btn sm" data-act="editshift" data-id="${esc(s.id)}">แก้เวลา</button> <button class="btn sm danger" data-act="delshift" data-id="${esc(s.id)}">ลบ</button></td>`:''}</tr>${adminDel&&shEditId===s.id?shiftEditRow(s):''}`;
 }
 
 /* ---- discord ---- */
@@ -986,7 +1051,7 @@ function notify(kind,o,x){
     const w=worstTri(x), pts=x.patients||[];
     embed={title:'🚑 เคสใหม่: '+x.caseNo,color:TRI_HEX[w]||0xC1121F,description:`**${x.title}**`,fields:[
       {name:'วันเวลา',value:fDate(x.at)+' '+fTime(x.at)+' น.',inline:true},{name:'ระดับสูงสุด',value:triLabel(w),inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
-      {name:'ผู้บาดเจ็บ',value:pts.map((p,i)=>`${i+1}. ${ptName(p)}${p.sex?' · '+p.sex:''}${p.age?' · '+p.age+' ปี':''} — ${triLabel(p.tri)} · ชีพจร${vitLabel(p.pulse)} · ความดัน${vitLabel(p.bp)}`).join('\n').slice(0,1000)},
+      {name:'ผู้บาดเจ็บ',value:pts.map((p,i)=>`${i+1}. ${ptName(p)}${p.sex?' · '+p.sex:''}${p.age?' · '+p.age+' ปี':''} — ${triLabel(p.tri)} · ชีพจร${vitLabel(p.pulse)} · ความดัน${vitLabel(p.bp)}${injList(p).length?' · '+injList(p).join('/'):''}${p.injuryDetail?' ('+p.injuryDetail.slice(0,80)+')':''}`).join('\n').slice(0,1000)},
       {name:'ผู้เขียนเคส',value:x.author?.name||'-',inline:true},{name:'เจ้าหน้าที่ที่ดูแล',value:(x.crew||[]).map(c=>c.name).join(', ')||'-',inline:true}]};
   }else if(kind==='cal'){
     const t=EVT[x.type]||EVT.event;
@@ -1186,10 +1251,10 @@ $('#fEv').addEventListener('submit',async e=>{
     }else{
       const by=mode==='admin'?{admin:true,name:'Admin'}:{badge:myBadge,name:me.first+' '+me.last};
       await db.collection('events').doc().set({...data,by,createdAt:Date.now()});
-      notify('cal',null,{...data,by}); toast('เพิ่มรายการในปฏิทินแล้ว');
+      try{notify('cal',null,{...data,by})}catch(_){} toast('เพิ่มรายการในปฏิทินแล้ว');
     }
     closeEvForm(); goDate(date);
-  }catch(x){err('#evMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase (ต้องมีส่วน events)':(x.message||'บันทึกไม่สำเร็จ'))}
+  }catch(x){console.error('events save',x);err('#evMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ไปที่ Firebase Console > Firestore > Rules แล้วกด Publish กฎล่าสุด (ต้องมีส่วน events)':'บันทึกไม่สำเร็จ ['+(x.code||'error')+'] '+(x.message||''))}
   finally{btn.disabled=false}
 });
 
@@ -1198,6 +1263,8 @@ const TRI=[{k:'green',label:'เขียว'},{k:'yellow',label:'เหลื�
 const TRI_RANK={black:4,red:3,yellow:2,green:1};
 const TRI_HEX={green:0x1D7A4C,yellow:0xE8B400,red:0xC1121F,black:0x111111};
 const VIT=[{k:'high',label:'สูง'},{k:'normal',label:'ปกติ'},{k:'low',label:'ต่ำ'}];
+const INJ=['GSW','SW','PW','ABR','CONT','BURN','BITE','FX'];
+const injList=p=>Array.isArray(p.injuries)?p.injuries:[];
 const triLabel=k=>(TRI.find(t=>t.k===k)||{}).label||'-';
 const vitLabel=k=>(VIT.find(t=>t.k===k)||{}).label||'-';
 const worstTri=c=>(c.patients||[]).reduce((w,p)=>(TRI_RANK[p.tri]||0)>(TRI_RANK[w]||0)?p.tri:w,'');
@@ -1233,7 +1300,7 @@ function renderCaseView(){
   if(!c){caseMode='none';caseSel=null;renderCaseList();return}
   const w=worstTri(c), pts=c.patients||[];
   $('#caseMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(c.caseNo)}</span><h2>${esc(c.title)}</h2><div class="hint">${dowTh[dowOf(ymdOf(c.at))]} ${fDate(c.at)} เวลา ${fTime(c.at)} น.</div></div>${w?`<span class="pill tri tri-${w}" style="font-size:14px;padding:4px 14px">ระดับ${triLabel(w)}</span>`:''}</div>
-  <div class="case-sec"><h3>ผู้บาดเจ็บ (${pts.length} คน)</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>ชื่อ – นามสกุล</th><th>เพศ</th><th class="num">อายุ</th><th>ระดับ</th><th>ชีพจร</th><th>ความดัน</th></tr></thead><tbody>${pts.map((p,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(ptName(p))}</td><td>${esc(p.sex||'-')}</td><td class="num mono">${p.age!==''&&p.age!=null?esc(p.age):'-'}</td><td>${p.tri?`<span class="pill tri tri-${p.tri}">${triLabel(p.tri)}</span>`:'-'}</td><td><span class="vit ${esc(p.pulse||'')}">${vitLabel(p.pulse)}</span></td><td><span class="vit ${esc(p.bp||'')}">${vitLabel(p.bp)}</span></td></tr>`).join('')}</tbody></table></div></div>
+  <div class="case-sec"><h3>ผู้บาดเจ็บ (${pts.length} คน)</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>ชื่อ – นามสกุล</th><th>เพศ</th><th class="num">อายุ</th><th>ระดับ</th><th>ชีพจร</th><th>ความดัน</th></tr></thead><tbody>${pts.map((p,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(ptName(p))}</td><td>${esc(p.sex||'-')}</td><td class="num mono">${p.age!==''&&p.age!=null?esc(p.age):'-'}</td><td>${p.tri?`<span class="pill tri tri-${p.tri}">${triLabel(p.tri)}</span>`:'-'}</td><td><span class="vit ${esc(p.pulse||'')}">${vitLabel(p.pulse)}</span></td><td><span class="vit ${esc(p.bp||'')}">${vitLabel(p.bp)}</span></td></tr>`).join('')}</tbody></table></div>${pts.some(p=>injList(p).length||p.injuryDetail)?`<div style="margin-top:12px"><h3>ลักษณะการบาดเจ็บ</h3>${pts.map((p,i)=>(injList(p).length||p.injuryDetail)?`<div class="inj-line"><b>${i+1}. ${esc(ptName(p))}</b><div>${injList(p).map(k=>`<span class="inj-tag">${esc(k)}</span>`).join('')}</div>${p.injuryDetail?`<p class="case-detail" style="margin:4px 0 0">${esc(p.injuryDetail)}</p>`:''}</div>`:'').join('')}</div>`:''}</div>
   <div class="case-sec"><h3>รายละเอียดเคส</h3>${c.detail?`<p class="case-detail">${esc(c.detail)}</p>`:'<span class="hint">ไม่มีรายละเอียด</span>'}</div>
   <div class="case-sec"><h3>ผู้เขียนเคส</h3><div class="chips-row">${whoChip(c.author||{name:'-'})}</div>
   <h3 style="margin-top:6px">เจ้าหน้าที่ที่ดูแลเคส</h3><div class="chips-row">${(c.crew||[]).length?(c.crew||[]).map(whoChip).join(''):'<span class="hint">ไม่ได้ระบุ</span>'}</div></div>
@@ -1252,13 +1319,16 @@ function ptRowHtml(uid){
     <div class="seg-row"><span class="lbl">ระดับเคส</span><div class="seg" role="radiogroup" aria-label="ระดับเคส">${segs('tri',TRI,k=>'tri-'+k)}</div></div>
     <div class="seg-row"><span class="lbl">ชีพจร</span><div class="seg" role="radiogroup" aria-label="ชีพจร">${segs('pulse',VIT,k=>'v-'+k)}</div></div>
     <div class="seg-row"><span class="lbl">ความดัน</span><div class="seg" role="radiogroup" aria-label="ความดัน">${segs('bp',VIT,k=>'v-'+k)}</div></div>
+    <div class="seg-row"><span class="lbl">ลักษณะการบาดเจ็บ</span><div class="inj-grid" role="group" aria-label="ลักษณะการบาดเจ็บ">${INJ.map(k=>`<label class="inj"><input type="checkbox" class="p-inj" value="${k}"><span>${k}</span></label>`).join('')}</div></div>
+    <label>รายละเอียดอาการบาดเจ็บ<textarea class="p-injd" rows="2" maxlength="600" placeholder="เช่น GSW หน้าท้องด้านขวา 1 จุด มีเลือดออกมาก / FX ขาซ้าย กระดูกหัก"></textarea></label>
   </div>`;
 }
 function addPt(p){
   const uid='p'+(++ptSeq); $('#ptList').insertAdjacentHTML('beforeend',ptRowHtml(uid));
   const el=$('#ptList').lastElementChild;
   if(p){el.querySelector('.p-first').value=p.first||'';el.querySelector('.p-last').value=p.last||'';el.querySelector('.p-sex').value=p.sex||'';el.querySelector('.p-age').value=p.age??'';
-    ['tri','pulse','bp'].forEach(k=>{const r=el.querySelector(`input[name="${k}-${uid}"][value="${p[k]}"]`);if(r)r.checked=true})}
+    ['tri','pulse','bp'].forEach(k=>{const r=el.querySelector(`input[name="${k}-${uid}"][value="${p[k]}"]`);if(r)r.checked=true});
+    injList(p).forEach(k=>{const c=el.querySelector(`.p-inj[value="${k}"]`);if(c)c.checked=true});el.querySelector('.p-injd').value=p.injuryDetail||''}
   numberPts(); return el;
 }
 function numberPts(){const rows=[...document.querySelectorAll('#ptList .pt')];rows.forEach((r,i)=>{r.querySelector('.pt-n').textContent=i+1;r.querySelector('[data-ptdel]').hidden=rows.length<2})}
@@ -1329,8 +1399,8 @@ $('#caseMain').addEventListener('submit',async e=>{
   const patients=[];
   for(const [i,el] of [...document.querySelectorAll('#ptList .pt')].entries()){
     const uid=el.dataset.uid, pick=k=>(el.querySelector(`input[name="${k}-${uid}"]:checked`)||{}).value||'';
-    const p={first:el.querySelector('.p-first').value.trim(),last:el.querySelector('.p-last').value.trim(),sex:el.querySelector('.p-sex').value,age:el.querySelector('.p-age').value.trim(),tri:pick('tri'),pulse:pick('pulse'),bp:pick('bp')};
-    if(!p.first&&!p.last&&!p.age&&!p.tri&&!p.pulse&&!p.bp&&!p.sex) continue;
+    const p={first:el.querySelector('.p-first').value.trim(),last:el.querySelector('.p-last').value.trim(),sex:el.querySelector('.p-sex').value,age:el.querySelector('.p-age').value.trim(),tri:pick('tri'),pulse:pick('pulse'),bp:pick('bp'),injuries:[...el.querySelectorAll('.p-inj:checked')].map(c=>c.value),injuryDetail:el.querySelector('.p-injd').value.trim()};
+    if(!p.first&&!p.last&&!p.age&&!p.tri&&!p.pulse&&!p.bp&&!p.sex&&!p.injuries.length&&!p.injuryDetail) continue;
     if(!p.first) return err('#cMsg','ผู้บาดเจ็บคนที่ '+(i+1)+': กรุณาใส่ชื่อ (ถ้าไม่ทราบ ใส่ “ไม่ทราบชื่อ”)');
     if(p.age&&(!/^\d{1,3}$/.test(p.age)||+p.age>130)) return err('#cMsg','ผู้บาดเจ็บคนที่ '+(i+1)+': อายุต้องเป็นตัวเลข 0–130');
     if(!p.tri) return err('#cMsg','ผู้บาดเจ็บคนที่ '+(i+1)+': กรุณาเลือกระดับเคส (เขียว เหลือง แดง ดำ)');
@@ -1347,7 +1417,7 @@ $('#caseMain').addEventListener('submit',async e=>{
     }else{
       const ref=db.collection('cases').doc(), author=myRef();
       await ref.set({...data,author,createdAt:now});
-      notify('case',null,{...data,author}); toast('บันทึกเคส '+caseNo+' แล้ว'); caseSel=ref.id; caseMode='view'; renderCaseList(); renderCaseView();
+      try{notify('case',null,{...data,author})}catch(_){} toast('บันทึกเคส '+caseNo+' แล้ว'); caseSel=ref.id; caseMode='view'; renderCaseList(); renderCaseView();
     }
   }catch(x){err('#cMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase (ต้องมีส่วน cases)':(x.message||'บันทึกไม่สำเร็จ'));btn.disabled=false}
 });
@@ -1736,6 +1806,7 @@ $('#aBody').addEventListener('click',async e=>{
     else if(act==='forceout'){ if(!armed(b))return; await closeShift(badge,o,{forced:true}); toast('บังคับออกเวร #'+badge+' แล้ว'); }
     else if(act==='toggleadmin'){ await db.doc('officers/'+badge).update({isAdmin:!o.isAdmin}); toast(o.isAdmin?'ถอดสิทธิ์ Admin แล้ว':'ตั้งเป็น Admin แล้ว'); }
     else if(act==='delofficer'){ if(!armed(b))return; const sh=rawAll.filter(s=>s.badge===badge); for(const s of sh) await db.doc('shifts/'+s.id).delete(); await db.doc('officers/'+badge).delete(); openRow=null; toast('ลบเจ้าหน้าที่ #'+badge+' แล้ว'); }
+    else if(act==='editshift'){ shEditId=shEditId===b.dataset.id?null:b.dataset.id; renderAdminRows(); if(shEditId&&$('#shInD')){shPreview();$('#shInT').focus()} return; }
     else if(act==='delshift'){ if(!armed(b))return; const s=rawAll.find(x=>x.id===b.dataset.id); if(s&&!s.end){const ow=allOfficers.find(x=>x.badge===s.badge); if(ow&&ow.activeShiftId===s.id) await db.doc('officers/'+s.badge).update({activeShiftId:null,activeStart:null});} await db.doc('shifts/'+b.dataset.id).delete(); toast('ลบรายการแล้ว'); }
   }catch(x){toast('ทำรายการไม่สำเร็จ: '+(x.message||x.code||''))}
 });
