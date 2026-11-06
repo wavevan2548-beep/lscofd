@@ -179,6 +179,13 @@ tr.total td{font-weight:700;background:var(--sunk)}
 .rankcard{max-width:760px}
 .rank-edit{border:1px solid var(--line);border-radius:8px}
 .rank-edit td{padding:6px 8px}
+.rank-edit td.gripc,.rank-edit th.gripc{width:38px;padding-left:10px;padding-right:0}
+.grip{display:inline-flex;align-items:center;justify-content:center;width:30px;height:34px;border-radius:6px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--muted);font-size:20px;line-height:1}
+.grip:hover{background:var(--sunk);color:var(--ink)}
+.grip:focus-visible{outline:2px solid var(--red);outline-offset:1px}
+tr.rk-drag{background:var(--sunk);box-shadow:0 4px 14px rgba(0,0,0,.35);position:relative;z-index:2}
+tr.rk-drag .grip{cursor:grabbing;color:var(--ink)}
+body.rk-dragging,body.rk-dragging *{cursor:grabbing!important;user-select:none!important}
 .rank-edit input{padding:7px 9px;font-size:14px;min-width:120px}
 .rank-edit input.amt{text-align:right;font-family:var(--f-mono);min-width:110px}
 .bk-acts{display:flex;gap:6px;justify-content:flex-end}
@@ -714,14 +721,14 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
             </div>
             <div class="table-wrap rank-edit">
               <table>
-                <thead><tr><th>Category</th><th>Rank</th><th class="num">เงินโบนัส / ครั้ง</th><th></th></tr></thead>
+                <thead><tr><th class="gripc"></th><th>Category</th><th>Rank</th><th class="num">เงินโบนัส / ครั้ง</th><th></th></tr></thead>
                 <tbody id="ratesGrid"></tbody>
               </table>
             </div>
             <button type="button" class="btn sm" id="addRank" style="justify-self:start">+ เพิ่มตำแหน่ง</button>
             <div id="ratesMsg" class="msg err" hidden></div>
             <button class="btn primary" type="submit" style="justify-self:start">บันทึกการตั้งค่า</button>
-            <p class="hint">เรียงจากตำแหน่งสูงไปต่ำ ลำดับนี้ใช้ทั้งในรายการลงทะเบียนและในเอกสาร PDF · เงินโบนัสคิดต่อการครบ 30 แต้ม 1 ครั้ง · ถ้าแก้ชื่อ Rank เจ้าหน้าที่ที่ใช้ชื่อเดิมจะถูกเปลี่ยนตามให้อัตโนมัติ</p>
+            <p class="hint">เรียงจากตำแหน่งสูงไปต่ำ ลากที่ไอคอน ⠿ ด้านซ้ายเพื่อสลับลำดับ (หรือกดลูกศรขึ้น/ลงเมื่อโฟกัสที่ไอคอน) แล้วกด “บันทึกการตั้งค่า” · ลำดับนี้ใช้ทั้งในรายการลงทะเบียนและในเอกสาร PDF · เงินโบนัสคิดต่อการครบ 30 แต้ม 1 ครั้ง · ถ้าแก้ชื่อ Rank เจ้าหน้าที่ที่ใช้ชื่อเดิมจะถูกเปลี่ยนตามให้อัตโนมัติ</p>
           </form>
         </div>
         <div class="card pwcard">
@@ -1592,15 +1599,49 @@ function fillRankSelect(){
   sel.innerHTML='<option value="">— เลือกตำแหน่ง —</option>'+RANKCFG.map(x=>`<option value="${esc(x.rank)}">${esc(x.rank)}${x.category?' · '+esc(x.category):''}</option>`).join('');
   sel.value=v;
 }
-function rankRow(x){return `<tr data-orig="${esc(x.rank||'')}"><td><input class="rc" value="${esc(x.category||'')}" placeholder="เช่น FF Officer"></td><td><input class="rr" value="${esc(x.rank||'')}" placeholder="เช่น FF-I"></td><td><input class="amt" inputmode="numeric" value="${Math.round(+x.rate||0).toLocaleString('en-US')}"></td><td><button type="button" class="btn sm danger" data-delrank>ลบ</button></td></tr>`}
+function rankRow(x){return `<tr data-orig="${esc(x.rank||'')}"><td class="gripc"><span class="grip" data-grip tabindex="0" role="button" aria-label="ลากเพื่อสลับลำดับ (หรือกดลูกศรขึ้น/ลง)" title="ลากเพื่อสลับลำดับ">⠿</span></td><td><input class="rc" value="${esc(x.category||'')}" placeholder="เช่น FF Officer"></td><td><input class="rr" value="${esc(x.rank||'')}" placeholder="เช่น FF-I"></td><td><input class="amt" inputmode="numeric" value="${Math.round(+x.rate||0).toLocaleString('en-US')}"></td><td><button type="button" class="btn sm danger" data-delrank>ลบ</button></td></tr>`}
+let ratesDirty=false;
 function renderRates(){
-  if(document.activeElement&&$('#fRates').contains(document.activeElement)) return;
+  if(ratesDirty||(document.activeElement&&$('#fRates').contains(document.activeElement))) return;
   $('#curSym').value=CUR; $('#signer').value=SIGNER;
   $('#ratesGrid').innerHTML=RANKCFG.map(rankRow).join('');
 }
 fillRankSelect(); renderRates();
 $('#addRank').onclick=()=>{$('#ratesGrid').insertAdjacentHTML('beforeend',rankRow({}));$('#ratesGrid').lastElementChild.querySelector('.rc').focus()};
-$('#ratesGrid').addEventListener('click',e=>{const b=e.target.closest('[data-delrank]');if(b)b.closest('tr').remove()});
+$('#ratesGrid').addEventListener('click',e=>{const b=e.target.closest('[data-delrank]');if(b){b.closest('tr').remove();ratesDirty=true}});
+$('#ratesGrid').addEventListener('input',()=>{ratesDirty=true});
+$('#addRank').addEventListener('click',()=>{ratesDirty=true});
+/* drag to reorder ranks (mouse / touch / pen) + keyboard arrows */
+(function(){
+  const grid=$('#ratesGrid'); let d=null;
+  function move(e){
+    if(!d) return; const y=e.clientY;
+    if(y<90) window.scrollBy(0,-14); else if(y>innerHeight-90) window.scrollBy(0,14);
+    const rows=[...grid.children].filter(r=>r!==d);
+    const target=rows.find(r=>{const b=r.getBoundingClientRect();return y<b.top+b.height/2});
+    if(target){ if(d.nextElementSibling!==target) grid.insertBefore(d,target) }
+    else if(grid.lastElementChild!==d) grid.appendChild(d);
+    ratesDirty=true;
+  }
+  function end(){
+    if(!d) return; d.classList.remove('rk-drag'); document.body.classList.remove('rk-dragging');
+    document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',end); document.removeEventListener('pointercancel',end);
+    d=null;
+  }
+  grid.addEventListener('pointerdown',e=>{
+    const g=e.target.closest('[data-grip]'); if(!g||(e.pointerType==='mouse'&&e.button!==0)) return;
+    e.preventDefault(); d=g.closest('tr'); d.classList.add('rk-drag'); document.body.classList.add('rk-dragging');
+    document.addEventListener('pointermove',move); document.addEventListener('pointerup',end); document.addEventListener('pointercancel',end);
+  });
+  grid.addEventListener('keydown',e=>{
+    const g=e.target.closest('[data-grip]'); if(!g||(e.key!=='ArrowUp'&&e.key!=='ArrowDown')) return;
+    e.preventDefault(); const tr=g.closest('tr');
+    if(e.key==='ArrowUp'&&tr.previousElementSibling) grid.insertBefore(tr,tr.previousElementSibling);
+    else if(e.key==='ArrowDown'&&tr.nextElementSibling) grid.insertBefore(tr.nextElementSibling,tr);
+    else return;
+    ratesDirty=true; g.focus();
+  });
+})();
 $('#fRates').addEventListener('submit',async e=>{
   e.preventDefault(); err('#ratesMsg','');
   const out=[], renames=[];
@@ -1617,7 +1658,7 @@ $('#fRates').addEventListener('submit',async e=>{
   try{
     await db.doc('config/bonus').set({ranks:out,currency:$('#curSym').value.trim()||'LSD',signer:$('#signer').value.trim(),updatedAt:Date.now()},{merge:true});
     for(const [a,b] of renames) for(const o of allOfficers.filter(x=>x.rank===a)) await db.doc('officers/'+o.badge).update({rank:b});
-    document.activeElement.blur(); toast('บันทึกการตั้งค่าแล้ว'+(renames.length?' และอัปเดตตำแหน่งเจ้าหน้าที่แล้ว':''));
+    ratesDirty=false; document.activeElement.blur(); toast('บันทึกการตั้งค่าแล้ว'+(renames.length?' และอัปเดตตำแหน่งเจ้าหน้าที่แล้ว':''));
   }catch(x){err('#ratesMsg','บันทึกไม่สำเร็จ ลองอีกครั้ง')}
 });
 
