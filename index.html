@@ -95,6 +95,9 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 
 
 /* fire safety */
+.fs-tabs{display:flex;gap:6px;padding:12px 14px 0}
+.fs-tabs button{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--muted);font-weight:600;cursor:pointer}
+.fs-tabs button[aria-selected="true"]{background:var(--red-deep);border-color:var(--red-deep);color:#fff}
 .fs-author{display:grid;gap:4px;justify-items:end;text-align:right}
 .fsdl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:0}
 .fsdl dt{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
@@ -614,6 +617,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
       <div class="case-layout">
         <div class="card">
           <div class="card-h"><h2>Fire Safety</h2><div class="spacer"></div><button class="btn sm primary" id="fsNew">+ เขียนรายงาน</button></div>
+          <div class="fs-tabs" role="tablist"><button type="button" data-fstab="reports" aria-selected="true">รายงาน</button><button type="button" data-fstab="shops" aria-selected="false">ร้านที่ตรวจแล้ว</button></div>
           <div class="case-filters"><input id="fsQ" placeholder="ค้นหาชื่อร้าน / เจ้าของร้าน / ผู้เขียน" aria-label="ค้นหารายงาน Fire Safety"></div>
           <div id="fsItems"></div>
           <div class="empty" id="fsEmpty">ยังไม่มีรายงาน กด “+ เขียนรายงาน” เพื่อเริ่มเขียนรายงานแรก</div>
@@ -1876,10 +1880,40 @@ const FS_SECS=[
   {k:'hydrant',label:'6. ตำแหน่ง Hydrant ใกล้เคียง',ph:'ตำแหน่ง ระยะห่างจากร้าน สภาพการใช้งาน ฯลฯ'}
 ];
 const FS_MAX=k=>k==='loc'?2:4, FS_BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-let fsList=[], fsSel=null, fsMode='none', fsEditing=null, fsInsp=[], fsPh={}, fsLeave=null;
+let fsList=[], fsShops=[], fsSel=null, fsMode='none', fsEditing=null, fsInsp=[], fsPh={}, fsLeave=null, fsTab='reports', fsLoaded={l:false,s:false}, fsBackfilled=false;
 const fsPhotoCache=new Map();
-function resetFs(){fsList=[];fsSel=null;fsMode='none';fsEditing=null;fsInsp=[];fsPh={}}
-function subFs(){unsubs.push(db.collection('inspections').orderBy('at','desc').limit(300).onSnapshot(q=>{fsList=q.docs.map(d=>({id:d.id,...d.data()}));renderFsList();if(fsMode==='view')renderFsView()},()=>{}))}
+function resetFs(){fsList=[];fsShops=[];fsSel=null;fsMode='none';fsEditing=null;fsInsp=[];fsPh={};fsTab='reports';fsLoaded={l:false,s:false};fsBackfilled=false}
+const shopKey=n=>(n||'').toLowerCase().replace(/\s+/g,' ').trim();
+const shopId=n=>'s_'+shopKey(n).replace(/[\/.#$\[\]]/g,'_').slice(0,120);
+function allShops(){
+  const m=new Map();
+  fsShops.forEach(x=>{const k=shopKey(x.name);if(k)m.set(k,{name:x.name,owner:x.owner||'',coords:x.coords||'',last:x.lastInspectedAt||0,key:k})});
+  fsList.forEach(c=>{const k=shopKey(c.shop);if(k&&!m.has(k))m.set(k,{name:c.shop,owner:c.owner||'',coords:c.coords||'',last:c.at||0,key:k})});
+  return [...m.values()].map(x=>({...x,n:fsList.filter(c=>shopKey(c.shop)===x.key).length})).sort((a,b)=>a.name.localeCompare(b.name,'th'));
+}
+async function upsertShop(shop,owner,coords,at,rid){
+  const id=shopId(shop), ex=fsShops.find(x=>x.id===id), now=Date.now();
+  const upd={name:shop,owner,coords,updatedAt:now};
+  if(!ex||at>=(ex.lastInspectedAt||0)){upd.lastInspectedAt=at;upd.lastReportId=rid}
+  if(!ex) upd.createdAt=now;
+  await db.doc('fsShops/'+id).set(upd,{merge:true});
+}
+function backfillShops(){
+  if(fsBackfilled||mode!=='admin'||!fsLoaded.l||!fsLoaded.s) return; fsBackfilled=true;
+  const have=new Set(fsShops.map(x=>shopKey(x.name))), seen=new Set();
+  fsList.forEach(c=>{const k=shopKey(c.shop);if(!k||have.has(k)||seen.has(k))return;seen.add(k);upsertShop(c.shop,c.owner||'',c.coords||'',c.at,c.id).catch(()=>{})});
+}
+function renderShopPick(){
+  const sel=$('#fsShopPick'); if(!sel) return;
+  const list=allShops();
+  sel.innerHTML=list.length?'<option value="">— เลือกร้านที่เคยตรวจ —</option>'+list.map(x=>`<option value="${esc(x.key)}">${esc(x.name)} · ${esc(x.owner||'-')}</option>`).join(''):'<option value="">— ยังไม่มีร้านที่เคยตรวจ (พิมพ์ชื่อร้านใหม่ด้านล่าง) —</option>';
+  sel.disabled=!list.length;
+}
+function fillFromShop(x){if(!x)return;$('#fsShop').value=x.name;$('#fsOwner').value=x.owner||'';if(x.coords)$('#fsCoords').value=x.coords}
+function subFs(){
+  unsubs.push(db.collection('inspections').orderBy('at','desc').limit(300).onSnapshot(q=>{fsList=q.docs.map(d=>({id:d.id,...d.data()}));fsLoaded.l=true;renderFsList();renderShopPick();if(fsMode==='view')renderFsView();backfillShops()},()=>{}));
+  unsubs.push(db.collection('fsShops').limit(1000).onSnapshot(q=>{fsShops=q.docs.map(d=>({id:d.id,...d.data()}));fsLoaded.s=true;renderFsList();renderShopPick();backfillShops()},()=>{}));
+}
 const isMineFs=c=>!!myBadge&&((c.author&&c.author.badge===myBadge)||(c.inspectors||[]).some(x=>x.badge===myBadge));
 const canEditFs=c=>mode==='admin'||isMineFs(c);
 const canDelFs=c=>mode==='admin'||(!!myBadge&&c.author&&c.author.badge===myBadge);
@@ -1918,6 +1952,19 @@ function fsCompress(file){
 function renderFsList(){
   if($('#pFs').hidden) return;
   const q=$('#fsQ').value.trim().toLowerCase();
+  document.querySelectorAll('[data-fstab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.fstab===fsTab));
+  if(fsTab==='shops'){
+    const shops=allShops().filter(x=>!q||[x.name,x.owner,x.coords].join(' ').toLowerCase().includes(q));
+    $('#fsEmpty').hidden=shops.length>0;
+    $('#fsEmpty').textContent=allShops().length?'ไม่พบร้านที่ตรงกับการค้นหา':'ยังไม่มีร้านที่ตรวจแล้ว ร้านจะถูกบันทึกอัตโนมัติเมื่อเขียนรายงาน';
+    $('#fsItems').innerHTML=shops.map(x=>`<button type="button" class="ci" data-shop="${esc(x.key)}">
+      <span class="ci-top"><span class="ci-no">${esc(x.coords||'-')}</span><span>ตรวจล่าสุด ${x.last?fDate(x.last):'-'}</span></span>
+      <span class="ci-title">${esc(x.name)}</span>
+      <span class="ci-foot"><span>เจ้าของ: ${esc(x.owner||'-')}</span><span>· ตรวจแล้ว ${x.n} ครั้ง</span></span>
+    </button>`).join('');
+    if(fsMode==='none') $('#fsMain').innerHTML='<div class="case-ph">รายชื่อร้านที่ผ่านการตรวจ Fire Safety แล้ว<br>กดชื่อร้านเพื่อดูรายงานตรวจล่าสุด</div>';
+    return;
+  }
   const list=fsList.filter(c=>!q||[c.shop,c.owner,c.author&&c.author.name,(c.inspectors||[]).map(x=>x.name).join(' ')].join(' ').toLowerCase().includes(q));
   $('#fsEmpty').hidden=list.length>0;
   $('#fsEmpty').textContent=fsList.length?'ไม่พบรายงานที่ตรงกับการค้นหา':'ยังไม่มีรายงาน กด “+ เขียนรายงาน” เพื่อเริ่มเขียนรายงานแรก';
@@ -1964,8 +2011,9 @@ function openFsForm(c){
   $('#fsMain').innerHTML=`<div class="card-h"><h2>${c?'แก้ไขรายงาน Fire Safety':'เขียนรายงาน Fire Safety'}</h2></div>
   <form id="fsForm" novalidate>
     <div class="row2"><label>วันที่<input type="date" id="fsDate"></label><label>เวลา (เวลาไทย)<input type="time" id="fsTime"></label></div>
+    <label>ร้านที่เคยตรวจ (เลือกเพื่อกรอกชื่อร้าน เจ้าของ และพิกัดให้อัตโนมัติ)<select id="fsShopPick"></select></label>
     <div class="row2"><label>ชื่อร้านค้า<input id="fsShop" maxlength="80" placeholder="เช่น Burger Shot สาขา Vinewood"></label><label>ชื่อเจ้าของร้าน<input id="fsOwner" maxlength="60" placeholder="ชื่อ – นามสกุล"></label></div>
-    <label>พิกัด<input id="fsCoords" maxlength="80" placeholder="เช่น X: 123.45, Y: -678.90"></label>
+    <label>พิกัด<input id="fsCoords" maxlength="80" placeholder="เช่น 1025 , 6045"></label>
     <div><span class="lbl">รูปจุดตั้งของร้าน (จำเป็น · แนบได้สูงสุด 2 รูป)</span>${fsSlotHtml('loc')}</div>
     ${FS_SECS.map(s=>`<div class="fsblock"><div class="sec-h"><b>${esc(s.label)}</b></div>
       <textarea id="fsT-${s.k}" rows="3" maxlength="1500" aria-label="${esc(s.label)}" placeholder="${esc(s.ph)}"></textarea>
@@ -1982,13 +2030,20 @@ function openFsForm(c){
   $('#fsShop').value=c?.shop||''; $('#fsOwner').value=c?.owner||''; $('#fsCoords').value=c?.coords||'';
   FS_SECS.forEach(s=>{$('#fsT-'+s.k).value=fsSecOf(c||{},s.k).text||''});
   Object.keys(fsPh).forEach(k=>{renderSlot(k);fsPh[k].forEach(async p=>{if(!p.src){p.src=await fsGetPhoto(p.id);renderSlot(k)}})});
-  loadPool(); renderFsInsp(); renderFsList();
+  loadPool(); renderFsInsp(); renderShopPick(); renderFsList();
   $('#fsMain').scrollIntoView({block:'start',behavior:'smooth'});
 }
 $('#fsNew').onclick=()=>{if(fsMode==='form'&&!fsEditing){$('#fsShop').focus();return}fsSel=null;openFsForm(null)};
 $('#fsQ').addEventListener('input',renderFsList);
+document.querySelectorAll('[data-fstab]').forEach(b=>b.onclick=()=>{fsTab=b.dataset.fstab;renderFsList()});
 $('#fsItems').addEventListener('click',e=>{
   const b=e.target.closest('.ci'); if(!b) return;
+  if(b.dataset.shop){
+    const c=fsList.find(x=>shopKey(x.shop)===b.dataset.shop);
+    if(!c){toast('ไม่พบรายงานของร้านนี้แล้ว (อาจถูกลบ)');return}
+    if(fsMode==='form'&&fsLeave!==c.id){fsLeave=c.id;err('#fsMsg','ยังไม่ได้บันทึกรายงานที่กำลังเขียน กดอีกครั้งเพื่อออกโดยไม่บันทึก');return}
+    fsLeave=null; fsTab='reports'; showFs(c.id); return;
+  }
   if(fsMode==='form'&&fsLeave!==b.dataset.id){fsLeave=b.dataset.id;err('#fsMsg','ยังไม่ได้บันทึกรายงานที่กำลังเขียน กดรายการเดิมอีกครั้งเพื่อออกโดยไม่บันทึก');return}
   fsLeave=null; showFs(b.dataset.id);
 });
@@ -2007,6 +2062,8 @@ $('#fsMain').addEventListener('click',async e=>{
 });
 $('#fsMain').addEventListener('change',async e=>{
   const t=e.target;
+  if(t.id==='fsShopPick'){const x=allShops().find(y=>y.key===t.value);fillFromShop(x);t.value='';return}
+  if(t.id==='fsShop'){const x=allShops().find(y=>y.key===shopKey(t.value));if(x&&!$('#fsOwner').value.trim()){$('#fsOwner').value=x.owner||'';if(!$('#fsCoords').value.trim()&&x.coords)$('#fsCoords').value=x.coords}return}
   if(t.id==='fsInspSel'&&t.value){const o=officerPool.find(x=>x.badge===t.value);if(o&&!fsInsp.some(x=>x.badge===o.badge))fsInsp.push({badge:o.badge,name:o.name});renderFsInsp();return}
   if(t.dataset&&t.dataset.slotfile){
     const k=t.dataset.slotfile, room=FS_MAX(k)-fsPh[k].length, all=[...t.files]; t.value='';
@@ -2050,10 +2107,12 @@ $('#fsMain').addEventListener('submit',async e=>{
       await db.doc('inspections/'+rid).update({...data,updatedBy:myRef().name});
       const keep=new Set(fsAllIds({loc:data.loc,sections}));
       await Promise.all(fsAllIds(fsEditing).filter(id=>!keep.has(id)).map(id=>db.doc('inspectionPhotos/'+id).delete().catch(()=>{})));
+      try{await upsertShop(shop,owner,coords,at,rid)}catch(x){toast('บันทึกรายงานแล้ว แต่บันทึกรายชื่อร้านไม่สำเร็จ ตรวจสอบ Rules (fsShops)')}
       toast('บันทึกการแก้ไขรายงานแล้ว'); showFs(rid);
     }else{
       await db.doc('inspections/'+rid).set({...data,author:myRef(),createdAt:now});
-      toast('บันทึกรายงาน Fire Safety แล้ว'); fsSel=rid; fsMode='view'; renderFsList(); renderFsView();
+      try{await upsertShop(shop,owner,coords,at,rid)}catch(x){toast('บันทึกรายงานแล้ว แต่บันทึกรายชื่อร้านไม่สำเร็จ ตรวจสอบ Rules (fsShops)')}
+      toast('บันทึกรายงาน Fire Safety แล้ว'); fsTab='reports'; fsSel=rid; fsMode='view'; renderFsList(); renderFsView();
     }
   }catch(x){
     err('#fsMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ไปที่ Firebase Console > Firestore > Rules แล้วกด Publish กฎล่าสุด (ต้องมีส่วน inspections และ inspectionPhotos)':'บันทึกไม่สำเร็จ ['+(x.code||'error')+'] '+(x.message||''));
