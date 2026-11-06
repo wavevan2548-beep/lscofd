@@ -44,7 +44,9 @@ button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 
 /* Top band */
-.band{background:var(--red-deep);color:var(--on-red);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.band{background:var(--red-deep);color:var(--on-red);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;box-shadow:0 4px 8px -2px rgba(0,0,0,.28),0 10px 22px -6px rgba(0,0,0,.30)}
+:root[data-theme="dark"] .band{box-shadow:0 4px 8px -2px rgba(0,0,0,.65),0 10px 24px -6px rgba(0,0,0,.7)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .band{box-shadow:0 4px 8px -2px rgba(0,0,0,.65),0 10px 24px -6px rgba(0,0,0,.7)}}
 .band .wrap{display:flex;align-items:center;gap:14px;padding-block:10px;flex-wrap:wrap}
 .crest{width:48px;height:48px;flex:none;display:block}
 .auth-crest{display:block;width:96px;height:96px;margin:22px auto 0}
@@ -90,10 +92,31 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .who h1{font-family:var(--f-display);font-size:34px;line-height:1;margin:0;letter-spacing:.02em;text-wrap:balance}
 .who .meta{color:var(--muted);font-size:14px}
 .who .spacer{flex:1}
-.viewtabs{display:flex;gap:6px}
-.viewtabs button{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer;color:var(--muted)}
-.viewtabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 
+/* sidebar navigation */
+main.wrap:has(#vDash:not([hidden])),body:has(#vDash:not([hidden])) .band .wrap,body:has(#vDash:not([hidden])) .site-foot .wrap{max-width:1360px}
+.dash-layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:24px;align-items:start}
+.dash-main{min-width:0}
+.sidenav{position:sticky;top:84px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;max-height:calc(100vh - 100px);overflow-y:auto}
+.viewtabs{display:flex;flex-direction:column;gap:2px}
+.viewtabs>button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:11px 12px;font-weight:600;color:var(--muted);cursor:pointer}
+.viewtabs>button[hidden]{display:none}
+.viewtabs>button svg{width:18px;height:18px;flex:none}
+.viewtabs>button:hover{background:var(--sunk);color:var(--ink)}
+.viewtabs>button[aria-selected="true"]{background:var(--red-deep);color:#fff}
+.subtabs{display:none;flex-direction:column;gap:1px;margin:2px 0 6px 18px;padding-left:10px;border-left:2px solid var(--line)}
+.dash-layout:has(#pAdmin:not([hidden])) .subtabs{display:flex}
+.subtabs button{background:none;border:0;border-radius:6px;padding:8px 10px;text-align:left;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+.subtabs button:hover{background:var(--sunk);color:var(--ink)}
+.subtabs button[aria-selected="true"]{color:var(--ink);background:var(--sunk);box-shadow:inset 3px 0 0 var(--red)}
+@media (max-width:860px){
+  .dash-layout{grid-template-columns:minmax(0,1fr);gap:16px}
+  .sidenav{position:static;max-height:none;padding:8px}
+  .viewtabs{flex-direction:row;flex-wrap:wrap}
+  .viewtabs>button{width:auto;flex:1 1 auto;justify-content:center;padding:9px 12px}
+  .subtabs{order:5;flex:1 0 100%;flex-direction:row;flex-wrap:wrap;margin:6px 0 0;padding:8px 0 0;border-left:0;border-top:1px solid var(--line)}
+  .subtabs button{padding:7px 10px}
+}
 .grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
 
@@ -170,9 +193,6 @@ tr.detail td{background:var(--sunk);white-space:normal;padding:16px}
 .editform .acts{display:flex;gap:8px;flex-wrap:wrap}
 .pwcard{margin-top:20px;max-width:560px}
 .pwcard form{padding:18px}
-.subtabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--line)}
-.subtabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:-1px}
-.subtabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--red)}
 .period{display:flex;gap:16px;align-items:center;padding:16px 18px;margin-bottom:20px;flex-wrap:wrap}
 .period-info{display:grid;gap:2px;flex:1;min-width:0}
 .period-info .k,.rep-sum .k{font-size:12px;color:var(--muted)}
@@ -351,7 +371,12 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 .sg.v-high input:checked+span{background:var(--red);color:var(--on-red);border-color:var(--red)}
 .sg.v-normal input:checked+span{background:var(--ok);color:var(--surface);border-color:var(--ok)}
 .sg.v-low input:checked+span{background:var(--t-work);color:var(--surface);border-color:var(--t-work)}
-.crew-pick{display:flex;gap:8px}
+.crew-pick{display:flex;gap:8px} .crew-pick input{flex:1;min-width:0;text-transform:uppercase}
+.unit-card{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;background:var(--sunk)}
+.unit-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.callsign{display:inline-block;font-family:var(--f-mono);font-weight:700;font-size:15px;letter-spacing:.04em;background:var(--red-deep);color:#fff;border-radius:6px;padding:2px 10px}
+.unit-cs{max-width:200px;text-transform:uppercase}
+.unit-view{margin-bottom:10px}
 .crew-pick select{flex:1;min-width:0}
 #fCase .acts{display:flex;gap:8px;flex-wrap:wrap}
 .hbar{display:flex;align-items:center;gap:10px}
@@ -453,18 +478,30 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 
   <!-- dashboard -->
   <section id="vDash" hidden>
+    <div class="dash-layout">
+    <aside class="sidenav" aria-label="เมนูหลัก">
+      <nav class="viewtabs" role="tablist" aria-orientation="vertical">
+        <button id="vtMe" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>เวรของฉัน</span></button>
+        <button id="vtAdmin" aria-selected="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span>Admin</span></button>
+        <div class="subtabs" role="tablist" aria-label="เมนูผู้ดูแลระบบ">
+          <button data-sub="atOfficers" aria-selected="true">เจ้าหน้าที่</button>
+          <button data-sub="atReport" aria-selected="false">รายงานโบนัส & ตัดยอด</button>
+          <button data-sub="atHours" aria-selected="false">ชั่วโมงเจ้าหน้าที่</button>
+          <button data-sub="atCaseFee" aria-selected="false">ค่าเคส</button>
+          <button data-sub="atBackups" aria-selected="false">ข้อมูลสำรอง</button>
+          <button data-sub="atSettings" aria-selected="false">ตั้งค่า</button>
+        </div>
+        <button id="vtCase" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>เคส</span></button>
+        <button id="vtCal" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>ปฏิทิน</span></button>
+      </nav>
+    </aside>
+    <div class="dash-main">
     <div class="who">
       <div>
         <div class="meta"><span class="badge-no" id="dBadge"></span> · <span id="dRank"></span></div>
         <h1 id="dName"></h1>
       </div>
       <div class="spacer"></div>
-      <div class="viewtabs" role="tablist">
-        <button id="vtMe" aria-selected="true">เวรของฉัน</button>
-        <button id="vtAdmin" aria-selected="false" hidden>Admin</button>
-        <button id="vtCase" aria-selected="false">เคส</button>
-        <button id="vtCal" aria-selected="false">ปฏิทิน</button>
-      </div>
       <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
     </div>
 
@@ -603,14 +640,6 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <div class="stat"><span class="k">กำลังปฏิบัติหน้าที่</span><span class="v" id="aOn" style="color:var(--ok)">0</span></div>
         <div class="stat bonus"><span class="k">รอรับโบนัส</span><span class="v" id="aBonus">0</span></div>
         <div class="stat"><span class="k">ชั่วโมงรวมทั้งหน่วย</span><span class="v" id="aHours">0</span></div>
-      </div>
-      <div class="subtabs" role="tablist">
-        <button data-sub="atOfficers" aria-selected="true">เจ้าหน้าที่</button>
-        <button data-sub="atReport" aria-selected="false">รายงานโบนัส & ตัดยอด</button>
-        <button data-sub="atHours" aria-selected="false">ชั่วโมงเจ้าหน้าที่</button>
-        <button data-sub="atCaseFee" aria-selected="false">ค่าเคส</button>
-        <button data-sub="atBackups" aria-selected="false">ข้อมูลสำรอง</button>
-        <button data-sub="atSettings" aria-selected="false">ตั้งค่า</button>
       </div>
       <div id="atOfficers">
       <div class="card">
@@ -827,6 +856,8 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
       </div>
       </div>
     </div>
+    </div>
+  </div>
   </section>
 </main>
 <footer class="site-foot">
@@ -1137,9 +1168,9 @@ function notify(kind,o,x){
   }else if(kind==='case'){
     const w=worstTri(x), pts=x.patients||[];
     embed={title:'🚑 เคสใหม่: '+x.caseNo,color:TRI_HEX[w]||0xC1121F,description:`**${x.title}**`,fields:[
-      {name:'ประเภทเคส',value:(x.caseType||'-')+(x.buildingSize?' (อาคารขนาด'+x.buildingSize+')':''),inline:true},{name:'วันเวลา',value:fDate(x.at)+' '+fTime(x.at)+' น.',inline:true},{name:'ผู้บาดเจ็บแยกสถานะ',value:'Civilian '+(x.injCivilian||0)+' · Officer/Deputy '+(x.injOfficer||0)+' · Firefighter '+(x.injFirefighter||0),inline:false},{name:'ระดับสูงสุด',value:triLabel(w),inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
-      {name:'ผู้บาดเจ็บ',value:pts.map((p,i)=>`${i+1}. ${ptName(p)}${p.sex?' · '+p.sex:''}${p.age?' · '+p.age+' ปี':''} — ${triLabel(p.tri)} · ชีพจร${vitLabel(p.pulse)} · ความดัน${vitLabel(p.bp)}${injList(p).length?' · '+injList(p).join('/'):''}${p.injuryDetail?' ('+p.injuryDetail.slice(0,80)+')':''}`).join('\n').slice(0,1000)},
-      {name:'ผู้เขียนเคส',value:x.author?.name||'-',inline:true},{name:'เจ้าหน้าที่ที่ดูแล',value:(x.crew||[]).map(c=>c.name).join(', ')||'-',inline:true}]};
+      {name:'ประเภทเคส',value:(x.caseType||'-')+(x.buildingSize?' (อาคารขนาด'+x.buildingSize+')':''),inline:true},{name:'วันเวลา',value:fDate(x.at)+' '+fTime(x.at)+' น.',inline:true},{name:'ผู้บาดเจ็บแยกสถานะ',value:'Civilian '+(x.injCivilian||0)+' · Officer/Deputy '+(x.injOfficer||0)+' · Firefighter '+(x.injFirefighter||0),inline:false},{name:'ระดับสูงสุด',value:w?triLabel(w):'-',inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
+      {name:'ผู้บาดเจ็บ',value:pts.map((p,i)=>`${i+1}. ${ptName(p)}${p.sex?' · '+p.sex:''}${p.age?' · '+p.age+' ปี':''} — ${triLabel(p.tri)} · ชีพจร${vitLabel(p.pulse)} · ความดัน${vitLabel(p.bp)}${injList(p).length?' · '+injList(p).join('/'):''}${p.injuryDetail?' ('+p.injuryDetail.slice(0,80)+')':''}`).join('\n').slice(0,1000)||'-'},
+      {name:'ผู้เขียนเคส',value:x.author?.name||'-',inline:true},{name:'ยูนิต / เจ้าหน้าที่ที่ดูแล',value:caseUnitsOf(x).map(u=>(u.callSign?'**'+u.callSign+'**: ':'')+(u.members.map(m=>m.name).join(', ')||'-')).join('\n').slice(0,1000)||'-',inline:false}]};
   }else if(kind==='cal'){
     const t=EVT[x.type]||EVT.event;
     embed={title:'📅 ปฏิทิน: '+t.label+'ใหม่',color:t.hex,description:`**${x.title}**`,fields:[
@@ -1356,7 +1387,7 @@ const triLabel=k=>(TRI.find(t=>t.k===k)||{}).label||'-';
 const vitLabel=k=>(VIT.find(t=>t.k===k)||{}).label||'-';
 const worstTri=c=>(c.patients||[]).reduce((w,p)=>(TRI_RANK[p.tri]||0)>(TRI_RANK[w]||0)?p.tri:w,'');
 const ptName=p=>((p.first||'')+' '+(p.last||'')).trim()||'ไม่ทราบชื่อ';
-let cases=[], caseSel=null, caseMode='none', caseEditing=null, caseCrew=[], officerPool=[], ptSeq=0;
+let cases=[], caseSel=null, caseMode='none', caseEditing=null, caseCrew=[], caseUnits=[], officerPool=[], ptSeq=0;
 function subCases(){unsubs.push(db.collection('cases').orderBy('at','desc').limit(500).onSnapshot(q=>{cases=q.docs.map(d=>({id:d.id,...d.data()}));renderCaseList();if(caseMode==='view')renderCaseView()},()=>{}))}
 const myRef=()=>mode==='admin'?{admin:true,badge:'',name:'Admin'}:{badge:myBadge,name:me?me.first+' '+me.last:''};
 const isMineCase=c=>!!myBadge&&((c.author&&c.author.badge===myBadge)||(c.crew||[]).some(x=>x.badge===myBadge));
@@ -1387,11 +1418,11 @@ function renderCaseView(){
   if(!c){caseMode='none';caseSel=null;renderCaseList();return}
   const w=worstTri(c), pts=c.patients||[];
   $('#caseMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(c.caseNo)}</span>${c.caseType?` <span class="pill">${esc(c.caseType)}${c.buildingSize?' · อาคารขนาด'+esc(c.buildingSize):''}</span>`:''}<h2>${esc(c.title)}</h2><div class="hint">${dowTh[dowOf(ymdOf(c.at))]} ${fDate(c.at)} เวลา ${fTime(c.at)} น.</div></div>${w?`<span class="pill tri tri-${w}" style="font-size:14px;padding:4px 14px">ระดับ${triLabel(w)}</span>`:''}</div>
-  <div class="case-sec"><h3>ผู้บาดเจ็บ (${pts.length} คน)</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>ชื่อ – นามสกุล</th><th>เพศ</th><th class="num">อายุ</th><th>ระดับ</th><th>ชีพจร</th><th>ความดัน</th></tr></thead><tbody>${pts.map((p,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(ptName(p))}</td><td>${esc(p.sex||'-')}</td><td class="num mono">${p.age!==''&&p.age!=null?esc(p.age):'-'}</td><td>${p.tri?`<span class="pill tri tri-${p.tri}">${triLabel(p.tri)}</span>`:'-'}</td><td><span class="vit ${esc(p.pulse||'')}">${vitLabel(p.pulse)}</span></td><td><span class="vit ${esc(p.bp||'')}">${vitLabel(p.bp)}</span></td></tr>`).join('')}</tbody></table></div>${pts.some(p=>injList(p).length||p.injuryDetail)?`<div style="margin-top:12px"><h3>ลักษณะการบาดเจ็บ</h3>${pts.map((p,i)=>(injList(p).length||p.injuryDetail)?`<div class="inj-line"><b>${i+1}. ${esc(ptName(p))}</b><div>${injList(p).map(k=>`<span class="inj-tag">${esc(k)}</span>`).join('')}</div>${p.injuryDetail?`<p class="case-detail" style="margin:4px 0 0">${esc(p.injuryDetail)}</p>`:''}</div>`:'').join('')}</div>`:''}</div>
+  <div class="case-sec"><h3>ผู้บาดเจ็บ (${pts.length} คน)</h3>${pts.length?'':'<p class="hint">ไม่มีผู้บาดเจ็บในเคสนี้</p>'}<div class="table-wrap"${pts.length?'':' hidden'}><table><thead><tr><th>#</th><th>ชื่อ – นามสกุล</th><th>เพศ</th><th class="num">อายุ</th><th>ระดับ</th><th>ชีพจร</th><th>ความดัน</th></tr></thead><tbody>${pts.map((p,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(ptName(p))}</td><td>${esc(p.sex||'-')}</td><td class="num mono">${p.age!==''&&p.age!=null?esc(p.age):'-'}</td><td>${p.tri?`<span class="pill tri tri-${p.tri}">${triLabel(p.tri)}</span>`:'-'}</td><td><span class="vit ${esc(p.pulse||'')}">${vitLabel(p.pulse)}</span></td><td><span class="vit ${esc(p.bp||'')}">${vitLabel(p.bp)}</span></td></tr>`).join('')}</tbody></table></div>${pts.some(p=>injList(p).length||p.injuryDetail)?`<div style="margin-top:12px"><h3>ลักษณะการบาดเจ็บ</h3>${pts.map((p,i)=>(injList(p).length||p.injuryDetail)?`<div class="inj-line"><b>${i+1}. ${esc(ptName(p))}</b><div>${injList(p).map(k=>`<span class="inj-tag">${esc(k)}</span>`).join('')}</div>${p.injuryDetail?`<p class="case-detail" style="margin:4px 0 0">${esc(p.injuryDetail)}</p>`:''}</div>`:'').join('')}</div>`:''}</div>
   ${(c.injCivilian!=null||c.injOfficer!=null||c.injFirefighter!=null)?`<div class="case-sec"><h3>จำนวนผู้บาดเจ็บแยกตามสถานะ</h3><div class="table-wrap"><table><thead><tr><th>Civilian</th><th>Officer/Deputy</th><th>Firefighter</th><th>รวม</th></tr></thead><tbody><tr><td class="mono">${c.injCivilian||0}</td><td class="mono">${c.injOfficer||0}</td><td class="mono">${c.injFirefighter||0}</td><td class="mono"><b>${(c.injCivilian||0)+(c.injOfficer||0)+(c.injFirefighter||0)}</b></td></tr></tbody></table></div></div>`:''}
   <div class="case-sec"><h3>รายละเอียดเคส</h3>${c.detail?`<p class="case-detail">${esc(c.detail)}</p>`:'<span class="hint">ไม่มีรายละเอียด</span>'}</div>
   <div class="case-sec"><h3>ผู้เขียนเคส</h3><div class="chips-row">${whoChip(c.author||{name:'-'})}</div>
-  <h3 style="margin-top:6px">เจ้าหน้าที่ที่ดูแลเคส</h3><div class="chips-row">${(c.crew||[]).length?(c.crew||[]).map(whoChip).join(''):'<span class="hint">ไม่ได้ระบุ</span>'}</div></div>
+  <h3 style="margin-top:6px">ยูนิตและเจ้าหน้าที่ที่ดูแลเคส</h3>${unitsView(c)}</div>
   <div class="case-sec"><div class="case-acts">${canEditCase(c)?`<button class="btn sm" id="caseEdit">แก้ไขเคส</button>`:''}${canDelCase(c)?`<button class="btn sm danger" id="caseDel">ลบเคส</button>`:''}<span class="hint">บันทึกเมื่อ ${fDate(c.createdAt||c.at)} ${fTime(c.createdAt||c.at)}${c.updatedAt&&c.updatedAt!==c.createdAt?' · แก้ไขล่าสุด '+fDate(c.updatedAt)+' '+fTime(c.updatedAt)+(c.updatedBy?' โดย '+esc(c.updatedBy):''):''}</span></div></div>`;
 }
 function ptRowHtml(uid){
@@ -1420,18 +1451,31 @@ function addPt(p){
   numberPts(); return el;
 }
 function numberPts(){const rows=[...document.querySelectorAll('#ptList .pt')];rows.forEach((r,i)=>{r.querySelector('.pt-n').textContent=i+1;r.querySelector('[data-ptdel]').hidden=rows.length<2})}
+function caseUnitsOf(c){
+  if(Array.isArray(c.units)) return c.units.map(u=>({callSign:u.callSign||'',members:Array.isArray(u.members)?u.members:[]}));
+  return (c.crew&&c.crew.length)?[{callSign:'',members:c.crew.map(x=>({badge:x.badge,name:x.name}))}]:[];
+}
+function unitsView(c){
+  const us=caseUnitsOf(c); if(!us.length) return '<span class="hint">ไม่ได้ระบุ</span>';
+  return us.map(u=>`<div class="unit-view"><span class="callsign">${u.callSign?esc(u.callSign):'ไม่ระบุ Call Sign'}</span><div class="chips-row" style="margin-top:6px">${u.members.length?u.members.map(whoChip).join(''):'<span class="hint">ไม่มีรายชื่อ</span>'}</div></div>`).join('');
+}
 function renderCrew(){
+  const g=$('#unitList'); if(!g) return;
   const author=caseEditing?caseEditing.author:myRef();
-  $('#crewChips').innerHTML=caseCrew.length?caseCrew.map((x,i)=>`<span class="who-chip">${esc(x.name)} <span class="mono">#${esc(x.badge)}</span><button type="button" data-crewdel="${i}" aria-label="เอา ${esc(x.name)} ออก">×</button></span>`).join(''):'<span class="hint">ยังไม่ได้เพิ่มเจ้าหน้าที่</span>';
-  const taken=new Set([...caseCrew.map(x=>x.badge),author&&author.badge].filter(Boolean));
-  $('#crewSel').innerHTML='<option value="">— เลือกเจ้าหน้าที่ —</option>'+officerPool.filter(o=>!taken.has(o.badge)).map(o=>`<option value="${esc(o.badge)}">#${esc(o.badge)} ${esc(o.name)} · ${esc(o.rank)}</option>`).join('');
+  const taken=new Set([...caseUnits.flatMap(u=>u.members.map(m=>m.badge)),author&&author.badge].filter(Boolean));
+  const pool=officerPool.filter(o=>!taken.has(o.badge));
+  g.innerHTML=caseUnits.length?caseUnits.map((u,ui)=>`<div class="unit-card">
+    <div class="unit-h">${u.callSign?`<span class="callsign">${esc(u.callSign)}</span>`:`<input class="unit-cs" data-ui="${ui}" maxlength="16" placeholder="ใส่ Call Sign ของยูนิตนี้" aria-label="Call Sign">`}<button type="button" class="btn sm danger" data-unitdel="${ui}">ลบยูนิต</button></div>
+    <div class="chips-row">${u.members.length?u.members.map((x,mi)=>`<span class="who-chip">${esc(x.name)} <span class="mono">#${esc(x.badge)}</span><button type="button" data-memdel="${ui}:${mi}" aria-label="เอา ${esc(x.name)} ออก">×</button></span>`).join(''):'<span class="hint">ยังไม่ได้เพิ่มเจ้าหน้าที่ในยูนิตนี้</span>'}</div>
+    <select class="unitSel" data-ui="${ui}" aria-label="เพิ่มเจ้าหน้าที่ใน ${esc(u.callSign||'ยูนิต')}"><option value="">+ เพิ่มเจ้าหน้าที่ใน ${esc(u.callSign||'ยูนิตนี้')}</option>${pool.map(o=>`<option value="${esc(o.badge)}">#${esc(o.badge)} ${esc(o.name)} · ${esc(o.rank)}</option>`).join('')}</select>
+  </div>`).join(''):'<span class="hint">ยังไม่ได้เพิ่มยูนิต</span>';
 }
 async function loadPool(){
   try{const q=await db.collection('officers').get();officerPool=q.docs.map(d=>d.data()).filter(o=>o.pwHash).map(o=>({badge:o.badge,name:o.first+' '+o.last,rank:o.rank||''})).sort((a,b)=>a.badge.localeCompare(b.badge))}catch(e){}
-  if($('#crewSel')) renderCrew();
+  if($('#unitList')) renderCrew();
 }
 function openCaseForm(c){
-  caseMode='form'; caseEditing=c||null; caseCrew=c?[...(c.crew||[])]:[];
+  caseMode='form'; caseEditing=c||null; caseCrew=[]; caseUnits=c?caseUnitsOf(c):[];
   const at=c?c.at:Date.now(), author=c?c.author:myRef();
   $('#caseMain').innerHTML=`<div class="card-h"><h2>${c?'แก้ไขเคส':'เขียนเคสใหม่'}</h2></div>
   <form id="fCase" novalidate>
@@ -1445,16 +1489,17 @@ function openCaseForm(c){
       <label>Officer/Deputy ที่บาดเจ็บ<input id="cOff" type="number" min="0" max="999" inputmode="numeric" placeholder="0"></label>
       <label>Firefighter ที่บาดเจ็บ<input id="cFf" type="number" min="0" max="999" inputmode="numeric" placeholder="0"></label>
     </div>
-    <div class="sec-h"><b>ผู้บาดเจ็บ</b><span class="hint">ใส่ได้หลายคน</span></div>
+    <div class="sec-h"><b>ผู้บาดเจ็บ</b><span class="hint">ใส่ได้หลายคน · ถ้าเคสนี้ไม่มีผู้บาดเจ็บ ปล่อยว่างได้</span></div>
     <div id="ptList"></div>
     <button type="button" class="btn sm" id="ptAdd" style="justify-self:start">+ เพิ่มผู้บาดเจ็บ</button>
     <div class="sec-h"><b>รายละเอียดเคส</b></div>
     <textarea id="cDetail" rows="6" maxlength="4000" aria-label="รายละเอียดเคส" placeholder="เหตุการณ์ อาการที่พบ การรักษาที่ให้ การนำส่งโรงพยาบาล ฯลฯ"></textarea>
     <div class="sec-h"><b>เจ้าหน้าที่</b></div>
     <div><span class="lbl">ผู้เขียนเคส</span><div class="chips-row" style="margin-top:6px">${whoChip(author)}</div></div>
-    <div><span class="lbl">เจ้าหน้าที่ที่ดูแลเคส</span>
-      <div class="crew-pick" style="margin-top:6px"><select id="crewSel" aria-label="เลือกเจ้าหน้าที่"></select><button type="button" class="btn sm" id="crewAdd">เพิ่ม</button></div>
-      <div class="chips-row" id="crewChips" style="margin-top:8px"></div></div>
+    <div><span class="lbl">ยูนิต / Call Sign และเจ้าหน้าที่ที่ดูแลเคส</span>
+      <div class="crew-pick" style="margin-top:6px"><input id="unitCall" maxlength="16" autocomplete="off" autocapitalize="characters" placeholder="พิมพ์ Call Sign ก่อน เช่น RA-01, E-10" aria-label="Call Sign ของยูนิต"><button type="button" class="btn sm" id="unitAdd">+ เพิ่มยูนิต</button></div>
+      <div id="unitList" style="display:grid;gap:10px;margin-top:10px"></div>
+      <p class="hint" style="margin:8px 0 0">เพิ่ม Call Sign ของรถ/ยูนิตก่อน แล้วจึงเลือกเจ้าหน้าที่ที่มากับยูนิตนั้น (เขียน Call Sign เองได้เลย)</p></div>
     <div id="cMsg" class="msg err" hidden></div>
     <div class="acts"><button class="btn primary" type="submit" id="cSave">${c?'บันทึกการแก้ไข':'บันทึกเคส'}</button><button class="btn" type="button" id="cCancel">ยกเลิก</button></div>
   </form>`;
@@ -1476,15 +1521,26 @@ $('#caseMain').addEventListener('click',async e=>{
   const t=e.target;
   if(t.closest('#ptAdd')){const el=addPt(null);el.querySelector('.p-first').focus();return}
   const pd=t.closest('[data-ptdel]'); if(pd){pd.closest('.pt').remove();numberPts();return}
-  if(t.closest('#crewAdd')){const b=$('#crewSel').value;const o=officerPool.find(x=>x.badge===b);if(o){caseCrew.push({badge:o.badge,name:o.name});renderCrew()}return}
-  const cd=t.closest('[data-crewdel]'); if(cd){caseCrew.splice(+cd.dataset.crewdel,1);renderCrew();return}
-  if(t.closest('#cCancel')){caseEditing&&caseSel?showCase(caseSel):showCase(null);return}
+  if(t.closest('#unitAdd')){
+    const inp=$('#unitCall'), cs=inp.value.trim().toUpperCase();
+    if(!cs){toast('กรุณาพิมพ์ Call Sign ก่อนเพิ่มยูนิต');inp.focus();return}
+    if(caseUnits.some(u=>u.callSign.toUpperCase()===cs)){toast('มี Call Sign '+cs+' อยู่แล้ว');return}
+    caseUnits.push({callSign:cs,members:[]}); inp.value=''; renderCrew(); inp.focus(); return}
+  const ud=t.closest('[data-unitdel]'); if(ud){caseUnits.splice(+ud.dataset.unitdel,1);renderCrew();return}
+  const md=t.closest('[data-memdel]'); if(md){const [ui,mi]=md.dataset.memdel.split(':').map(Number);if(caseUnits[ui])caseUnits[ui].members.splice(mi,1);renderCrew();return}
+    if(t.closest('#cCancel')){caseEditing&&caseSel?showCase(caseSel):showCase(null);return}
   if(t.closest('#caseEdit')){const c=cases.find(x=>x.id===caseSel);if(c&&canEditCase(c))openCaseForm(c);return}
   const del=t.closest('#caseDel');
   if(del){const c=cases.find(x=>x.id===caseSel);if(!c||!canDelCase(c)||!armed(del))return;
     try{await db.doc('cases/'+c.id).delete();showCase(null);toast('ลบเคส '+c.caseNo+' แล้ว')}catch(x){toast('ลบไม่สำเร็จ ลองอีกครั้ง')}}
 });
-$('#caseMain').addEventListener('change',e=>{if(e.target.id==='crewSel'&&e.target.value)$('#crewAdd').click();if(e.target.id==='cType')syncBs()});
+$('#caseMain').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.classList&&t.classList.contains('unitSel')&&t.value){const u=caseUnits[+t.dataset.ui],o=officerPool.find(x=>x.badge===t.value);if(u&&o&&!caseUnits.some(x=>x.members.some(m=>m.badge===o.badge)))u.members.push({badge:o.badge,name:o.name});renderCrew()}
+  if(t.id==='cType')syncBs();
+});
+$('#caseMain').addEventListener('input',e=>{const t=e.target;if(t.classList&&t.classList.contains('unit-cs')){t.value=t.value.toUpperCase();const u=caseUnits[+t.dataset.ui];if(u)u.callSign=t.value.trim()}});
+$('#caseMain').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='unitCall'){e.preventDefault();$('#unitAdd').click()}});
 $('#caseMain').addEventListener('submit',async e=>{
   if(e.target.id!=='fCase') return; e.preventDefault(); err('#cMsg','');
   const caseNo=$('#cNo').value.trim(), title=$('#cTitle').value.trim(), at=tsOf($('#cDate').value,$('#cTime').value), detail=$('#cDetail').value.trim();
@@ -1501,6 +1557,16 @@ $('#caseMain').addEventListener('submit',async e=>{
   const cnt=id=>{const v=$(id).value.trim();return v===''?0:(/^\d{1,3}$/.test(v)?+v:NaN)};
   const injCivilian=cnt('#cCiv'), injOfficer=cnt('#cOff'), injFirefighter=cnt('#cFf');
   if([injCivilian,injOfficer,injFirefighter].some(isNaN)) return err('#cMsg','จำนวนผู้บาดเจ็บแยกตามสถานะต้องเป็นตัวเลข 0–999');
+  if($('#unitCall').value.trim()) return err('#cMsg','คุณพิมพ์ Call Sign ไว้แต่ยังไม่ได้กด “+ เพิ่มยูนิต”');
+  const seenCs=new Set();
+  for(const [i,u] of caseUnits.entries()){
+    const cs=(u.callSign||'').trim().toUpperCase();
+    if(!cs) return err('#cMsg','ยูนิตที่ '+(i+1)+': กรุณาใส่ Call Sign');
+    if(seenCs.has(cs)) return err('#cMsg','Call Sign '+cs+' ซ้ำกัน');
+    seenCs.add(cs); u.callSign=cs;
+  }
+  const units=caseUnits.map(u=>({callSign:u.callSign,members:u.members.map(m=>({badge:m.badge,name:m.name}))}));
+  const crewFlat=units.flatMap(u=>u.members.map(m=>({badge:m.badge,name:m.name,callSign:u.callSign})));
   const patients=[];
   for(const [i,el] of [...document.querySelectorAll('#ptList .pt')].entries()){
     const uid=el.dataset.uid, pick=k=>(el.querySelector(`input[name="${k}-${uid}"]:checked`)||{}).value||'';
@@ -1511,8 +1577,7 @@ $('#caseMain').addEventListener('submit',async e=>{
     if(!p.tri) return err('#cMsg','ผู้บาดเจ็บคนที่ '+(i+1)+': กรุณาเลือกระดับเคส (เขียว เหลือง แดง ดำ)');
     patients.push(p);
   }
-  if(!patients.length) return err('#cMsg','กรุณาใส่ข้อมูลผู้บาดเจ็บอย่างน้อย 1 คน');
-  const now=Date.now(), data={caseNo,title,at,detail,patients,crew:caseCrew,updatedAt:now,caseType,buildingSize,injCivilian,injOfficer,injFirefighter};
+  const now=Date.now(), data={caseNo,title,at,detail,patients,crew:crewFlat,units,updatedAt:now,caseType,buildingSize,injCivilian,injOfficer,injFirefighter};
   const btn=$('#cSave'); btn.disabled=true;
   try{
     if(caseEditing){
