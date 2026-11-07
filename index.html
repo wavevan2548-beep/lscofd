@@ -143,6 +143,17 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .exok{margin-left:auto;font-size:12px;font-weight:700;color:#2E9B5F;white-space:nowrap}
 .exkeybox{margin-top:6px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px}
 #exForm{padding:18px}
+.extimer{position:sticky;top:76px;z-index:4;margin:0;padding:10px 18px;background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-weight:600;display:flex;gap:8px;align-items:center}
+.extimer b{font-family:var(--f-mono);font-size:22px;letter-spacing:.04em}
+.extimer.warn{background:rgba(192,57,43,.14);color:var(--red)}
+.exwarn{padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--red-deep);border-radius:8px;background:var(--sunk);line-height:1.6}
+.exansbox{padding:8px 10px;border:1px solid var(--line);border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);margin-top:6px}
+.exvo.bad{border-color:#C0392B;background:rgba(192,57,43,.1)}
+.exvo.pick{box-shadow:inset 3px 0 0 var(--red-deep)}
+.exmark{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.exvo .exmark+.exok{margin-left:8px}
+.exta{width:100%}
+.exq .exopt.chk{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer}
 #exForm .acts{display:flex;gap:8px;flex-wrap:wrap}
 #atCaseFee>.card{margin-bottom:20px}
 /* sidebar navigation */
@@ -2205,33 +2216,42 @@ $('#fsMain').addEventListener('submit',async e=>{
 /* ---- Exams (Admin + Command Officer) ---- */
 const EX_TYPES={single:'ตัวเลือก 4 ข้อ (ตอบข้อเดียว)',multi:'เลือกได้หลายข้อ',text:'ข้อเขียน'};
 const EX_LET='ABCDEFGH';
-let exams=[], exSel=null, exMode='none', exEditing=null, exQs=[], exSub=null, exLeave=null;
+let exams=[], exSubs=[], exGrade=null, exSel=null, exMode='none', exEditing=null, exQs=[], exSub=null, exLeave=null;
 function canExam(){return mode==='admin'||(!!me&&/^(command|executive) officer$/i.test(((rankInfo(me.rank)||{}).category||'').trim()))}
 const canEditExam=e=>mode==='admin'||(!!myBadge&&!!e.author&&e.author.badge===myBadge);
-function updateExamNav(){const b=$('#vtExam');if(!b)return;const ok=canExam();if(b.hidden===ok)b.hidden=!ok}
-function resetEx(){if(exSub){try{exSub()}catch(e){}exSub=null}exams=[];exSel=null;exMode='none';exEditing=null;exQs=[];exLeave=null}
+function updateExamNav(){const b=$('#vtExam');if(!b)return;const ok=mode==='admin'||!!myBadge;if(b.hidden===ok)b.hidden=!ok}
+function resetEx(){exStopTimer();if(exSub){try{exSub()}catch(e){}exSub=null}exams=[];exSubs=[];exGrade=null;exSel=null;exMode='none';exEditing=null;exQs=[];exLeave=null}
 function ensureExamSub(){
-  if(exSub||!db||!canExam()) return;
-  exSub=db.collection('exams').orderBy('createdAt','desc').limit(200).onSnapshot(q=>{exams=q.docs.map(d=>({id:d.id,...d.data()}));renderExList();if(exMode==='view')renderExView()},()=>{});
-  unsubs.push(exSub);
+  if(exSub||!db||!(mode==='admin'||myBadge)) return;
+  const u1=db.collection('exams').orderBy('createdAt','desc').limit(200).onSnapshot(q=>{exams=q.docs.map(d=>({id:d.id,...d.data()}));renderExList();if(exMode==='view')renderExView();else if(exMode==='result')renderExTake()},()=>{});
+  const q2=canExam()?db.collection('examSubs').limit(1000):db.collection('examSubs').where('badge','==',myBadge);
+  const u2=q2.onSnapshot(q=>{exSubs=q.docs.map(d=>({id:d.id,...d.data()}));renderExList();if(exMode==='view')renderExView();else if(exMode==='result')renderExTake()},()=>{});
+  exSub=()=>{u1();u2()}; unsubs.push(exSub);
 }
 const exBlankQ=()=>({type:'single',text:'',options:['','','',''],correct:[],points:1,key:''});
 const exIsBlank=q=>!q.text.trim()&&q.options.every(o=>!o.trim())&&!q.key.trim();
 const exTotal=e=>(e.questions||[]).reduce((a,q)=>a+(+q.points||0),0);
 function renderExList(){
   if(!$('#pExam')||$('#pExam').hidden) return;
+  const creator=canExam(); $('#exNew').hidden=!creator;
   const q=$('#exQ').value.trim().toLowerCase();
-  const list=exams.filter(e=>!q||[e.title,e.author&&e.author.name].join(' ').toLowerCase().includes(q));
+  const list=exams.filter(e=>(creator||e.open!==false||exMySub(e.id))&&(!q||[e.title,e.author&&e.author.name].join(' ').toLowerCase().includes(q)));
   $('#exEmpty').hidden=list.length>0;
-  $('#exEmpty').textContent=exams.length?'ไม่พบข้อสอบที่ตรงกับการค้นหา':'ยังไม่มีข้อสอบ กด “+ สร้างข้อสอบ” เพื่อเริ่มสร้างข้อสอบแรก';
-  $('#exItems').innerHTML=list.map(e=>`<button type="button" class="ci${e.id===exSel?' sel':''}" data-id="${esc(e.id)}">
-    <span class="ci-top"><span class="ci-no">EXAM</span><span>${fDate(e.createdAt)}</span></span>
-    <span class="ci-title">${esc(e.title)}</span>
-    <span class="ci-foot"><span>${(e.questions||[]).length} ข้อ</span><span>· ${exTotal(e)} คะแนน</span><span>· ${esc(e.author?.name||'-')}</span></span>
-  </button>`).join('');
-  if(exMode==='none') $('#exMain').innerHTML='<div class="case-ph">เลือกข้อสอบจากรายการเพื่อดูรายละเอียด<br>หรือกด “+ สร้างข้อสอบ” เพื่อสร้างข้อสอบใหม่</div>';
+  $('#exEmpty').textContent=exams.length&&q?'ไม่พบข้อสอบที่ตรงกับการค้นหา':creator?'ยังไม่มีข้อสอบ กด “+ สร้างข้อสอบ” เพื่อเริ่มสร้างข้อสอบแรก':'ยังไม่มีข้อสอบที่เปิดให้ทำ';
+  $('#exItems').innerHTML=list.map(e=>{
+    const n=(e.questions||[]).length; let tail;
+    if(creator) tail=`<span>${n} ข้อ</span><span>· ${exTotal(e)} คะแนน</span>${e.timeLimit?`<span>· ⏱ ${e.timeLimit} นาที</span>`:''}<span>· ส่งแล้ว ${exSubs.filter(s=>s.examId===e.id&&s.submittedAt).length} คน</span><span>· ${e.open===false?'ยังไม่เปิด/ปิดรับ':'เปิดอยู่'}</span>`;
+    else{const sub=exMySub(e.id);tail=`<span>${n} ข้อ</span><span>· ${exTotal(e)} คะแนน</span>${e.timeLimit?`<span>· ⏱ ${e.timeLimit} นาที</span>`:''}<span>· ${exDone(sub)?(exVisible(e,sub)?'✓ ประกาศผลแล้ว':'ส่งแล้ว รอประกาศผล'):(sub&&sub.startedAt?'กำลังทำข้อสอบ':'ยังไม่ได้ทำ')}</span>`}
+    return `<button type="button" class="ci${e.id===exSel?' sel':''}" data-id="${esc(e.id)}"><span class="ci-top"><span class="ci-no">EXAM</span><span>${fDate(e.createdAt)}</span></span><span class="ci-title">${esc(e.title)}</span><span class="ci-foot">${tail}</span></button>`;
+  }).join('');
+  if(exMode==='none') $('#exMain').innerHTML=creator?'<div class="case-ph">เลือกข้อสอบจากรายการเพื่อดูรายละเอียด<br>หรือกด “+ สร้างข้อสอบ” เพื่อสร้างข้อสอบใหม่</div>':'<div class="case-ph">เลือกข้อสอบจากรายการเพื่อทำข้อสอบหรือดูผลคะแนน</div>';
 }
-function showEx(id){exSel=id;exMode=id?'view':'none';exEditing=null;renderExList();if(id){renderExView();if(window.innerWidth<900)$('#exMain').scrollIntoView({block:'start',behavior:'smooth'})}}
+function showEx(id){
+  exSel=id; exEditing=null; exGrade=null;
+  exStopTimer(); exMode=!id?'none':canExam()?'view':(exDone(exMySub(id))?'result':'take');
+  renderExList();
+  if(id){if(exMode==='view')renderExView();else renderExTake();if(window.innerWidth<900)$('#exMain').scrollIntoView({block:'start',behavior:'smooth'})}
+}
 function renderExView(){
   const e=exams.find(x=>x.id===exSel);
   if(!e){exMode='none';exSel=null;renderExList();return}
@@ -2243,8 +2263,10 @@ function renderExView(){
   }).join('');
   $('#exMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">EXAM</span><h2>${esc(e.title)}</h2><div class="hint">${(e.questions||[]).length} ข้อ · รวม ${exTotal(e)} คะแนน · สร้างเมื่อ ${fDate(e.createdAt)} ${fTime(e.createdAt)}</div></div>
     <div class="fs-author"><span class="lbl">ผู้สร้างข้อสอบ</span><div>${whoChip(e.author||{name:'-'})}</div></div></div>
+  <div class="case-sec"><div class="chips-row"><span class="pill">${exRelLabel(e)}</span><span class="pill">${e.timeLimit?'⏱ จำกัดเวลา '+e.timeLimit+' นาที':'ไม่จำกัดเวลา'}</span><span class="pill${e.open===false?'':' ct-acc'}">${e.open===false?'ยังไม่เปิด / ปิดรับคำตอบ':'เปิดให้เจ้าหน้าที่ทุกคนทำอยู่'}</span></div><div class="case-acts" style="margin-top:8px">${canEditExam(e)?`<button class="btn sm ${e.open===false?'primary':''}" id="exToggleOpen">${e.open===false?'เปิดข้อสอบให้เจ้าหน้าที่ทุกคนทำ':'ปิดรับคำตอบ'}</button>`:''}${(myBadge&&!(e.author&&e.author.badge===myBadge)&&e.open!==false)?'<button class="btn sm" id="exTakeBtn">ทำข้อสอบนี้</button>':''}</div></div>
   ${e.description?`<div class="case-sec"><h3>คำชี้แจง</h3><p class="case-detail">${esc(e.description)}</p></div>`:''}
   ${qs}
+  ${exSubsHtml(e)}
   <div class="case-sec"><div class="case-acts">${canEditExam(e)?'<button class="btn sm" id="exEdit">แก้ไขข้อสอบ</button><button class="btn sm danger" id="exDel">ลบข้อสอบ</button>':''}<span class="hint">${e.updatedAt&&e.updatedAt!==e.createdAt?'แก้ไขล่าสุด '+fDate(e.updatedAt)+' '+fTime(e.updatedAt)+(e.updatedBy?' โดย '+esc(e.updatedBy):''):''}</span></div></div>`;
 }
 function exQHtml(q,i){
@@ -2268,20 +2290,24 @@ function renderExQs(){
   const tp=exQs.reduce((a,q)=>a+(+q.points||0),0); $('#exSum').textContent='รวม '+exQs.length+' ข้อ · '+tp+' คะแนน';
 }
 function openExForm(e){
-  exMode='form'; exEditing=e||null; exLeave=null;
+  exStopTimer(); exMode='form'; exEditing=e||null; exLeave=null;
   exQs=e?(e.questions||[]).map(q=>({type:q.type,text:q.text||'',options:[...(q.options||[])].concat(q.type==='text'?['','','','']:[]),correct:[...(q.correct||[])],points:+q.points||0,key:q.key||''})):[exBlankQ()];
   exQs.forEach(q=>{while(q.type!=='text'&&q.options.length<(q.type==='single'?4:2))q.options.push('')});
   $('#exMain').innerHTML=`<div class="card-h"><h2>${e?'แก้ไขข้อสอบ':'สร้างข้อสอบใหม่'}</h2></div>
   <form id="exForm" novalidate>
     <label>หัวข้อข้อสอบ<input id="exTitle" maxlength="120" placeholder="เช่น ข้อสอบวัดความรู้ปฐมพยาบาลเบื้องต้น"></label>
     <label>คำชี้แจง (ไม่บังคับ)<textarea id="exDesc" rows="2" maxlength="800" placeholder="เช่น เวลาสอบ เกณฑ์ผ่าน ข้อควรระวัง"></textarea></label>
+    <div class="row2"><label>การประกาศคะแนนและเฉลยให้ผู้สอบ<select id="exRelease"><option value="manual">รอผู้จัดทำข้อสอบกดส่งคะแนนและเฉลยให้</option><option value="instant">ประกาศทันทีหลังผู้สอบส่งคำตอบ (ระบบตรวจให้อัตโนมัติ)</option></select></label><label class="chk" style="align-self:end;padding-bottom:10px"><input type="checkbox" id="exOpen"> เปิดข้อสอบให้เจ้าหน้าที่ทุกคนทำได้ทันที</label></div>
+    <label>เวลาทำข้อสอบ (นาที) · เว้นว่าง = ไม่จำกัดเวลา<input type="number" id="exLimit" min="1" max="600" inputmode="numeric" placeholder="เช่น 30"></label>
+    <p class="hint" style="margin:0">ถ้ากำหนดเวลา ระบบจะเริ่มนับเวลาถอยหลังเมื่อเจ้าหน้าที่กด “เริ่มทำข้อสอบ” และส่งคำตอบให้อัตโนมัติเมื่อหมดเวลา · ถ้ายังไม่ติ๊กเปิด ข้อสอบจะเป็นฉบับร่าง เจ้าหน้าที่คนอื่นยังไม่เห็น เปิดทีหลังได้จากหน้าข้อสอบ</p>
+    ${e&&exSubs.some(x=>x.examId===e.id)?`<p class="hint" style="margin:0">⚠ มีผู้ส่งคำตอบแล้ว ${exSubs.filter(x=>x.examId===e.id).length} คน การแก้โจทย์/ตัวเลือก/เฉลย จะมีผลต่อคะแนนที่คำนวณ</p>`:''}
     <div class="row2"><label>จำนวนข้อสอบทั้งหมด<input type="number" id="exCount" min="1" max="100" inputmode="numeric"></label><span class="hint" id="exSum" style="align-self:end;padding-bottom:10px"></span></div>
     <div id="exQs" style="display:grid;gap:12px"></div>
     <button type="button" class="btn" id="exAddQ" style="justify-self:start">+ เพิ่มข้อสอบ</button>
     <div id="exMsg" class="msg err" hidden></div>
     <div class="acts"><button class="btn primary" type="submit" id="exSave">${e?'บันทึกการแก้ไข':'บันทึกข้อสอบ'}</button><button class="btn" type="button" id="exCancel">ยกเลิก</button></div>
   </form>`;
-  $('#exTitle').value=e?.title||''; $('#exDesc').value=e?.description||'';
+  $('#exTitle').value=e?.title||''; $('#exDesc').value=e?.description||''; $('#exRelease').value=e?.release||'manual'; $('#exOpen').checked=e?e.open!==false:false; $('#exLimit').value=e&&e.timeLimit?e.timeLimit:'';
   renderExQs(); renderExList();
   $('#exMain').scrollIntoView({block:'start',behavior:'smooth'});
 }
@@ -2289,7 +2315,7 @@ $('#exNew').onclick=()=>{if(exMode==='form'&&!exEditing){$('#exTitle').focus();r
 $('#exQ').addEventListener('input',renderExList);
 $('#exItems').addEventListener('click',e=>{
   const b=e.target.closest('.ci'); if(!b) return;
-  if(exMode==='form'&&exLeave!==b.dataset.id){exLeave=b.dataset.id;err('#exMsg','ยังไม่ได้บันทึกข้อสอบที่กำลังสร้าง กดรายการเดิมอีกครั้งเพื่อออกโดยไม่บันทึก');return}
+  if((exMode==='form'||exMode==='take')&&exLeave!==b.dataset.id){exLeave=b.dataset.id;err('#exMsg',exMode==='take'?'ยังไม่ได้ส่งคำตอบ กดรายการเดิมอีกครั้งเพื่อออกโดยไม่ส่ง':'ยังไม่ได้บันทึกข้อสอบที่กำลังสร้าง กดรายการเดิมอีกครั้งเพื่อออกโดยไม่บันทึก');return}
   exLeave=null; showEx(b.dataset.id);
 });
 $('#exMain').addEventListener('input',e=>{
@@ -2357,7 +2383,7 @@ $('#exMain').addEventListener('submit',async e=>{
   }
   const btn=$('#exSave'); btn.disabled=true; const now=Date.now();
   try{
-    const data={title,description,questions,count:questions.length,totalPoints:questions.reduce((a,q)=>a+q.points,0),updatedAt:now};
+    const data={title,description,release:$('#exRelease').value,open:$('#exOpen').checked,timeLimit:(()=>{const v=Math.round(Number($('#exLimit').value));return isFinite(v)&&v>0?Math.min(600,v):0})(),questions,count:questions.length,totalPoints:questions.reduce((a,q)=>a+q.points,0),updatedAt:now};
     let id;
     if(exEditing){id=exEditing.id;await db.doc('exams/'+id).update({...data,updatedBy:myRef().name});toast('บันทึกการแก้ไขข้อสอบแล้ว')}
     else{const ref=db.collection('exams').doc();id=ref.id;await ref.set({...data,author:myRef(),createdAt:now});toast('บันทึกข้อสอบแล้ว')}
@@ -2460,6 +2486,211 @@ $('#cfCut').addEventListener('click',async e=>{
     toast('ตัดยอดค่าเคส '+thMonth(cfMonthVal)+' และสำรองข้อมูลแล้ว');
   }catch(x){toast(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules (caseFeeBackups, caseFeeBackupData)':'ตัดยอดไม่สำเร็จ ['+(x.code||'error')+']')}
   finally{btn.disabled=false}
+});
+
+/* ---- exam taking / grading / release ---- */
+const exMySub=id=>exSubs.find(s=>s.examId===id&&s.badge===myBadge);
+const exVisible=(e,sub)=>e.release==='instant'||!!sub.released;
+const exRelLabel=e=>e.release==='instant'?'ประกาศผลทันทีหลังส่ง':'รอผู้จัดทำกดส่งคะแนนและเฉลย';
+function exScore(e,sub){
+  let auto=0,manual=0,max=0,pending=0;
+  (e.questions||[]).forEach((q,i)=>{
+    const pts=+q.points||0; max+=pts; const a=(sub.answers||[])[i]||{};
+    if(q.type==='text'){const m=sub.manual&&sub.manual[i];if(m==null||m==='')pending++;else manual+=Math.min(pts,+m||0)}
+    else{const sel=[...(a.sel||[])].sort((x,y)=>x-y),cor=[...(q.correct||[])].sort((x,y)=>x-y);if(sel.length&&sel.length===cor.length&&sel.every((v,k)=>v===cor[k]))auto+=pts}
+  });
+  return {auto,manual,total:auto+manual,max,pending};
+}
+function exQResult(q,i,sub,showKey,gradeMode){
+  const a=(sub.answers||[])[i]||{}, pts=+q.points||0; let body,status='';
+  if(q.type==='text'){
+    const m=sub.manual&&sub.manual[i], has=m!=null&&m!=='';
+    body=`<div class="exansbox">${a.text?esc(a.text):'<span class="hint">ไม่ได้ตอบ</span>'}</div>`;
+    if(showKey&&q.key) body+=`<div class="exkeybox"><span class="lbl">เฉลย / แนวคำตอบ</span><p class="case-detail" style="margin:2px 0 0">${esc(q.key)}</p></div>`;
+    if(gradeMode) body+=`<label class="expts" style="margin-top:6px">คะแนนที่ให้ (เต็ม ${pts})<input type="number" class="exgp" data-qi="${i}" min="0" max="${pts}" step="0.5" value="${has?esc(m):''}"></label>`;
+    status=has?`${m}/${pts} คะแนน`:'รอตรวจ';
+  }else{
+    const sel=a.sel||[], cor=q.correct||[], ok=sel.length>0&&sel.length===cor.length&&sel.every(v=>cor.includes(v));
+    body=`<div class="exview-opts">${(q.options||[]).map((o,oi)=>{const pick=sel.includes(oi),isC=cor.includes(oi);return `<div class="exvo${showKey&&isC?' ok':''}${showKey&&pick&&!isC?' bad':''}${pick?' pick':''}"><span class="exlet">${EX_LET[oi]}</span><span>${esc(o)}</span>${pick?`<span class="exmark">${gradeMode?'คำตอบของผู้สอบ':'คำตอบของคุณ'}</span>`:''}${showKey&&isC?'<span class="exok">✓ ถูกต้อง</span>':''}</div>`}).join('')}</div>${sel.length?'':'<span class="hint">ไม่ได้ตอบ</span>'}`;
+    status=showKey?(ok?`✓ ถูก ${pts}/${pts}`:`✗ ผิด 0/${pts}`):pts+' คะแนน';
+  }
+  return `<div class="case-sec"><h3>ข้อ ${i+1} <span class="pill">${esc(EX_TYPES[q.type]||q.type)}</span> <span class="hint">${status}</span></h3><p class="case-detail">${esc(q.text)}</p>${body}</div>`;
+}
+function exResultHtml(e,sub){
+  const vis=exVisible(e,sub), qs=(e.questions||[]).map((q,i)=>exQResult(q,i,sub,vis,false)).join('');
+  const head=`<div class="case-head"><div style="min-width:0"><span class="caseno">EXAM</span><h2>${esc(e.title)}</h2><div class="hint">ส่งคำตอบเมื่อ ${fDate(sub.submittedAt)} ${fTime(sub.submittedAt)}${sub.timedOut?' · หมดเวลา (ระบบส่งให้อัตโนมัติ)':''}</div></div>${canExam()?'<button class="btn sm" id="exTBack">กลับ</button>':''}</div>`;
+  if(!vis) return head+`<div class="case-sec"><p class="case-detail">ส่งคำตอบเรียบร้อยแล้ว ✓<br>ผู้จัดทำข้อสอบจะส่งคะแนนและเฉลยให้ภายหลัง</p></div>${qs}`;
+  const sc=exScore(e,sub);
+  return head+`<div class="case-sec"><div class="stat" style="max-width:320px"><span class="k">คะแนนที่ได้</span><span class="v">${sc.total} <small>/ ${sc.max}</small></span></div>${sc.pending?`<p class="hint">ยังไม่รวมข้อเขียนที่รอตรวจอีก ${sc.pending} ข้อ — คะแนนจะอัปเดตเมื่อผู้จัดทำตรวจเสร็จ</p>`:''}</div>${qs}`;
+}
+const exDone=s=>!!(s&&s.submittedAt);
+let exTimer=null, exDraftT=null;
+function exStopTimer(){if(exTimer){clearInterval(exTimer);exTimer=null}if(exDraftT){clearTimeout(exDraftT);exDraftT=null}}
+function exCollect(e,fromDraft){
+  return (e.questions||[]).map((q,i)=>{
+    if(fromDraft){const a=fromDraft[i]||{};return q.type==='text'?{text:a.text||''}:{sel:a.sel||[]}}
+    return q.type==='text'?{text:((document.querySelector(`.exta[data-ti="${i}"]`)||{}).value||'').trim()}:{sel:[...document.querySelectorAll(`input[data-ti="${i}"]:checked`)].map(x=>+x.value).sort((a,b)=>a-b)};
+  });
+}
+function exUpsertLocal(id,data){const i=exSubs.findIndex(s=>s.id===id);if(i>=0)exSubs[i]={...exSubs[i],...data};else exSubs.push({id,...data})}
+const fmtLeft=ms=>{const t=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60,p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(s)};
+async function exAutoSubmit(){
+  exStopTimer();
+  const e=exams.find(x=>x.id===exSel); if(!e||!myBadge) return;
+  const sub=exMySub(e.id); if(exDone(sub)) return;
+  const answers=document.getElementById('exTakeForm')?exCollect(e):exCollect(e,(sub&&sub.draft)||[]);
+  try{
+    const now=Date.now(), id=e.id+'_'+myBadge;
+    const data={examId:e.id,examTitle:e.title,badge:myBadge,name:myRef().name,answers,manual:{},released:false,submittedAt:now,updatedAt:now,timedOut:true};
+    if(sub&&sub.startedAt) data.startedAt=sub.startedAt;
+    await db.doc('examSubs/'+id).set(data,{merge:true});
+    exUpsertLocal(id,data); toast('หมดเวลา ระบบส่งคำตอบให้อัตโนมัติแล้ว'); renderExList(); renderExTake();
+  }catch(x){toast('ส่งคำตอบอัตโนมัติไม่สำเร็จ ['+(x.code||'error')+'] กรุณากด “ส่งคำตอบ” ด้วยตนเอง')}
+}
+function exStartTimer(e,sub){
+  exStopTimer();
+  const end=sub.startedAt+(+e.timeLimit)*60000, box=document.getElementById('exTimer'), left=document.getElementById('exTimeLeft');
+  const tick=()=>{
+    const ms=end-Date.now(); if(!document.getElementById('exTimeLeft')){exStopTimer();return}
+    left.textContent=fmtLeft(ms); box.classList.toggle('warn',ms<=60000);
+    if(ms<=0) exAutoSubmit();
+  };
+  tick(); exTimer=setInterval(tick,1000);
+}
+function renderExTake(){
+  const e=exams.find(x=>x.id===exSel); if(!e){exStopTimer();exMode='none';exSel=null;renderExList();return}
+  const sub=exMySub(e.id), limit=+e.timeLimit||0, back=canExam()?'<button type="button" class="btn" id="exTBack">กลับ</button>':'';
+  if(exDone(sub)){exStopTimer();exMode='result';$('#exMain').innerHTML=exResultHtml(e,sub);return}
+  const msg=t=>{exStopTimer();exMode='take';$('#exMain').innerHTML=`<div class="case-ph">${t}</div>`+(back?`<div style="padding:0 18px 18px">${back}</div>`:'')};
+  if(!myBadge) return msg('บัญชี Admin ไม่สามารถส่งคำตอบได้<br>ต้องเข้าสู่ระบบด้วยบัญชีเจ้าหน้าที่');
+  const inProgress=limit&&sub&&sub.startedAt;
+  if(e.open===false&&!inProgress) return msg(`ข้อสอบ “${esc(e.title)}” ยังไม่เปิดหรือปิดรับคำตอบแล้ว`);
+  const head=`<div class="case-head"><div style="min-width:0"><span class="caseno">EXAM</span><h2>${esc(e.title)}</h2><div class="hint">${(e.questions||[]).length} ข้อ · รวม ${exTotal(e)} คะแนน${limit?' · จำกัดเวลา '+limit+' นาที':''}</div></div></div>${e.description?`<div class="case-sec"><h3>คำชี้แจง</h3><p class="case-detail">${esc(e.description)}</p></div>`:''}`;
+  if(limit&&!inProgress){
+    exStopTimer(); exMode='take';
+    $('#exMain').innerHTML=head+`<div class="case-sec"><div class="exwarn">⏱ ข้อสอบนี้จำกัดเวลา <b>${limit} นาที</b><br>เมื่อกด “เริ่มทำข้อสอบ” ระบบจะเริ่มนับเวลาถอยหลังทันที (ปิดหน้าเว็บก็ไม่หยุดนับ) และเมื่อหมดเวลาระบบจะส่งคำตอบที่ทำไว้ให้อัตโนมัติ ส่งได้ครั้งเดียว</div><div class="acts" style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="exTStart">เริ่มทำข้อสอบ</button>${back}</div><div id="exMsg" class="msg err" hidden></div></div>`;
+    return;
+  }
+  if(inProgress&&sub.startedAt+limit*60000<=Date.now()){exAutoSubmit();return}
+  exMode='take';
+  const qs=(e.questions||[]).map((q,i)=>{
+    const body=q.type==='text'?`<textarea class="exta" data-ti="${i}" rows="4" maxlength="3000" placeholder="พิมพ์คำตอบของคุณ" aria-label="คำตอบข้อ ${i+1}"></textarea>`:`<div class="exopts">${(q.options||[]).map((o,oi)=>`<label class="exopt chk"><input type="${q.type==='single'?'radio':'checkbox'}" name="ta-${i}" data-ti="${i}" value="${oi}"><span class="exlet">${EX_LET[oi]}</span><span>${esc(o)}</span></label>`).join('')}</div>${q.type==='multi'?'<span class="hint">เลือกได้หลายข้อ</span>':''}`;
+    return `<div class="exq"><div class="exq-h"><b>ข้อ ${i+1}</b><span class="hint">${+q.points||0} คะแนน · ${esc(EX_TYPES[q.type]||'')}</span></div><p class="case-detail" style="margin:0">${esc(q.text)}</p>${body}</div>`;
+  }).join('');
+  $('#exMain').innerHTML=head+`${inProgress?'<div class="extimer" id="exTimer" role="timer">⏱ เหลือเวลา <b id="exTimeLeft">--:--</b></div>':''}
+  <form id="exTakeForm" novalidate style="padding:18px;display:grid;gap:14px">${qs}<div id="exMsg" class="msg err" hidden></div><div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" id="exTSubmit">ส่งคำตอบ</button>${inProgress?'':back}</div><p class="hint">ส่งแล้วจะแก้ไขคำตอบไม่ได้ · ${e.release==='instant'?'เมื่อส่งแล้วจะเห็นคะแนนและเฉลยทันที':'คะแนนและเฉลยจะแจ้งเมื่อผู้จัดทำข้อสอบส่งให้'}</p></form>`;
+  if(inProgress){
+    (sub.draft||[]).forEach((a,i)=>{
+      if(!a) return;
+      if(a.text!=null){const t=document.querySelector(`.exta[data-ti="${i}"]`);if(t)t.value=a.text}
+      (a.sel||[]).forEach(v=>{const c=document.querySelector(`input[data-ti="${i}"][value="${v}"]`);if(c)c.checked=true});
+    });
+    exStartTimer(e,sub);
+  }
+  $('#exMain').scrollIntoView({block:'start',behavior:'smooth'});
+}
+function exSubsHtml(e){
+  const subs=exSubs.filter(s=>s.examId===e.id&&s.submittedAt).sort((a,b)=>b.submittedAt-a.submittedAt), doing=exSubs.filter(s=>s.examId===e.id&&!s.submittedAt&&s.startedAt).length;
+  const unrel=e.release==='instant'?0:subs.filter(s=>!s.released).length;
+  const rows=subs.map(s=>{const sc=exScore(e,s),rel=exVisible(e,s);return `<tr class="officer" data-exsub="${esc(s.id)}" style="cursor:pointer"><td>${esc(s.name)} <span class="mono">#${esc(s.badge)}</span></td><td class="mono">${fDate(s.submittedAt)} ${fTime(s.submittedAt)}</td><td class="num mono"><b>${sc.total}/${sc.max}</b></td><td class="num">${sc.pending?`<span class="pill">รอตรวจ ${sc.pending}</span>`:'-'}</td><td>${rel?'<span class="pill ct-acc">ส่งผลแล้ว</span>':'<span class="pill">ยังไม่ส่งผล</span>'}</td></tr>`}).join('');
+  return `<div class="case-sec"><h3>ผู้ส่งคำตอบ (${subs.length})</h3>${doing?`<p class="hint" style="margin-top:0">กำลังทำข้อสอบอยู่ ${doing} คน</p>`:''}${subs.length?`<div class="table-wrap"><table><thead><tr><th>ผู้สอบ</th><th>ส่งเมื่อ</th><th class="num">คะแนน</th><th class="num">ข้อเขียน</th><th>สถานะผล</th></tr></thead><tbody>${rows}</tbody></table></div>${unrel?`<div style="margin-top:8px"><button class="btn sm primary" id="exRelAll">ส่งคะแนนและเฉลยให้ทุกคนที่ยังไม่ได้ส่ง (${unrel})</button></div>`:''}<p class="hint">กดแถวเพื่อดูคำตอบ ตรวจข้อเขียน และส่งคะแนน/เฉลยให้ผู้สอบรายบุคคล</p>`:'<p class="hint">ยังไม่มีผู้ส่งคำตอบ</p>'}</div>`;
+}
+function renderExGrade(){
+  const e=exams.find(x=>x.id===exSel), sub=exSubs.find(s=>s.id===exGrade);
+  if(!e||!sub){exMode='view';exGrade=null;renderExView();return}
+  const sc=exScore(e,sub), hasText=(e.questions||[]).some(q=>q.type==='text'), can=canEditExam(e);
+  $('#exMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">คำตอบของผู้สอบ</span><h2>${esc(sub.name)} <span class="mono">#${esc(sub.badge)}</span></h2><div class="hint">${esc(e.title)} · ส่งเมื่อ ${fDate(sub.submittedAt)} ${fTime(sub.submittedAt)}${sub.timedOut?' · หมดเวลา (ระบบส่งอัตโนมัติ)':''}</div></div>
+    <div class="fs-author"><span class="lbl">คะแนนรวม</span><b style="font-size:22px">${sc.total} / ${sc.max}</b>${sc.pending?`<span class="hint">รอตรวจข้อเขียน ${sc.pending} ข้อ</span>`:''}</div></div>
+  ${(e.questions||[]).map((q,i)=>exQResult(q,i,sub,true,can)).join('')}
+  <div class="case-sec"><div class="case-acts">${can&&hasText?'<button class="btn sm primary" id="exGSave">บันทึกคะแนนข้อเขียน</button>':''}${can?(e.release==='instant'?'<span class="hint">ข้อสอบนี้ตั้งให้ประกาศผลทันที</span>':(sub.released?'<button class="btn sm" id="exGUnrel">ถอนการส่งผล</button>':'<button class="btn sm primary" id="exGRel">ส่งคะแนนและเฉลยให้ผู้สอบ</button>')):''}${can?'<button class="btn sm danger" id="exGDel">ลบคำตอบ (ให้สอบใหม่ได้)</button>':''}<button class="btn sm" id="exGBack">กลับ</button></div>
+    <p class="hint">${exVisible(e,sub)?'ผู้สอบเห็นคะแนนและเฉลยแล้ว':'ผู้สอบยังไม่เห็นคะแนนและเฉลย'}</p></div>`;
+  $('#exMain').scrollIntoView({block:'start',behavior:'smooth'});
+}
+$('#exMain').addEventListener('submit',async ev=>{
+  if(ev.target.id!=='exTakeForm') return; ev.preventDefault(); err('#exMsg','');
+  const e=exams.find(x=>x.id===exSel); if(!e||!myBadge) return;
+  const sub0=exMySub(e.id);
+  if(exDone(sub0)) return err('#exMsg','คุณส่งคำตอบข้อสอบนี้ไปแล้ว');
+  if(e.open===false&&!(sub0&&sub0.startedAt)) return err('#exMsg','ข้อสอบนี้ปิดรับคำตอบแล้ว');
+  const answers=exCollect(e);
+  const blank=answers.filter((a,i)=>e.questions[i].type==='text'?!a.text:!a.sel.length).length;
+  const btn=$('#exTSubmit');
+  if(!armed(btn)){err('#exMsg',(blank?'มี '+blank+' ข้อที่ยังไม่ได้ตอบ · ':'')+'ส่งแล้วจะแก้ไขคำตอบไม่ได้ กดปุ่มอีกครั้งเพื่อยืนยันการส่ง');return}
+  btn.disabled=true;
+  try{
+    const id=e.id+'_'+myBadge, ref=db.doc('examSubs/'+id), ex=await ref.get();
+    if(ex.exists&&ex.data().submittedAt){err('#exMsg','คุณส่งคำตอบข้อสอบนี้ไปแล้ว');return}
+    const now=Date.now(), data={examId:e.id,examTitle:e.title,badge:myBadge,name:myRef().name,answers,manual:{},released:false,submittedAt:now,updatedAt:now};
+    if(ex.exists&&ex.data().startedAt) data.startedAt=ex.data().startedAt;
+    await ref.set(data,{merge:true});
+    exStopTimer(); exUpsertLocal(id,data);
+    toast('ส่งคำตอบเรียบร้อยแล้ว'); renderExList(); renderExTake();
+  }catch(x){err('#exMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules (ต้องมีส่วน examSubs)':'ส่งคำตอบไม่สำเร็จ ['+(x.code||'error')+']');btn.disabled=false}
+});
+$('#exMain').addEventListener('input',()=>exQueueDraft());
+$('#exMain').addEventListener('change',()=>exQueueDraft());
+function exQueueDraft(){
+  if(!document.getElementById('exTakeForm')||!document.getElementById('exTimer')) return;
+  if(exDraftT) clearTimeout(exDraftT);
+  exDraftT=setTimeout(async()=>{
+    exDraftT=null;
+    const e=exams.find(x=>x.id===exSel); if(!e||!myBadge||!document.getElementById('exTakeForm')) return;
+    const sub=exMySub(e.id); if(!sub||exDone(sub)) return;
+    const draft=exCollect(e);
+    try{await db.doc('examSubs/'+sub.id).update({draft,updatedAt:Date.now()});sub.draft=draft}catch(x){}
+  },2500);
+}
+$('#exMain').addEventListener('click',async ev=>{
+  const t=ev.target, e=exams.find(x=>x.id===exSel);
+  const row=t.closest('tr[data-exsub]');
+  if(row){if(!canExam())return;exGrade=row.dataset.exsub;exMode='grade';renderExGrade();return}
+  if(t.closest('#exGBack')){exGrade=null;exMode='view';renderExView();return}
+  if(t.closest('#exTBack')){showEx(exSel);return}
+  if(t.closest('#exTakeBtn')){exMode='take';renderExTake();return}
+  const st=t.closest('#exTStart');
+  if(st){
+    const ex0=exams.find(x=>x.id===exSel); if(!ex0||!myBadge||!armed(st)) return; st.disabled=true;
+    try{
+      const id=ex0.id+'_'+myBadge, ref=db.doc('examSubs/'+id), cur=await ref.get();
+      if(cur.exists&&cur.data().submittedAt){exUpsertLocal(id,{id,...cur.data()});renderExTake();return}
+      let data;
+      if(cur.exists&&cur.data().startedAt) data=cur.data();
+      else{const now=Date.now();data={examId:ex0.id,examTitle:ex0.title,badge:myBadge,name:myRef().name,startedAt:now,submittedAt:null,answers:[],manual:{},released:false,updatedAt:now};await ref.set(data)}
+      exUpsertLocal(id,data); renderExList(); renderExTake();
+    }catch(x){err('#exMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules (examSubs)':'เริ่มข้อสอบไม่สำเร็จ ['+(x.code||'error')+']');st.disabled=false}
+    return;
+  }
+  if(!e) return;
+  const fail=x=>toast(x&&x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules':'ทำรายการไม่สำเร็จ ลองอีกครั้ง');
+  if(t.closest('#exToggleOpen')){
+    if(!canEditExam(e)) return;
+    try{await db.doc('exams/'+e.id).update({open:e.open===false,updatedAt:Date.now()});toast(e.open===false?'เปิดข้อสอบให้เจ้าหน้าที่ทุกคนแล้ว':'ปิดรับคำตอบแล้ว')}catch(x){fail(x)} return;
+  }
+  const rall=t.closest('#exRelAll');
+  if(rall){
+    if(!canEditExam(e)||!armed(rall)) return;
+    const list=exSubs.filter(s=>s.examId===e.id&&s.submittedAt&&!s.released);
+    try{
+      for(let i=0;i<list.length;i+=400){const b=db.batch();list.slice(i,i+400).forEach(s=>b.update(db.doc('examSubs/'+s.id),{released:true,releasedAt:Date.now()}));await b.commit()}
+      list.forEach(s=>{s.released=true});toast('ส่งคะแนนและเฉลยให้ผู้สอบ '+list.length+' คนแล้ว');renderExView();
+    }catch(x){fail(x)} return;
+  }
+  const sub=exSubs.find(s=>s.id===exGrade);
+  if(exMode!=='grade'||!sub||!canEditExam(e)) return;
+  if(t.closest('#exGSave')){
+    const manual={};
+    for(const inp of document.querySelectorAll('.exgp')){
+      const v=inp.value.trim(); if(v==='') continue;
+      const n=Number(v), max=+e.questions[+inp.dataset.qi].points||0;
+      if(!isFinite(n)||n<0||n>max){toast('ข้อ '+(+inp.dataset.qi+1)+': คะแนนต้องอยู่ระหว่าง 0 ถึง '+max);return}
+      manual[inp.dataset.qi]=n;
+    }
+    try{await db.doc('examSubs/'+sub.id).update({manual,gradedAt:Date.now(),updatedAt:Date.now()});sub.manual=manual;toast('บันทึกคะแนนข้อเขียนแล้ว');renderExGrade()}catch(x){fail(x)} return;
+  }
+  if(t.closest('#exGRel')){try{await db.doc('examSubs/'+sub.id).update({released:true,releasedAt:Date.now()});sub.released=true;toast('ส่งคะแนนและเฉลยให้ '+sub.name+' แล้ว');renderExGrade()}catch(x){fail(x)} return}
+  if(t.closest('#exGUnrel')){try{await db.doc('examSubs/'+sub.id).update({released:false});sub.released=false;toast('ถอนการส่งผลแล้ว');renderExGrade()}catch(x){fail(x)} return}
+  const gdel=t.closest('#exGDel');
+  if(gdel){if(!armed(gdel))return;try{await db.doc('examSubs/'+sub.id).delete();exSubs=exSubs.filter(s=>s.id!==sub.id);exGrade=null;exMode='view';toast('ลบคำตอบแล้ว ผู้สอบส่งใหม่ได้');renderExView()}catch(x){fail(x)}}
 });
 
 /* ---- case types (admin) ---- */
