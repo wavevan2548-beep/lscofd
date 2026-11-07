@@ -125,6 +125,26 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .fslb{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.88);display:grid;place-items:center;padding:16px;cursor:zoom-out}
 .fslb img{max-width:96vw;max-height:92vh;border-radius:8px;object-fit:contain}
 .fslb button{position:absolute;top:12px;right:16px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:26px;cursor:pointer}
+
+/* exams */
+.exq{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--sunk)}
+.exq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.exq-h select{width:auto;max-width:100%}
+.expts{display:inline-flex;flex-direction:row;align-items:center;gap:6px;font-size:13px;margin:0}
+.expts input{width:70px}
+.exopts{display:grid;gap:6px}
+.exopt{display:flex;align-items:center;gap:8px}
+.exopt input.exoptt{flex:1;min-width:0}
+.exopt input.excor{width:18px;height:18px;flex:none;accent-color:var(--red-deep)}
+.exlet{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-weight:700;font-size:12px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.exview-opts{display:grid;gap:6px;margin-top:6px}
+.exvo{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:8px}
+.exvo.ok{border-color:#2E9B5F;background:rgba(46,155,95,.12)}
+.exok{margin-left:auto;font-size:12px;font-weight:700;color:#2E9B5F;white-space:nowrap}
+.exkeybox{margin-top:6px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px}
+#exForm{padding:18px}
+#exForm .acts{display:flex;gap:8px;flex-wrap:wrap}
+#atCaseFee>.card{margin-bottom:20px}
 /* sidebar navigation */
 main.wrap:has(#vDash:not([hidden])),body:has(#vDash:not([hidden])) .band .wrap,body:has(#vDash:not([hidden])) .site-foot .wrap{max-width:1360px}
 .dash-layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:24px;align-items:start}
@@ -529,6 +549,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         </div>
         <button id="vtCase" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Case</span></button>
         <button id="vtFs" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2 0-3-1-5 1-8z"/></svg><span>Fire Safety</span></button>
+        <button id="vtExam" aria-selected="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14l2 2 4-4"/></svg><span>Exam</span></button>
         <button id="vtCal" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
       </nav>
     </aside>
@@ -632,6 +653,19 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
           <div class="empty" id="fsEmpty">ยังไม่มีรายงาน กด “+ เขียนรายงาน” เพื่อเริ่มเขียนรายงานแรก</div>
         </div>
         <div class="card case-main" id="fsMain"></div>
+      </div>
+    </div>
+
+    <!-- exams -->
+    <div id="pExam" hidden>
+      <div class="case-layout">
+        <div class="card">
+          <div class="card-h"><h2>Exam</h2><div class="spacer"></div><button class="btn sm primary" id="exNew">+ สร้างข้อสอบ</button></div>
+          <div class="case-filters"><input id="exQ" placeholder="ค้นหาหัวข้อข้อสอบ / ผู้สร้าง" aria-label="ค้นหาข้อสอบ"></div>
+          <div id="exItems"></div>
+          <div class="empty" id="exEmpty">ยังไม่มีข้อสอบ กด “+ สร้างข้อสอบ” เพื่อเริ่มสร้างข้อสอบแรก</div>
+        </div>
+        <div class="card case-main" id="exMain"></div>
       </div>
     </div>
 
@@ -765,6 +799,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
             <div class="stat"><span class="k">มูลค่าเคสรวม</span><span class="v" id="cfValue">0</span></div>
             <div class="stat bonus"><span class="k">เจ้าหน้าที่ที่ได้ส่วนแบ่ง</span><span class="v" id="cfPeople">0</span></div>
           </div>
+          <div class="cf-cutbar" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px"><button type="button" class="btn primary" id="cfCut">ตัดยอดเดือนนี้ & สำรองข้อมูล</button><span class="hint" id="cfCutInfo" style="flex:1;min-width:200px"></span></div>
           <h3 style="margin:0 0 8px">สรุปส่วนแบ่งรายบุคคล</h3>
           <div class="table-wrap"><table>
             <thead><tr><th>Badge</th><th>ชื่อ</th><th>ตำแหน่ง</th><th class="num">จำนวนเคส</th><th class="num">ส่วนแบ่งรวม</th></tr></thead>
@@ -778,6 +813,15 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
             <tbody id="cfCaseBody"></tbody>
           </table></div>
           <div class="empty" id="cfCaseEmpty" hidden>ไม่มีเคสในเดือนนี้</div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>ประวัติการตัดยอดค่าเคส</h2></div>
+          <p class="hint" style="margin:0;padding:12px 18px">ทุกครั้งที่กด “ตัดยอด” ระบบจะสำรองข้อมูล (ส่วนแบ่งรายบุคคล รายการเคส และอัตราที่ใช้) เก็บไว้ถาวร แม้ภายหลังแก้เคสหรือเปลี่ยนอัตรา ยอดที่ตัดไว้ก็ไม่เปลี่ยน · เดือนที่ตัดหลายครั้งจะมีป้าย “ล่าสุด” ที่ครั้งที่ใช้เป็นยอดสรุป · กดแถวเพื่อดูรายละเอียด</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>เดือน</th><th>ตัดยอดเมื่อ</th><th class="num">เคส</th><th class="num">ผู้รับ</th><th class="num">มูลค่ารวม</th><th></th></tr></thead>
+            <tbody id="cfHistBody"></tbody>
+          </table></div>
+          <div class="empty" id="cfHistEmpty">ยังไม่เคยตัดยอดค่าเคส</div>
         </div>
         <div class="card pwcard">
           <div class="card-h"><h2>อัตราค่าเคส</h2></div>
@@ -1021,7 +1065,7 @@ function refreshTimes(){
   }
 }
 function tick(){
-  const now=Date.now();
+  const now=Date.now(); updateExamNav();
   $('#clock').textContent=fClock(now);
   $('#clockDate').textContent=fDate(now)+' · เวลาไทย';
   if(!$('#vDash').hidden){
@@ -1082,7 +1126,7 @@ $('#fLogin').addEventListener('submit',async e=>{
 });
 
 /* ---- session ---- */
-function stopAll(){unsubs.forEach(u=>u());unsubs=[];adminSubs.forEach(u=>u());adminSubs=[];if(typeof cfUnsub!=='undefined'&&cfUnsub){cfUnsub();cfUnsub=null}if(typeof cfMonthVal!=='undefined')cfMonthVal=''}
+function stopAll(){unsubs.forEach(u=>u());unsubs=[];adminSubs.forEach(u=>u());adminSubs=[];if(typeof cfUnsub!=='undefined'&&cfUnsub){cfUnsub();cfUnsub=null}if(typeof cfMonthVal!=='undefined')cfMonthVal='';if(typeof cfBackups!=='undefined'){cfBackups=[];cfLoaded=false;cfHistOpen=null}}
 function logout(){stopAll();lsSet('lsfd_badge',null);lsSet('lsfd_admin',null);mode=null;myBadge=null;me=null;myShifts=[];events=[];resetCases();closeManual();closeEvForm();authTab(false);show('vAuth');setView('me')}
 $('#logoutBtn').onclick=logout;
 
@@ -1584,7 +1628,7 @@ function openCaseForm(c){
   $('#caseMain').scrollIntoView({block:'start',behavior:'smooth'}); $('#cNo').focus({preventScroll:true});
 }
 function showCase(id){caseSel=id;caseMode=id?'view':'none';caseEditing=null;renderCaseList();if(id){renderCaseView();if(window.innerWidth<900)$('#caseMain').scrollIntoView({block:'start',behavior:'smooth'})}}
-function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs()}
+function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs();resetEx()}
 $('#caseNew').onclick=()=>{if(caseMode==='form'&&!caseEditing){$('#cNo').focus();return}caseSel=null;openCaseForm(null)};
 ['#caseQ','#caseTypeF','#caseMine'].forEach(id=>$(id).addEventListener('input',renderCaseList));
 let leaveArm=null;
@@ -1699,15 +1743,17 @@ async function closeShift(badge,o,opt={}){
 /* ---- admin ---- */
 const canAdmin=()=>mode==='admin';
 function setView(v){
-  [['vtMe','me'],['vtAdmin','admin'],['vtCase','case'],['vtFs','fs'],['vtCal','cal']].forEach(([id,k])=>$('#'+id).setAttribute('aria-selected',v===k));
-  $('#pMe').hidden=v!=='me';$('#pAdmin').hidden=v!=='admin';$('#pCal').hidden=v!=='cal';$('#pCase').hidden=v!=='case';$('#pFs').hidden=v!=='fs';
+  [['vtMe','me'],['vtAdmin','admin'],['vtCase','case'],['vtFs','fs'],['vtExam','exam'],['vtCal','cal']].forEach(([id,k])=>$('#'+id).setAttribute('aria-selected',v===k));
+  $('#pMe').hidden=v!=='me';$('#pAdmin').hidden=v!=='admin';$('#pCal').hidden=v!=='cal';$('#pCase').hidden=v!=='case';$('#pFs').hidden=v!=='fs';$('#pExam').hidden=v!=='exam';
   if(v==='cal') renderCal();
   if(v==='fs'){renderFsList();if(fsMode==='view')renderFsView()}
+  if(v==='exam'){ensureExamSub();renderExList();if(exMode==='view')renderExView()}
   if(v==='case'){renderCaseList();if(caseMode==='view')renderCaseView()}
 }
 $('#vtCal').onclick=()=>setView('cal');
 $('#vtCase').onclick=()=>setView('case');
 $('#vtFs').onclick=()=>setView('fs');
+$('#vtExam').onclick=()=>setView('exam');
 $('#vtMe').onclick=()=>setView('me');
 $('#vtAdmin').onclick=()=>setView('admin');
 const ADMIN_USER='Admin', ADMIN_DEFAULT={salt:'lsfd-admin-default',pwHash:'7be4d36327d69e1faad94ee38d74d64c7666bff679be86f95c679af32f2d093e'};
@@ -1746,6 +1792,7 @@ function setupAdmin(){
   adminSubs.push(db.collection('officers').onSnapshot(q=>{allOfficers=q.docs.map(d=>d.data()).filter(d=>d.pwHash);renderAdmin()},()=>{}));
   adminSubs.push(db.collection('shifts').orderBy('start','desc').limit(1000).onSnapshot(q=>{rawAll=q.docs.map(d=>({id:d.id,...d.data()}));deriveAll();renderAdmin()},()=>{}));
   adminSubs.push(db.doc('config/period').onSnapshot(s=>{periodStart=(s.exists&&s.data().start)||0;deriveAll();renderAdmin()},()=>{}));
+  adminSubs.push(db.collection('caseFeeBackups').orderBy('createdAt','desc').limit(300).onSnapshot(q=>{cfBackups=q.docs.map(d=>({id:d.id,...d.data()}));renderCfHistory();renderCfCutInfo()},()=>{}));
   adminSubs.push(db.collection('backups').orderBy('createdAt','desc').limit(200).onSnapshot(q=>{backups=q.docs.map(d=>({id:d.id,...d.data()}));renderAdmin()},()=>{}));
 }
 $('#aSearch').addEventListener('input',renderAdmin);
@@ -2155,6 +2202,266 @@ $('#fsMain').addEventListener('submit',async e=>{
   }
 });
 
+/* ---- Exams (Admin + Command Officer) ---- */
+const EX_TYPES={single:'ตัวเลือก 4 ข้อ (ตอบข้อเดียว)',multi:'เลือกได้หลายข้อ',text:'ข้อเขียน'};
+const EX_LET='ABCDEFGH';
+let exams=[], exSel=null, exMode='none', exEditing=null, exQs=[], exSub=null, exLeave=null;
+function canExam(){return mode==='admin'||(!!me&&/^(command|executive) officer$/i.test(((rankInfo(me.rank)||{}).category||'').trim()))}
+const canEditExam=e=>mode==='admin'||(!!myBadge&&!!e.author&&e.author.badge===myBadge);
+function updateExamNav(){const b=$('#vtExam');if(!b)return;const ok=canExam();if(b.hidden===ok)b.hidden=!ok}
+function resetEx(){if(exSub){try{exSub()}catch(e){}exSub=null}exams=[];exSel=null;exMode='none';exEditing=null;exQs=[];exLeave=null}
+function ensureExamSub(){
+  if(exSub||!db||!canExam()) return;
+  exSub=db.collection('exams').orderBy('createdAt','desc').limit(200).onSnapshot(q=>{exams=q.docs.map(d=>({id:d.id,...d.data()}));renderExList();if(exMode==='view')renderExView()},()=>{});
+  unsubs.push(exSub);
+}
+const exBlankQ=()=>({type:'single',text:'',options:['','','',''],correct:[],points:1,key:''});
+const exIsBlank=q=>!q.text.trim()&&q.options.every(o=>!o.trim())&&!q.key.trim();
+const exTotal=e=>(e.questions||[]).reduce((a,q)=>a+(+q.points||0),0);
+function renderExList(){
+  if(!$('#pExam')||$('#pExam').hidden) return;
+  const q=$('#exQ').value.trim().toLowerCase();
+  const list=exams.filter(e=>!q||[e.title,e.author&&e.author.name].join(' ').toLowerCase().includes(q));
+  $('#exEmpty').hidden=list.length>0;
+  $('#exEmpty').textContent=exams.length?'ไม่พบข้อสอบที่ตรงกับการค้นหา':'ยังไม่มีข้อสอบ กด “+ สร้างข้อสอบ” เพื่อเริ่มสร้างข้อสอบแรก';
+  $('#exItems').innerHTML=list.map(e=>`<button type="button" class="ci${e.id===exSel?' sel':''}" data-id="${esc(e.id)}">
+    <span class="ci-top"><span class="ci-no">EXAM</span><span>${fDate(e.createdAt)}</span></span>
+    <span class="ci-title">${esc(e.title)}</span>
+    <span class="ci-foot"><span>${(e.questions||[]).length} ข้อ</span><span>· ${exTotal(e)} คะแนน</span><span>· ${esc(e.author?.name||'-')}</span></span>
+  </button>`).join('');
+  if(exMode==='none') $('#exMain').innerHTML='<div class="case-ph">เลือกข้อสอบจากรายการเพื่อดูรายละเอียด<br>หรือกด “+ สร้างข้อสอบ” เพื่อสร้างข้อสอบใหม่</div>';
+}
+function showEx(id){exSel=id;exMode=id?'view':'none';exEditing=null;renderExList();if(id){renderExView();if(window.innerWidth<900)$('#exMain').scrollIntoView({block:'start',behavior:'smooth'})}}
+function renderExView(){
+  const e=exams.find(x=>x.id===exSel);
+  if(!e){exMode='none';exSel=null;renderExList();return}
+  const qs=(e.questions||[]).map((q,i)=>{
+    let body='';
+    if(q.type==='text') body=q.key?`<div class="exkeybox"><span class="lbl">เฉลย / แนวคำตอบ</span><p class="case-detail" style="margin:2px 0 0">${esc(q.key)}</p></div>`:'<span class="hint">ข้อเขียน · ไม่มีเฉลย</span>';
+    else body=`<div class="exview-opts">${(q.options||[]).map((o,oi)=>{const ok=(q.correct||[]).includes(oi);return `<div class="exvo${ok?' ok':''}"><span class="exlet">${EX_LET[oi]}</span><span>${esc(o)}</span>${ok?'<span class="exok">✓ ถูกต้อง</span>':''}</div>`}).join('')}</div>`;
+    return `<div class="case-sec"><h3>ข้อ ${i+1} <span class="pill">${esc(EX_TYPES[q.type]||q.type)}</span> <span class="hint">${+q.points||0} คะแนน</span></h3><p class="case-detail">${esc(q.text)}</p>${body}</div>`;
+  }).join('');
+  $('#exMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">EXAM</span><h2>${esc(e.title)}</h2><div class="hint">${(e.questions||[]).length} ข้อ · รวม ${exTotal(e)} คะแนน · สร้างเมื่อ ${fDate(e.createdAt)} ${fTime(e.createdAt)}</div></div>
+    <div class="fs-author"><span class="lbl">ผู้สร้างข้อสอบ</span><div>${whoChip(e.author||{name:'-'})}</div></div></div>
+  ${e.description?`<div class="case-sec"><h3>คำชี้แจง</h3><p class="case-detail">${esc(e.description)}</p></div>`:''}
+  ${qs}
+  <div class="case-sec"><div class="case-acts">${canEditExam(e)?'<button class="btn sm" id="exEdit">แก้ไขข้อสอบ</button><button class="btn sm danger" id="exDel">ลบข้อสอบ</button>':''}<span class="hint">${e.updatedAt&&e.updatedAt!==e.createdAt?'แก้ไขล่าสุด '+fDate(e.updatedAt)+' '+fTime(e.updatedAt)+(e.updatedBy?' โดย '+esc(e.updatedBy):''):''}</span></div></div>`;
+}
+function exQHtml(q,i){
+  let body;
+  if(q.type==='text') body=`<label>เฉลย / แนวคำตอบ (ไม่บังคับ)<textarea class="exkey" data-qi="${i}" rows="2" maxlength="1500" placeholder="แนวคำตอบหรือประเด็นที่ต้องการให้ผู้สอบตอบ">${esc(q.key)}</textarea></label><p class="hint">ข้อเขียน: ผู้สอบพิมพ์คำตอบเอง</p>`;
+  else body=`<div class="exopts">${q.options.map((o,oi)=>`<div class="exopt"><input type="${q.type==='single'?'radio':'checkbox'}" name="excor-${i}" class="excor" data-qi="${i}" data-oi="${oi}"${q.correct.includes(oi)?' checked':''} aria-label="ตัวเลือก ${EX_LET[oi]} เป็นคำตอบที่ถูกต้อง"><span class="exlet">${EX_LET[oi]}</span><input class="exoptt" data-qi="${i}" data-oi="${oi}" maxlength="300" value="${esc(o)}" placeholder="ตัวเลือก ${EX_LET[oi]}" aria-label="ตัวเลือก ${EX_LET[oi]}">${q.type==='multi'&&q.options.length>2?`<button type="button" class="btn sm" data-exoptdel="${i}:${oi}" aria-label="ลบตัวเลือก ${EX_LET[oi]}">×</button>`:''}</div>`).join('')}</div>${q.type==='multi'&&q.options.length<8?`<button type="button" class="btn sm" data-exoptadd="${i}" style="justify-self:start">+ เพิ่มตัวเลือก</button>`:''}<p class="hint">${q.type==='single'?'ติ๊กวงกลมหน้าตัวเลือกที่เป็นคำตอบถูก (เลือกได้ 1 ข้อ)':'ติ๊กช่องหน้าตัวเลือกที่ถูกต้อง (เลือกได้มากกว่า 1 ข้อ)'}</p>`;
+  return `<div class="exq" data-qi="${i}"><div class="exq-h"><b>ข้อ ${i+1}</b>
+    <select class="extype" data-qi="${i}" aria-label="รูปแบบคำตอบข้อ ${i+1}">${Object.entries(EX_TYPES).map(([k,v])=>`<option value="${k}"${q.type===k?' selected':''}>${v}</option>`).join('')}</select>
+    <label class="expts">คะแนน<input type="number" class="expt" data-qi="${i}" min="0" max="100" value="${+q.points||0}"></label><span class="spacer"></span>
+    <button type="button" class="btn sm" data-exmove="${i}:-1" aria-label="เลื่อนขึ้น"${i===0?' disabled':''}>↑</button><button type="button" class="btn sm" data-exmove="${i}:1" aria-label="เลื่อนลง"${i===exQs.length-1?' disabled':''}>↓</button><button type="button" class="btn sm danger" data-exqdel="${i}">ลบข้อ</button></div>
+    <label>โจทย์<textarea class="extext" data-qi="${i}" rows="2" maxlength="1500" placeholder="พิมพ์โจทย์ของข้อนี้">${esc(q.text)}</textarea></label>${body}</div>`;
+}
+function exFixMoves(){
+  const cards=[...document.querySelectorAll('#exQs .exq')];
+  cards.forEach((c,i)=>{const u=c.querySelector('[data-exmove$=":-1"]'),d=c.querySelector('[data-exmove$=":1"]');if(u)u.disabled=i===0;if(d)d.disabled=i===cards.length-1});
+}
+function renderExQs(){
+  const box=$('#exQs'); if(!box) return;
+  box.innerHTML=exQs.map(exQHtml).join('');
+  $('#exCount').value=exQs.length;
+  const tp=exQs.reduce((a,q)=>a+(+q.points||0),0); $('#exSum').textContent='รวม '+exQs.length+' ข้อ · '+tp+' คะแนน';
+}
+function openExForm(e){
+  exMode='form'; exEditing=e||null; exLeave=null;
+  exQs=e?(e.questions||[]).map(q=>({type:q.type,text:q.text||'',options:[...(q.options||[])].concat(q.type==='text'?['','','','']:[]),correct:[...(q.correct||[])],points:+q.points||0,key:q.key||''})):[exBlankQ()];
+  exQs.forEach(q=>{while(q.type!=='text'&&q.options.length<(q.type==='single'?4:2))q.options.push('')});
+  $('#exMain').innerHTML=`<div class="card-h"><h2>${e?'แก้ไขข้อสอบ':'สร้างข้อสอบใหม่'}</h2></div>
+  <form id="exForm" novalidate>
+    <label>หัวข้อข้อสอบ<input id="exTitle" maxlength="120" placeholder="เช่น ข้อสอบวัดความรู้ปฐมพยาบาลเบื้องต้น"></label>
+    <label>คำชี้แจง (ไม่บังคับ)<textarea id="exDesc" rows="2" maxlength="800" placeholder="เช่น เวลาสอบ เกณฑ์ผ่าน ข้อควรระวัง"></textarea></label>
+    <div class="row2"><label>จำนวนข้อสอบทั้งหมด<input type="number" id="exCount" min="1" max="100" inputmode="numeric"></label><span class="hint" id="exSum" style="align-self:end;padding-bottom:10px"></span></div>
+    <div id="exQs" style="display:grid;gap:12px"></div>
+    <button type="button" class="btn" id="exAddQ" style="justify-self:start">+ เพิ่มข้อสอบ</button>
+    <div id="exMsg" class="msg err" hidden></div>
+    <div class="acts"><button class="btn primary" type="submit" id="exSave">${e?'บันทึกการแก้ไข':'บันทึกข้อสอบ'}</button><button class="btn" type="button" id="exCancel">ยกเลิก</button></div>
+  </form>`;
+  $('#exTitle').value=e?.title||''; $('#exDesc').value=e?.description||'';
+  renderExQs(); renderExList();
+  $('#exMain').scrollIntoView({block:'start',behavior:'smooth'});
+}
+$('#exNew').onclick=()=>{if(exMode==='form'&&!exEditing){$('#exTitle').focus();return}exSel=null;openExForm(null)};
+$('#exQ').addEventListener('input',renderExList);
+$('#exItems').addEventListener('click',e=>{
+  const b=e.target.closest('.ci'); if(!b) return;
+  if(exMode==='form'&&exLeave!==b.dataset.id){exLeave=b.dataset.id;err('#exMsg','ยังไม่ได้บันทึกข้อสอบที่กำลังสร้าง กดรายการเดิมอีกครั้งเพื่อออกโดยไม่บันทึก');return}
+  exLeave=null; showEx(b.dataset.id);
+});
+$('#exMain').addEventListener('input',e=>{
+  const t=e.target, i=+t.dataset.qi; if(isNaN(i)||!exQs[i]) return;
+  if(t.classList.contains('extext')) exQs[i].text=t.value;
+  else if(t.classList.contains('exoptt')) exQs[i].options[+t.dataset.oi]=t.value;
+  else if(t.classList.contains('exkey')) exQs[i].key=t.value;
+  else if(t.classList.contains('expt')){exQs[i].points=Math.max(0,Math.min(100,+t.value||0));const tp=exQs.reduce((a,q)=>a+(+q.points||0),0);$('#exSum').textContent='รวม '+exQs.length+' ข้อ · '+tp+' คะแนน'}
+});
+$('#exMain').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='exCount'){
+    const n=Math.max(1,Math.min(100,Math.round(+t.value)||1)), box=$('#exQs');
+    if(n!==exQs.length){
+      while(exQs.length<n){exQs.push(exBlankQ());box.insertAdjacentHTML('beforeend',exQHtml(exQs[exQs.length-1],exQs.length-1))}
+      while(exQs.length>n){ if(!exIsBlank(exQs[exQs.length-1])){toast('ข้อท้ายมีเนื้อหาอยู่ ให้กด “ลบข้อ” ในข้อนั้นแทน');break} exQs.pop();box.lastElementChild.remove() }
+      exFixMoves();
+    }
+    t.value=exQs.length; const tp=exQs.reduce((a,q)=>a+(+q.points||0),0); $('#exSum').textContent='รวม '+exQs.length+' ข้อ · '+tp+' คะแนน'; return;
+  }
+  const i=+t.dataset.qi; if(isNaN(i)||!exQs[i]) return; const q=exQs[i];
+  if(t.classList.contains('extype')){
+    const nt=t.value; q.type=nt;
+    if(nt==='single'){q.options=q.options.slice(0,4);while(q.options.length<4)q.options.push('');q.correct=q.correct.filter(c=>c<4).slice(0,1)}
+    else if(nt==='multi'){while(q.options.length<4)q.options.push('');q.correct=q.correct.filter(c=>c<q.options.length)}
+    renderExQs(); return;
+  }
+  if(t.classList.contains('excor')){
+    const oi=+t.dataset.oi;
+    if(q.type==='single') q.correct=[oi];
+    else q.correct=t.checked?[...new Set([...q.correct,oi])].sort():q.correct.filter(c=>c!==oi);
+  }
+});
+$('#exMain').addEventListener('click',async e=>{
+  const t=e.target;
+  if(t.closest('#exAddQ')){exQs.push(exBlankQ());renderExQs();const cards=document.querySelectorAll('.exq');if(cards.length)cards[cards.length-1].scrollIntoView({block:'center',behavior:'smooth'});return}
+  const qd=t.closest('[data-exqdel]'); if(qd){if(exQs.length<=1){toast('ต้องมีอย่างน้อย 1 ข้อ');return}exQs.splice(+qd.dataset.exqdel,1);renderExQs();return}
+  const mv=t.closest('[data-exmove]'); if(mv){const [i,d]=mv.dataset.exmove.split(':').map(Number),j=i+d;if(exQs[j]){[exQs[i],exQs[j]]=[exQs[j],exQs[i]];renderExQs()}return}
+  const oa=t.closest('[data-exoptadd]'); if(oa){const q=exQs[+oa.dataset.exoptadd];if(q&&q.options.length<8){q.options.push('');renderExQs()}return}
+  const od=t.closest('[data-exoptdel]'); if(od){const [i,oi]=od.dataset.exoptdel.split(':').map(Number),q=exQs[i];if(q&&q.options.length>2){q.options.splice(oi,1);q.correct=q.correct.filter(c=>c!==oi).map(c=>c>oi?c-1:c);renderExQs()}return}
+  if(t.closest('#exCancel')){exEditing&&exSel?showEx(exSel):showEx(null);return}
+  if(t.closest('#exEdit')){const x=exams.find(y=>y.id===exSel);if(x&&canEditExam(x))openExForm(x);return}
+  const del=t.closest('#exDel');
+  if(del){const x=exams.find(y=>y.id===exSel);if(!x||!canEditExam(x)||!armed(del))return;
+    try{await db.doc('exams/'+x.id).delete();showEx(null);toast('ลบข้อสอบ “'+x.title+'” แล้ว')}catch(er){toast('ลบไม่สำเร็จ ลองอีกครั้ง')}}
+});
+$('#exMain').addEventListener('submit',async e=>{
+  if(e.target.id!=='exForm') return; e.preventDefault(); err('#exMsg','');
+  if(!canExam()) return err('#exMsg','คุณไม่มีสิทธิ์สร้างข้อสอบ');
+  if(exEditing&&!canEditExam(exEditing)) return err('#exMsg','คุณไม่มีสิทธิ์แก้ไขข้อสอบนี้');
+  const title=$('#exTitle').value.trim(), description=$('#exDesc').value.trim();
+  if(!title) return err('#exMsg','กรุณาใส่หัวข้อข้อสอบ');
+  if(!exQs.length) return err('#exMsg','ต้องมีอย่างน้อย 1 ข้อ');
+  const questions=[];
+  for(const [i,q] of exQs.entries()){
+    const n='ข้อ '+(i+1)+': ';
+    if(!q.text.trim()) return err('#exMsg',n+'กรุณาพิมพ์โจทย์');
+    const base={type:q.type,text:q.text.trim(),points:Math.max(0,Math.min(100,+q.points||0))};
+    if(q.type==='text'){questions.push({...base,options:[],correct:[],key:q.key.trim()});continue}
+    const opts=q.options.map(o=>o.trim());
+    const bi=opts.findIndex(o=>!o); if(bi>=0) return err('#exMsg',n+'ตัวเลือก '+EX_LET[bi]+' ยังว่างอยู่');
+    if(q.type==='single'&&q.correct.length!==1) return err('#exMsg',n+'กรุณาเลือกคำตอบที่ถูกต้อง 1 ข้อ');
+    if(q.type==='multi'&&q.correct.length<1) return err('#exMsg',n+'กรุณาเลือกคำตอบที่ถูกต้องอย่างน้อย 1 ข้อ');
+    questions.push({...base,options:opts,correct:[...q.correct].sort(),key:''});
+  }
+  const btn=$('#exSave'); btn.disabled=true; const now=Date.now();
+  try{
+    const data={title,description,questions,count:questions.length,totalPoints:questions.reduce((a,q)=>a+q.points,0),updatedAt:now};
+    let id;
+    if(exEditing){id=exEditing.id;await db.doc('exams/'+id).update({...data,updatedBy:myRef().name});toast('บันทึกการแก้ไขข้อสอบแล้ว')}
+    else{const ref=db.collection('exams').doc();id=ref.id;await ref.set({...data,author:myRef(),createdAt:now});toast('บันทึกข้อสอบแล้ว')}
+    exSel=id; exMode='view'; exEditing=null; renderExList(); renderExView();
+  }catch(x){
+    err('#exMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ไปที่ Firebase Console > Firestore > Rules แล้วกด Publish กฎล่าสุด (ต้องมีส่วน exams)':'บันทึกไม่สำเร็จ ['+(x.code||'error')+'] '+(x.message||''));
+    btn.disabled=false;
+  }
+});
+
+/* ---- case fee cut-off + backups ---- */
+let cfBackups=[], cfLoaded=false, cfHistOpen=null;
+const cfDetailCache=new Map();
+const TH_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const thMonth=v=>{const [y,m]=(v||'').split('-').map(Number);return m?TH_MONTHS[m-1]+' '+y:v};
+function cfCompute(){
+  const people=new Map(); let totalValue=0;
+  const cases=cfCases.map(c=>{
+    const value=caseValue(c), rec=caseRecipients(c), share=rec.length?value/rec.length:0; totalValue+=value;
+    rec.forEach(r=>{
+      const o=allOfficers.find(x=>x.badge===r.badge);
+      const p=people.get(r.badge)||{badge:r.badge,name:o?o.first+' '+o.last:(r.name||''),rank:o?o.rank:'',cases:0,total:0,items:[]};
+      p.cases++; p.total+=share; p.items.push({no:c.caseNo,at:c.at,type:c.caseType||'',value,share:Math.round(share*100)/100}); people.set(r.badge,p);
+    });
+    const tri={}; (c.patients||[]).forEach(p=>{if(p.tri)tri[p.tri]=(tri[p.tri]||0)+1});
+    return {id:c.id,no:c.caseNo||'',title:c.title||'',at:c.at,type:c.caseType||'',tri,value,recipients:rec.map(r=>r.badge),share:Math.round(share*100)/100};
+  });
+  const list=[...people.values()].map(p=>({...p,total:Math.round(p.total*100)/100})).sort((a,b)=>b.total-a.total||a.badge.localeCompare(b.badge));
+  return {people:list,cases,totalValue:Math.round(totalValue)};
+}
+const cfLatestOf=m=>cfBackups.find(b=>b.month===m);
+function renderCfCutInfo(){
+  const el=$('#cfCutInfo'); if(!el) return;
+  const b=cfLatestOf(cfMonthVal);
+  if(!b){el.textContent='ยังไม่เคยตัดยอดเดือน '+thMonth(cfMonthVal);return}
+  const live=cfCompute().totalValue, changed=cfLoaded&&live!==b.totalValue;
+  el.innerHTML='ตัดยอดล่าสุด '+fDate(b.createdAt)+' '+fTime(b.createdAt)+' · ยอดรวม '+fmtMoney(b.totalValue)+' · '+b.caseCount+' เคส'+(changed?' <b style="color:var(--red)">· ⚠ ข้อมูลเปลี่ยนไปหลังตัดยอด (ตอนนี้ '+fmtMoney(live)+') ควรตัดยอดใหม่</b>':' · ตรงกับข้อมูลปัจจุบัน');
+}
+function renderCfHistory(){
+  const body=$('#cfHistBody'); if(!body) return;
+  $('#cfHistEmpty').hidden=cfBackups.length>0;
+  const seen=new Set();
+  body.innerHTML=cfBackups.map(b=>{
+    const latest=!seen.has(b.month); seen.add(b.month);
+    let h=`<tr class="officer" data-cfh="${esc(b.id)}" style="cursor:pointer"><td><b>${esc(thMonth(b.month))}</b>${latest?' <span class="pill">ล่าสุด</span>':''}</td><td class="mono">${fDate(b.createdAt)} ${fTime(b.createdAt)}</td><td class="num mono">${b.caseCount||0}</td><td class="num mono">${b.peopleCount||0}</td><td class="num mono"><b>${fmtMoney(b.totalValue)}</b></td><td style="white-space:nowrap"><button type="button" class="btn sm" data-cfdl="csv:${esc(b.id)}">CSV</button> <button type="button" class="btn sm" data-cfdl="json:${esc(b.id)}">สำรอง JSON</button></td></tr>`;
+    if(cfHistOpen===b.id) h+=`<tr class="detail"><td colspan="6"><div class="sub" id="cfHD-${esc(b.id)}"><span class="hint">กำลังโหลดข้อมูล…</span></div></td></tr>`;
+    return h;
+  }).join('');
+  if(cfHistOpen) cfFillDetail(cfHistOpen);
+}
+async function cfGetDetail(id){
+  if(cfDetailCache.has(id)) return cfDetailCache.get(id);
+  const d=await db.doc('caseFeeBackupData/'+id).get();
+  if(!d.exists) return null; cfDetailCache.set(id,d.data()); return d.data();
+}
+async function cfFillDetail(id){
+  const box=document.getElementById('cfHD-'+id); if(!box) return;
+  try{
+    const d=await cfGetDetail(id); if(!document.getElementById('cfHD-'+id)) return;
+    if(!d){box.innerHTML='<span class="hint">ไม่พบข้อมูลสำรองของรายการนี้</span>';return}
+    const r=d.rates||{};
+    box.innerHTML=`<p class="hint">อัตราที่ใช้ตอนตัดยอด: เขียว ${nf2(r.green)} · เหลือง ${nf2(r.yellow)} · แดง ${nf2(r.red)} · ดำ ${nf2(r.black)} · ${r.includeAuthor===false?'ไม่นับผู้เขียนเคส':'นับผู้เขียนเคสด้วย'}</p>
+    <table><thead><tr><th>Badge</th><th>ชื่อ</th><th>ตำแหน่ง</th><th class="num">จำนวนเคส</th><th class="num">ส่วนแบ่งรวม</th></tr></thead><tbody>${(d.people||[]).map(p=>`<tr><td class="badge-no">${esc(p.badge)}</td><td>${esc(p.name)}</td><td>${esc(p.rank||'-')}</td><td class="num mono">${p.cases}</td><td class="num mono"><b>${fmtMoney(p.total)}</b></td></tr>`).join('')||'<tr><td colspan="5" class="hint">ไม่มีผู้รับส่วนแบ่ง</td></tr>'}</tbody></table>`;
+  }catch(e){box.innerHTML='<span class="hint">โหลดข้อมูลไม่สำเร็จ</span>'}
+}
+function cfDownload(name,text,mime){
+  const a=document.createElement('a'), u=URL.createObjectURL(new Blob([text],{type:mime}));
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);
+}
+const csvCell=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+async function cfExport(kind,id){
+  const sum=cfBackups.find(b=>b.id===id); if(!sum) return;
+  try{
+    const d=await cfGetDetail(id); if(!d){toast('ไม่พบข้อมูลสำรองของรายการนี้');return}
+    const base='casefee_'+sum.month+'_'+ymdOf(sum.createdAt);
+    if(kind==='json'){cfDownload(base+'_backup.json',JSON.stringify({summary:sum,detail:d},null,2),'application/json');return}
+    const rows=[['Badge','ชื่อ','ตำแหน่ง','จำนวนเคส','ส่วนแบ่งรวม']].concat((d.people||[]).map(p=>[p.badge,p.name,p.rank||'',p.cases,Math.round(p.total)]));
+    rows.push(['','','','รวมมูลค่าเคส',sum.totalValue]);
+    cfDownload(base+'_summary.csv','\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv;charset=utf-8');
+  }catch(e){toast('ดาวน์โหลดไม่สำเร็จ ลองอีกครั้ง')}
+}
+$('#cfHistBody').addEventListener('click',e=>{
+  const dl=e.target.closest('[data-cfdl]'); if(dl){const [k,id]=dl.dataset.cfdl.split(':');cfExport(k,id);return}
+  const r=e.target.closest('tr.officer'); if(!r) return;
+  cfHistOpen=cfHistOpen===r.dataset.cfh?null:r.dataset.cfh; renderCfHistory();
+});
+$('#cfCut').addEventListener('click',async e=>{
+  const btn=e.currentTarget;
+  if(mode!=='admin') return;
+  if(!/^\d{4}-\d{2}$/.test(cfMonthVal)){toast('กรุณาเลือกเดือนก่อน');return}
+  if(!cfLoaded){toast('กำลังโหลดข้อมูลเคส รอสักครู่แล้วลองอีกครั้ง');return}
+  if(!cfCases.length){toast('เดือนนี้ไม่มีเคสให้ตัดยอด');return}
+  if(!armed(btn)) return;
+  btn.disabled=true;
+  try{
+    const snap=cfCompute(), ts=Date.now(), id=cfMonthVal+'_'+ts, rates={...CASERATES};
+    await db.doc('caseFeeBackupData/'+id).set({month:cfMonthVal,createdAt:ts,rates,people:snap.people,cases:snap.cases});
+    await db.doc('caseFeeBackups/'+id).set({month:cfMonthVal,createdAt:ts,createdBy:'Admin',totalValue:snap.totalValue,caseCount:cfCases.length,peopleCount:snap.people.length});
+    cfDetailCache.set(id,{month:cfMonthVal,createdAt:ts,rates,people:snap.people,cases:snap.cases});
+    toast('ตัดยอดค่าเคส '+thMonth(cfMonthVal)+' และสำรองข้อมูลแล้ว');
+  }catch(x){toast(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules (caseFeeBackups, caseFeeBackupData)':'ตัดยอดไม่สำเร็จ ['+(x.code||'error')+']')}
+  finally{btn.disabled=false}
+});
+
 /* ---- case types (admin) ---- */
 let ctDirty=false;
 const ctRow=n=>`<tr data-orig="${esc(n||'')}"><td><input class="ct" maxlength="40" value="${esc(n||'')}" placeholder="เช่น ไฟไหม้อาคาร"></td><td><button type="button" class="btn sm danger" data-delct>ลบ</button></td></tr>`;
@@ -2212,8 +2519,8 @@ function subCaseFee(){
   if(!/^\d{4}-\d{2}$/.test(cfMonthVal)) return;
   if(cfUnsub){cfUnsub();cfUnsub=null}
   const [a,b]=monthRange(cfMonthVal);
-  cfCases=[]; renderCaseFee();
-  cfUnsub=db.collection('cases').where('at','>=',a).where('at','<',b).onSnapshot(q=>{cfCases=q.docs.map(d=>({id:d.id,...d.data()})).sort((x,y)=>x.at-y.at);renderCaseFee()},x=>{toast('โหลดเคสไม่สำเร็จ ['+(x.code||'error')+']')});
+  cfCases=[]; cfLoaded=false; renderCaseFee(); renderCfCutInfo();
+  cfUnsub=db.collection('cases').where('at','>=',a).where('at','<',b).onSnapshot(q=>{cfCases=q.docs.map(d=>({id:d.id,...d.data()})).sort((x,y)=>x.at-y.at);cfLoaded=true;renderCaseFee();renderCfCutInfo()},x=>{toast('โหลดเคสไม่สำเร็จ ['+(x.code||'error')+']')});
 }
 function setCfMonth(v){cfMonthVal=v;$('#cfMonth').value=v;cfOpen=null;subCaseFee()}
 const shiftMonth=(v,d)=>{let [y,m]=v.split('-').map(Number);m+=d;while(m<1){m+=12;y--}while(m>12){m-=12;y++}return y+'-'+String(m).padStart(2,'0')};
