@@ -517,7 +517,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
     <div class="dash-layout">
     <aside class="sidenav" aria-label="เมนูหลัก">
       <nav class="viewtabs" role="tablist" aria-orientation="vertical">
-        <button id="vtMe" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>เวรของฉัน</span></button>
+        <button id="vtMe" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Duty</span></button>
         <button id="vtAdmin" aria-selected="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span>Admin</span></button>
         <div class="subtabs" role="tablist" aria-label="เมนูผู้ดูแลระบบ">
           <button data-sub="atOfficers" aria-selected="true">เจ้าหน้าที่</button>
@@ -527,9 +527,9 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
           <button data-sub="atBackups" aria-selected="false">ข้อมูลสำรอง</button>
           <button data-sub="atSettings" aria-selected="false">ตั้งค่า</button>
         </div>
-        <button id="vtCase" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>เคส</span></button>
+        <button id="vtCase" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Case</span></button>
         <button id="vtFs" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2 0-3-1-5 1-8z"/></svg><span>Fire Safety</span></button>
-        <button id="vtCal" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>ปฏิทิน</span></button>
+        <button id="vtCal" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
       </nav>
     </aside>
     <div class="dash-main">
@@ -1237,7 +1237,7 @@ function notify(kind,o,x){
   }else if(kind==='case'){
     const w=worstTri(x), pts=x.patients||[];
     embed={title:'🚑 เคสใหม่: '+x.caseNo,color:TRI_HEX[w]||0xC1121F,description:`**${x.title}**`,fields:[
-      {name:'ประเภทเคส',value:(x.caseType||'-')+(x.buildingSize?' (อาคารขนาด'+x.buildingSize+')':''),inline:true},{name:'วันเวลา',value:fDate(x.at)+' '+fTime24(x.at)+' น.',inline:true},{name:'ผู้บาดเจ็บแยกสถานะ',value:'Civilian '+(x.injCivilian||0)+' · Officer/Deputy '+(x.injOfficer||0)+' · Firefighter '+(x.injFirefighter||0),inline:false},{name:'ระดับสูงสุด',value:w?triLabel(w):'-',inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
+      {name:'ประเภทเคส',value:(x.caseType||'-')+(x.buildingSize?' (อาคารขนาด'+x.buildingSize+')':''),inline:true},{name:'วันเวลา',value:fDate(x.at)+' '+fTime24(x.at)+' น.'+(x.gameYear?' (ปีในเกม '+x.gameYear+')':''),inline:true},{name:'ผู้บาดเจ็บแยกสถานะ',value:'Civilian '+(x.injCivilian||0)+' · Officer/Deputy '+(x.injOfficer||0)+' · Firefighter '+(x.injFirefighter||0),inline:false},{name:'ระดับสูงสุด',value:w?triLabel(w):'-',inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
       {name:'ผู้บาดเจ็บ',value:pts.map((p,i)=>`${i+1}. ${ptName(p)}${p.sex?' · '+p.sex:''}${p.age?' · '+p.age+' ปี':''} — ${triLabel(p.tri)} · ชีพจร${vitLabel(p.pulse)} · ความดัน${vitLabel(p.bp)}${injList(p).length?' · '+injList(p).join('/'):''}${p.injuryDetail?' ('+p.injuryDetail.slice(0,80)+')':''}`).join('\n').slice(0,1000)||'-'},
       {name:'ผู้เขียนเคส',value:x.author?.name||'-',inline:true},{name:'ยูนิต / เจ้าหน้าที่ที่ดูแล',value:caseUnitsOf(x).map(u=>(u.callSign?'**'+u.callSign+'**: ':'')+(u.members.map(m=>m.name).join(', ')||'-')).join('\n').slice(0,1000)||'-',inline:false}]};
   }else if(kind==='cal'){
@@ -1491,7 +1491,7 @@ function renderCaseView(){
   const c=cases.find(x=>x.id===caseSel);
   if(!c){caseMode='none';caseSel=null;renderCaseList();return}
   const w=worstTri(c), pts=c.patients||[];
-  $('#caseMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(c.caseNo)}</span>${c.caseType?` <span class="pill${ctClass(c.caseType)}">${esc(c.caseType)}${c.buildingSize?' · อาคารขนาด'+esc(c.buildingSize):''}</span>`:''}<h2>${esc(c.title)}</h2><div class="hint">${dowTh[dowOf(ymdOf(c.at))]} ${fDate(c.at)} เวลา ${fTime(c.at)} น.</div></div>${w?`<span class="pill tri tri-${w}" style="font-size:14px;padding:4px 14px">ระดับ${triLabel(w)}</span>`:''}</div>
+  $('#caseMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(c.caseNo)}</span>${c.caseType?` <span class="pill${ctClass(c.caseType)}">${esc(c.caseType)}${c.buildingSize?' · อาคารขนาด'+esc(c.buildingSize):''}</span>`:''}<h2>${esc(c.title)}</h2><div class="hint">${dowTh[dowOf(ymdOf(c.at))]} ${fDate(c.at)} เวลา ${fTime(c.at)} น.${c.gameYear?' · ปีในเกม <b>'+esc(c.gameYear)+'</b>':''}</div></div>${w?`<span class="pill tri tri-${w}" style="font-size:14px;padding:4px 14px">ระดับ${triLabel(w)}</span>`:''}</div>
   <div class="case-sec"><h3>ผู้บาดเจ็บ (${pts.length} คน)</h3>${pts.length?'':'<p class="hint">ไม่มีผู้บาดเจ็บในเคสนี้</p>'}<div class="table-wrap"${pts.length?'':' hidden'}><table><thead><tr><th>#</th><th>ชื่อ – นามสกุล</th><th>เพศ</th><th class="num">อายุ</th><th>ระดับ</th><th>ชีพจร</th><th>ความดัน</th></tr></thead><tbody>${pts.map((p,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(ptName(p))}</td><td>${esc(p.sex||'-')}</td><td class="num mono">${p.age!==''&&p.age!=null?esc(p.age):'-'}</td><td>${p.tri?`<span class="pill tri tri-${p.tri}">${triLabel(p.tri)}</span>`:'-'}</td><td><span class="vit ${esc(p.pulse||'')}">${vitLabel(p.pulse)}</span></td><td><span class="vit ${esc(p.bp||'')}">${vitLabel(p.bp)}</span></td></tr>`).join('')}</tbody></table></div>${pts.some(p=>injList(p).length||p.injuryDetail)?`<div style="margin-top:12px"><h3>ลักษณะการบาดเจ็บ</h3>${pts.map((p,i)=>(injList(p).length||p.injuryDetail)?`<div class="inj-line"><b>${i+1}. ${esc(ptName(p))}</b><div>${injList(p).map(k=>`<span class="inj-tag">${esc(k)}</span>`).join('')}</div>${p.injuryDetail?`<p class="case-detail" style="margin:4px 0 0">${esc(p.injuryDetail)}</p>`:''}</div>`:'').join('')}</div>`:''}</div>
   ${(c.injCivilian!=null||c.injOfficer!=null||c.injFirefighter!=null)?`<div class="case-sec"><h3>จำนวนผู้บาดเจ็บแยกตามสถานะ</h3><div class="table-wrap"><table><thead><tr><th>Civilian</th><th>Officer/Deputy</th><th>Firefighter</th><th>รวม</th></tr></thead><tbody><tr><td class="mono">${c.injCivilian||0}</td><td class="mono">${c.injOfficer||0}</td><td class="mono">${c.injFirefighter||0}</td><td class="mono"><b>${(c.injCivilian||0)+(c.injOfficer||0)+(c.injFirefighter||0)}</b></td></tr></tbody></table></div></div>`:''}
   <div class="case-sec"><h3>รายละเอียดเคส</h3>${c.detail?`<p class="case-detail">${esc(c.detail)}</p>`:'<span class="hint">ไม่มีรายละเอียด</span>'}</div>
@@ -1556,7 +1556,7 @@ function openCaseForm(c){
     <div class="row2"><label>เลขที่เคส<input id="cNo" maxlength="30" placeholder="เช่น EMS-231026-01"></label><label>ชื่อเคส<input id="cTitle" maxlength="100" placeholder="เช่น อุบัติเหตุรถชน ถนน Del Perro"></label></div>
     <div class="row2"><label>ประเภทเคส<select id="cType"></select></label><span></span></div>
     <div class="seg-row" id="bsRow" hidden><span class="lbl">ขนาดอาคาร</span><div class="seg" role="radiogroup" aria-label="ขนาดอาคาร">${['เล็ก','กลาง','ใหญ่'].map(k=>`<label class="sg bs"><input type="radio" name="bsize" value="${k}"><span>ขนาด${k}</span></label>`).join('')}</div></div>
-    <div class="row2"><label>วันที่<input type="date" id="cDate"></label><label>เวลา (เวลาไทย)<input type="time" id="cTime"></label></div>
+    <div class="row3"><label>วันที่<input type="date" id="cDate"></label><label>เวลา (เวลาไทย)<input type="time" id="cTime"></label><label>ปี (ในเกม)<input id="cYear" inputmode="numeric" maxlength="4" placeholder="เช่น 2035"></label></div>
     <div class="sec-h"><b>จำนวนผู้บาดเจ็บแยกตามสถานะ</b><span class="hint">เว้นว่าง = 0</span></div>
     <div class="row3">
       <label>Civilian ที่บาดเจ็บ<input id="cCiv" type="number" min="0" max="999" inputmode="numeric" placeholder="0"></label>
@@ -1577,7 +1577,7 @@ function openCaseForm(c){
     <div id="cMsg" class="msg err" hidden></div>
     <div class="acts"><button class="btn primary" type="submit" id="cSave">${c?'บันทึกการแก้ไข':'บันทึกเคส'}</button><button class="btn" type="button" id="cCancel">ยกเลิก</button></div>
   </form>`;
-  $('#cNo').value=c?.caseNo||''; $('#cTitle').value=c?.title||''; $('#cDate').value=ymdOf(at); $('#cTime').value=hhmmOf(at); $('#cDetail').value=c?.detail||'';
+  $('#cNo').value=c?.caseNo||''; $('#cTitle').value=c?.title||''; $('#cDate').value=ymdOf(at); $('#cTime').value=hhmmOf(at); $('#cYear').value=c?(c.gameYear||''):(lsGet('cad_gameyear')||'2035'); $('#cDetail').value=c?.detail||'';
   fillCaseTypeSelect(c); (()=>{const r=document.querySelector(`input[name="bsize"][value="${c?.buildingSize||''}"]`);if(r)r.checked=true;syncBs()})(); $('#cCiv').value=c?.injCivilian??''; $('#cOff').value=c?.injOfficer??''; $('#cFf').value=c?.injFirefighter??'';
   (c?.patients?.length?c.patients:[null]).forEach(p=>addPt(p));
   renderCrew(); loadPool(); renderCaseList();
@@ -1623,6 +1623,10 @@ $('#caseMain').addEventListener('submit',async e=>{
   if(isNaN(at)) return err('#cMsg','กรุณาระบุวันที่และเวลาของเคส');
   if(at>Date.now()+5*60000) return err('#cMsg','วันเวลาของเคสต้องไม่เกินเวลาปัจจุบัน');
   if(cases.some(c=>c.caseNo.toLowerCase()===caseNo.toLowerCase()&&(!caseEditing||c.id!==caseEditing.id))) return err('#cMsg','เลขที่เคส '+caseNo+' มีอยู่แล้ว ใช้เลขอื่น');
+  const gameYear=$('#cYear').value.trim();
+  if(!gameYear&&(!caseEditing||caseEditing.gameYear)) return err('#cMsg','กรุณาระบุปี (ในเกม) เช่น 2035');
+  if(gameYear&&!/^\d{4}$/.test(gameYear)) return err('#cMsg','ปี (ในเกม) ต้องเป็นตัวเลข 4 หลัก เช่น 2035');
+  if(gameYear) lsSet('cad_gameyear',gameYear);
   const caseType=$('#cType').value;
   if(!caseType&&(!caseEditing||caseEditing.caseType)) return err('#cMsg','กรุณาเลือกประเภทเคส');
   const bsv=(document.querySelector('input[name="bsize"]:checked')||{}).value||'';
@@ -1651,7 +1655,7 @@ $('#caseMain').addEventListener('submit',async e=>{
     if(!p.tri) return err('#cMsg','ผู้บาดเจ็บคนที่ '+(i+1)+': กรุณาเลือกระดับเคส (เขียว เหลือง แดง ดำ)');
     patients.push(p);
   }
-  const now=Date.now(), data={caseNo,title,at,detail,patients,crew:crewFlat,units,updatedAt:now,caseType,buildingSize,injCivilian,injOfficer,injFirefighter};
+  const now=Date.now(), data={caseNo,title,at,detail,patients,crew:crewFlat,units,updatedAt:now,gameYear,caseType,buildingSize,injCivilian,injOfficer,injFirefighter};
   const btn=$('#cSave'); btn.disabled=true;
   try{
     if(caseEditing){
