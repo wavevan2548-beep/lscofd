@@ -20,6 +20,7 @@
 :root{
   --bg:#F4F1EA; --surface:#FFFFFF; --sunk:#FAF8F3; --ink:#16110F; --muted:#6B6359; --line:#E1DACB;
   --red:#D42732; --red-deep:#A4161F; --on-red:#FFFFFF; --amber:#A89058; --brass:#7D6528; --brass-bg:#F5EFDC; color-scheme:light;
+  --acc-bg:#E6F1FB; --acc-fg:#2A6AA8; --acc-bd:#C3DCF2; --fire-bg:#FCE9E9; --fire-fg:#B03030; --fire-bd:#F3C9C9; --chem-bg:#F1EAFA; --chem-fg:#6B3FA0; --chem-bd:#DCCCF0; --shoot-bg:#FDEFDF; --shoot-fg:#B5600F; --shoot-bd:#F5D6B0;
   --ok:#1D7A4C; --ok-bg:#E3F4EA; --warn-bg:#FDE8E8;
   --t-work:#1F5FA8; --t-train:#6B3FA8; --t-event:#8A5B00; --t-mission:#B3101C;
   --f-display:"Saira Condensed","Arial Narrow",sans-serif;
@@ -30,10 +31,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0E0C0C; --surface:#191515; --sunk:#131010; --ink:#F6F2EA; --muted:#A99F92; --line:#342D2B;
   --red:#EC434D; --red-deep:#8E1520; --on-red:#FFFFFF; --amber:#CDB26A; --brass:#CDB26A; --brass-bg:#2C2611;
+  --acc-bg:rgba(90,160,225,.16); --acc-fg:#93C6F3; --acc-bd:rgba(120,180,240,.35); --fire-bg:rgba(236,67,77,.16); --fire-fg:#F5A3A8; --fire-bd:rgba(236,100,110,.38); --chem-bg:rgba(170,120,230,.17); --chem-fg:#C9A8F3; --chem-bd:rgba(180,140,240,.38); --shoot-bg:rgba(240,150,60,.17); --shoot-fg:#F5B877; --shoot-bd:rgba(240,160,80,.38);
   --ok:#4CC38A; --ok-bg:#12301F; --warn-bg:#3A1416; --t-work:#6EA8EC; --t-train:#B89BEA; --t-event:#E9B949; --t-mission:#F2777A; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E0C0C; --surface:#191515; --sunk:#131010; --ink:#F6F2EA; --muted:#A99F92; --line:#342D2B;
   --red:#EC434D; --red-deep:#8E1520; --on-red:#FFFFFF; --amber:#CDB26A; --brass:#CDB26A; --brass-bg:#2C2611;
+  --acc-bg:rgba(90,160,225,.16); --acc-fg:#93C6F3; --acc-bd:rgba(120,180,240,.35); --fire-bg:rgba(236,67,77,.16); --fire-fg:#F5A3A8; --fire-bd:rgba(236,100,110,.38); --chem-bg:rgba(170,120,230,.17); --chem-fg:#C9A8F3; --chem-bd:rgba(180,140,240,.38); --shoot-bg:rgba(240,150,60,.17); --shoot-fg:#F5B877; --shoot-bd:rgba(240,160,80,.38);
   --ok:#4CC38A; --ok-bg:#12301F; --warn-bg:#3A1416; --t-work:#6EA8EC; --t-train:#B89BEA; --t-event:#E9B949; --t-mission:#F2777A; color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -56,6 +59,7 @@ button,input,select{font:inherit;color:inherit}
 .brand span{font-size:12px;opacity:.85}
 .band .spacer{flex:1}
 .theme-btn{flex:none;width:38px;height:38px;display:grid;place-items:center;border-radius:9px;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;padding:0}
+.theme-btn.fmt-btn{width:auto;min-width:48px;padding:0 9px;font-family:var(--f-mono);font-weight:700;font-size:12px;letter-spacing:.02em;white-space:nowrap}
 .theme-btn:hover{background:rgba(255,255,255,.22)}
 .theme-btn svg{width:20px;height:20px;display:block}
 .clock{font-family:var(--f-mono);font-size:15px;text-align:right;line-height:1.2}
@@ -95,6 +99,10 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 
 
 /* fire safety */
+.pill.ct-acc{background:var(--acc-bg);color:var(--acc-fg);border-color:var(--acc-bd)}
+.pill.ct-chem{background:var(--chem-bg);color:var(--chem-fg);border-color:var(--chem-bd)}
+.pill.ct-shoot{background:var(--shoot-bg);color:var(--shoot-fg);border-color:var(--shoot-bd)}
+.pill.ct-fire{background:var(--fire-bg);color:var(--fire-fg);border-color:var(--fire-bd)}
 .fs-tabs{display:flex;gap:6px;padding:12px 14px 0}
 .fs-tabs button{flex:1;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--muted);font-weight:600;cursor:pointer}
 .fs-tabs button[aria-selected="true"]{background:var(--red-deep);border-color:var(--red-deep);color:#fff}
@@ -422,6 +430,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
     <div class="brand"><b>Los Santos County of Fire Department</b><span>Computer-Aided Dispatch (CAD)</span></div>
     <div class="spacer"></div>
     <div class="clock"><span id="clock">--:--:--</span><small id="clockDate">เวลาประเทศไทย</small></div>
+    <button type="button" class="theme-btn fmt-btn" id="fmtBtn" aria-label="สลับรูปแบบเวลา 12/24 ชั่วโมง"></button>
     <button type="button" class="theme-btn" id="themeBtn" aria-label="สลับโหมดมืด / สว่าง" title="สลับโหมดมืด / สว่าง"></button>
   </div>
 </header>
@@ -601,7 +610,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
           <div class="case-filters">
             <input id="caseQ" placeholder="ค้นหาเลขที่เคส / ชื่อเคส / ชื่อผู้บาดเจ็บ" aria-label="ค้นหาเคส">
             <div class="row2">
-              <select id="caseLv" aria-label="กรองตามระดับ"><option value="">ทุกระดับ</option><option value="red">แดง</option><option value="yellow">เหลือง</option><option value="green">เขียว</option><option value="black">ดำ</option></select>
+              <select id="caseTypeF" aria-label="กรองตามประเภทเคส"><option value="">ทุกประเภท</option></select>
               <select id="caseMine" aria-label="กรองเคส"><option value="">ทุกเคส</option><option value="mine">เคสที่ฉันเกี่ยวข้อง</option></select>
             </div>
           </div>
@@ -915,6 +924,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 (function(){
 const $=s=>document.querySelector(s);
 const TZ='Asia/Bangkok', GOAL=30;
+let TF12=(()=>{try{return localStorage.getItem('cad_timefmt')==='12'}catch(e){return false}})();
 let db=null, usr=null, isEditor=false, isOwner=false;
 let myBadge=null, me=null, myShifts=[], allOfficers=[], allShifts=[];
 let rawMine=[], rawAll=[], periodStart=0, backups=[], repSource=null;
@@ -952,6 +962,10 @@ const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(
   function paint(){const t=cur();btn.innerHTML=t==='dark'?SUN:MOON;btn.title=t==='dark'?'เปลี่ยนเป็นโหมดสว่าง':'เปลี่ยนเป็นโหมดมืด';btn.setAttribute('aria-label',btn.title)}
   btn.onclick=()=>{const n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('cad_theme',n)}catch(e){}paint()};
   paint();
+  const fb=document.getElementById('fmtBtn');
+  function paintFmt(){fb.textContent=TF12?'AM/PM':'24H';fb.title=TF12?'ตอนนี้แสดงเวลาแบบ 12 ชม. (AM/PM) · กดเพื่อสลับเป็น 24 ชม.':'ตอนนี้แสดงเวลาแบบ 24 ชม. · กดเพื่อสลับเป็น AM/PM';fb.setAttribute('aria-label',fb.title)}
+  fb.onclick=()=>{TF12=!TF12;try{localStorage.setItem('cad_timefmt',TF12?'12':'24')}catch(e){}paintFmt();refreshTimes()};
+  paintFmt();
 })();
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
 
@@ -959,8 +973,10 @@ function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTim
 const fmtParts=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 function parts(ts){const o={};fmtParts.formatToParts(new Date(ts)).forEach(p=>o[p.type]=p.value);return o}
 const fDate=ts=>{const p=parts(ts);return `${p.day}/${p.month}/${p.year}`};
-const fTime=ts=>{const p=parts(ts);return `${p.hour}:${p.minute}`};
-const fClock=ts=>{const p=parts(ts);return `${p.hour}:${p.minute}:${p.second}`};
+const h12=(h,m,sec)=>{const H=+h;return String(H%12||12).padStart(2,'0')+':'+m+(sec!=null?':'+sec:'')+' '+(H>=12?'PM':'AM')};
+const fTime24=ts=>{const p=parts(ts);return `${p.hour}:${p.minute}`};
+const fTime=ts=>{const p=parts(ts);return TF12?h12(p.hour,p.minute):`${p.hour}:${p.minute}`};
+const fClock=ts=>{const p=parts(ts);return TF12?h12(p.hour,p.minute,p.second):`${p.hour}:${p.minute}:${p.second}`};
 function pointsFor(ts){const p=parts(ts);const m=+p.hour*60+ +p.minute;return (m>=121&&m<=1079)?1:2}
 const HOUR=3600000;
 function shiftPoints(start,end){let p=0;for(let t=start;t+HOUR<=end;t+=HOUR)p+=pointsFor(t);return p}
@@ -993,6 +1009,17 @@ const newSalt=()=>hex(crypto.getRandomValues(new Uint8Array(16)));
 function show(v){['vNoDb','vAuth','vAdminLogin','vDash'].forEach(id=>$('#'+id).hidden=id!==v)}
 
 /* clock */
+function refreshTimes(){
+  const run=f=>{try{f()}catch(e){}};
+  run(tick);
+  if(!$('#vDash').hidden){
+    run(()=>{if(typeof renderMe==='function'&&mode!=='admin')renderMe()});
+    run(()=>{if(mode==='admin')renderAdmin()});
+    run(renderCaseList); run(()=>{if(caseMode==='view')renderCaseView()});
+    run(renderFsList); run(()=>{if(fsMode==='view')renderFsView()});
+    run(renderCaseFee);
+  }
+}
 function tick(){
   const now=Date.now();
   $('#clock').textContent=fClock(now);
@@ -1193,24 +1220,24 @@ function notify(kind,o,x){
   if(kind==='in'){
     const r=pointsFor(x.start);
     embed={title:x.manual?'🟢 เข้าเวร (ลงเวลาย้อนหลัง)':'🟢 เข้าเวร',color:0x1D7A4C,description:`**${o.first} ${o.last}** เข้าปฏิบัติหน้าที่`,fields:[
-      {name:'Badge',value:'#'+o.badge,inline:true},{name:'ตำแหน่ง',value:o.rank||'-',inline:true},{name:'เวลาเข้าเวร',value:fDate(x.start)+' '+fTime(x.start)+' น.',inline:true},
+      {name:'Badge',value:'#'+o.badge,inline:true},{name:'ตำแหน่ง',value:o.rank||'-',inline:true},{name:'เวลาเข้าเวร',value:fDate(x.start)+' '+fTime24(x.start)+' น.',inline:true},
       {name:'อัตราตอนนี้',value:(r===2?'กลางคืน · 2 แต้ม/ชม.':'กลางวัน · 1 แต้ม/ชม.'),inline:true}]};
   }else if(kind==='out'){
     embed={title:x.forced?'⛔ ถูกบังคับออกเวร (โดย Admin)':x.manual?'🔴 ออกเวร (ระบุเวลาเอง)':'🔴 ออกเวร',color:x.forced?0x8E0D17:0xC1121F,description:`**${o.first} ${o.last}** ออกจากการปฏิบัติหน้าที่`,fields:[
       {name:'Badge',value:'#'+o.badge,inline:true},{name:'ตำแหน่ง',value:o.rank||'-',inline:true},
-      {name:'เวลา',value:fTime(x.start)+' – '+fTime(x.end)+' น. ('+fDate(x.end)+')',inline:true},
+      {name:'เวลา',value:fTime24(x.start)+' – '+fTime24(x.end)+' น. ('+fDate(x.end)+')',inline:true},
       {name:'ระยะเวลา',value:hm(x.minutes),inline:true},{name:'แต้มที่ได้',value:'+'+x.points,inline:true},
       {name:'แต้มสะสมรอบนี้',value:(x.total??'-')+' / '+GOAL+(x.total>=GOAL?' 🏅 ได้รับโบนัส':''),inline:true}]};
   }else if(kind==='manual'){
     embed={title:'📝 ลงเวลาย้อนหลัง',color:0x9A6A00,description:`**${o.first} ${o.last}** ลงเวลาเข้า–ออกเวรย้อนหลัง`,fields:[
       {name:'Badge',value:'#'+o.badge,inline:true},{name:'ตำแหน่ง',value:o.rank||'-',inline:true},
-      {name:'เวลา',value:fDate(x.start)+' '+fTime(x.start)+' – '+fDate(x.end)+' '+fTime(x.end)+' น.'},
+      {name:'เวลา',value:fDate(x.start)+' '+fTime24(x.start)+' – '+fDate(x.end)+' '+fTime24(x.end)+' น.'},
       {name:'ระยะเวลา',value:hm(x.minutes),inline:true},{name:'แต้มที่ได้',value:'+'+x.points,inline:true},
       {name:'หมายเหตุ',value:x.note||'-',inline:true}]};
   }else if(kind==='case'){
     const w=worstTri(x), pts=x.patients||[];
     embed={title:'🚑 เคสใหม่: '+x.caseNo,color:TRI_HEX[w]||0xC1121F,description:`**${x.title}**`,fields:[
-      {name:'ประเภทเคส',value:(x.caseType||'-')+(x.buildingSize?' (อาคารขนาด'+x.buildingSize+')':''),inline:true},{name:'วันเวลา',value:fDate(x.at)+' '+fTime(x.at)+' น.',inline:true},{name:'ผู้บาดเจ็บแยกสถานะ',value:'Civilian '+(x.injCivilian||0)+' · Officer/Deputy '+(x.injOfficer||0)+' · Firefighter '+(x.injFirefighter||0),inline:false},{name:'ระดับสูงสุด',value:w?triLabel(w):'-',inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
+      {name:'ประเภทเคส',value:(x.caseType||'-')+(x.buildingSize?' (อาคารขนาด'+x.buildingSize+')':''),inline:true},{name:'วันเวลา',value:fDate(x.at)+' '+fTime24(x.at)+' น.',inline:true},{name:'ผู้บาดเจ็บแยกสถานะ',value:'Civilian '+(x.injCivilian||0)+' · Officer/Deputy '+(x.injOfficer||0)+' · Firefighter '+(x.injFirefighter||0),inline:false},{name:'ระดับสูงสุด',value:w?triLabel(w):'-',inline:true},{name:'จำนวนผู้บาดเจ็บ',value:pts.length+' คน',inline:true},
       {name:'ผู้บาดเจ็บ',value:pts.map((p,i)=>`${i+1}. ${ptName(p)}${p.sex?' · '+p.sex:''}${p.age?' · '+p.age+' ปี':''} — ${triLabel(p.tri)} · ชีพจร${vitLabel(p.pulse)} · ความดัน${vitLabel(p.bp)}${injList(p).length?' · '+injList(p).join('/'):''}${p.injuryDetail?' ('+p.injuryDetail.slice(0,80)+')':''}`).join('\n').slice(0,1000)||'-'},
       {name:'ผู้เขียนเคส',value:x.author?.name||'-',inline:true},{name:'ยูนิต / เจ้าหน้าที่ที่ดูแล',value:caseUnitsOf(x).map(u=>(u.callSign?'**'+u.callSign+'**: ':'')+(u.members.map(m=>m.name).join(', ')||'-')).join('\n').slice(0,1000)||'-',inline:false}]};
   }else if(kind==='cal'){
@@ -1424,6 +1451,7 @@ const TRI_RANK={black:4,red:3,yellow:2,green:1};
 const TRI_HEX={green:0x1D7A4C,yellow:0xE8B400,red:0xC1121F,black:0x111111};
 const VIT=[{k:'high',label:'สูง'},{k:'normal',label:'ปกติ'},{k:'low',label:'ต่ำ'}];
 const INJ=['GSW','SW','PW','ABR','CONT','BURN','BITE','FX'];
+const ctClass=t=>/อุบัติเหตุ/.test(t||'')?' ct-acc':/ไฟไหม้|ไฟป่า/.test(t||'')?' ct-fire':/สารเคมี/.test(t||'')?' ct-chem':/shooting/i.test(t||'')?' ct-shoot':'';
 const injList=p=>Array.isArray(p.injuries)?p.injuries:[];
 const triLabel=k=>(TRI.find(t=>t.k===k)||{}).label||'-';
 const vitLabel=k=>(VIT.find(t=>t.k===k)||{}).label||'-';
@@ -1437,20 +1465,24 @@ const canEditCase=c=>mode==='admin'||isMineCase(c);
 const canDelCase=c=>mode==='admin'||(!!myBadge&&c.author&&c.author.badge===myBadge);
 function renderCaseList(){
   if($('#pCase').hidden) return;
-  const q=$('#caseQ').value.trim().toLowerCase(), lv=$('#caseLv').value, mine=$('#caseMine').value==='mine';
+  const q=$('#caseQ').value.trim().toLowerCase(), mine=$('#caseMine').value==='mine';
   $('#caseMine').hidden=mode==='admin';
+  const tsel=$('#caseTypeF'), tnames=[...CASETYPES]; cases.forEach(c=>{if(c.caseType&&!tnames.includes(c.caseType))tnames.push(c.caseType)});
+  const hasNone=cases.some(c=>!c.caseType), sig=tnames.join('|')+'#'+hasNone;
+  if(tsel.dataset.sig!==sig){const keep=tsel.value;tsel.innerHTML='<option value="">ทุกประเภท</option>'+tnames.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')+(hasNone?'<option value="__none">ไม่ระบุประเภท</option>':'');tsel.dataset.sig=sig;tsel.value=[...tsel.options].some(o=>o.value===keep)?keep:''}
+  const tf=tsel.value;
   const list=cases.filter(c=>{
-    if(lv&&!(c.patients||[]).some(p=>p.tri===lv)) return false;
+    if(tf&&(tf==='__none'?!!c.caseType:c.caseType!==tf)) return false;
     if(mine&&mode!=='admin'&&!isMineCase(c)) return false;
     if(!q) return true;
     return [c.caseNo,c.title,c.caseType||'',...(c.patients||[]).map(ptName)].join(' ').toLowerCase().includes(q);
   });
   $('#caseEmpty').hidden=list.length>0;
   $('#caseEmpty').textContent=cases.length?'ไม่พบเคสที่ตรงกับการค้นหา':'ยังไม่มีเคส กด “+ เขียนเคส” เพื่อเริ่มเขียนเคสแรก';
-  $('#caseItems').innerHTML=list.map(c=>{const w=worstTri(c);return `<button type="button" class="ci${c.id===caseSel?' sel':''}" data-id="${esc(c.id)}">
+  $('#caseItems').innerHTML=list.map(c=>{return `<button type="button" class="ci${c.id===caseSel?' sel':''}" data-id="${esc(c.id)}">
     <span class="ci-top"><span class="ci-no">${esc(c.caseNo)}</span><span>${fDate(c.at)} ${fTime(c.at)}</span></span>
     <span class="ci-title">${esc(c.title)}</span>
-    <span class="ci-foot">${w?`<span class="pill tri tri-${w}">${triLabel(w)}</span>`:''}${c.caseType?`<span class="pill">${esc(c.caseType)}${c.buildingSize?' · '+esc(c.buildingSize):''}</span>`:''}<span>ผู้บาดเจ็บ ${(c.patients||[]).length} คน</span><span>· ${esc(c.author?.name||'-')}</span></span>
+    <span class="ci-foot">${c.caseType?`<span class="pill${ctClass(c.caseType)}">${esc(c.caseType)}${c.buildingSize?' · '+esc(c.buildingSize):''}</span>`:''}<span>ผู้บาดเจ็บ ${(c.patients||[]).length} คน</span><span>· ${esc(c.author?.name||'-')}</span></span>
   </button>`}).join('');
   if(caseMode==='none') $('#caseMain').innerHTML='<div class="case-ph">เลือกเคสจากรายการเพื่อดูรายละเอียด<br>หรือกด “+ เขียนเคส” เพื่อเขียนเคสใหม่</div>';
 }
@@ -1459,7 +1491,7 @@ function renderCaseView(){
   const c=cases.find(x=>x.id===caseSel);
   if(!c){caseMode='none';caseSel=null;renderCaseList();return}
   const w=worstTri(c), pts=c.patients||[];
-  $('#caseMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(c.caseNo)}</span>${c.caseType?` <span class="pill">${esc(c.caseType)}${c.buildingSize?' · อาคารขนาด'+esc(c.buildingSize):''}</span>`:''}<h2>${esc(c.title)}</h2><div class="hint">${dowTh[dowOf(ymdOf(c.at))]} ${fDate(c.at)} เวลา ${fTime(c.at)} น.</div></div>${w?`<span class="pill tri tri-${w}" style="font-size:14px;padding:4px 14px">ระดับ${triLabel(w)}</span>`:''}</div>
+  $('#caseMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(c.caseNo)}</span>${c.caseType?` <span class="pill${ctClass(c.caseType)}">${esc(c.caseType)}${c.buildingSize?' · อาคารขนาด'+esc(c.buildingSize):''}</span>`:''}<h2>${esc(c.title)}</h2><div class="hint">${dowTh[dowOf(ymdOf(c.at))]} ${fDate(c.at)} เวลา ${fTime(c.at)} น.</div></div>${w?`<span class="pill tri tri-${w}" style="font-size:14px;padding:4px 14px">ระดับ${triLabel(w)}</span>`:''}</div>
   <div class="case-sec"><h3>ผู้บาดเจ็บ (${pts.length} คน)</h3>${pts.length?'':'<p class="hint">ไม่มีผู้บาดเจ็บในเคสนี้</p>'}<div class="table-wrap"${pts.length?'':' hidden'}><table><thead><tr><th>#</th><th>ชื่อ – นามสกุล</th><th>เพศ</th><th class="num">อายุ</th><th>ระดับ</th><th>ชีพจร</th><th>ความดัน</th></tr></thead><tbody>${pts.map((p,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(ptName(p))}</td><td>${esc(p.sex||'-')}</td><td class="num mono">${p.age!==''&&p.age!=null?esc(p.age):'-'}</td><td>${p.tri?`<span class="pill tri tri-${p.tri}">${triLabel(p.tri)}</span>`:'-'}</td><td><span class="vit ${esc(p.pulse||'')}">${vitLabel(p.pulse)}</span></td><td><span class="vit ${esc(p.bp||'')}">${vitLabel(p.bp)}</span></td></tr>`).join('')}</tbody></table></div>${pts.some(p=>injList(p).length||p.injuryDetail)?`<div style="margin-top:12px"><h3>ลักษณะการบาดเจ็บ</h3>${pts.map((p,i)=>(injList(p).length||p.injuryDetail)?`<div class="inj-line"><b>${i+1}. ${esc(ptName(p))}</b><div>${injList(p).map(k=>`<span class="inj-tag">${esc(k)}</span>`).join('')}</div>${p.injuryDetail?`<p class="case-detail" style="margin:4px 0 0">${esc(p.injuryDetail)}</p>`:''}</div>`:'').join('')}</div>`:''}</div>
   ${(c.injCivilian!=null||c.injOfficer!=null||c.injFirefighter!=null)?`<div class="case-sec"><h3>จำนวนผู้บาดเจ็บแยกตามสถานะ</h3><div class="table-wrap"><table><thead><tr><th>Civilian</th><th>Officer/Deputy</th><th>Firefighter</th><th>รวม</th></tr></thead><tbody><tr><td class="mono">${c.injCivilian||0}</td><td class="mono">${c.injOfficer||0}</td><td class="mono">${c.injFirefighter||0}</td><td class="mono"><b>${(c.injCivilian||0)+(c.injOfficer||0)+(c.injFirefighter||0)}</b></td></tr></tbody></table></div></div>`:''}
   <div class="case-sec"><h3>รายละเอียดเคส</h3>${c.detail?`<p class="case-detail">${esc(c.detail)}</p>`:'<span class="hint">ไม่มีรายละเอียด</span>'}</div>
@@ -1554,7 +1586,7 @@ function openCaseForm(c){
 function showCase(id){caseSel=id;caseMode=id?'view':'none';caseEditing=null;renderCaseList();if(id){renderCaseView();if(window.innerWidth<900)$('#caseMain').scrollIntoView({block:'start',behavior:'smooth'})}}
 function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs()}
 $('#caseNew').onclick=()=>{if(caseMode==='form'&&!caseEditing){$('#cNo').focus();return}caseSel=null;openCaseForm(null)};
-['#caseQ','#caseLv','#caseMine'].forEach(id=>$(id).addEventListener('input',renderCaseList));
+['#caseQ','#caseTypeF','#caseMine'].forEach(id=>$(id).addEventListener('input',renderCaseList));
 let leaveArm=null;
 $('#caseItems').addEventListener('click',e=>{const b=e.target.closest('.ci');if(!b)return;
   if(caseMode==='form'&&leaveArm!==b.dataset.id){leaveArm=b.dataset.id;err('#cMsg','ยังไม่ได้บันทึกเคสที่กำลังเขียน กดรายการเดิมอีกครั้งเพื่อออกโดยไม่บันทึก');return}
@@ -2287,7 +2319,7 @@ function hoursRows(){
       mins=Math.round(mins); nm=Math.min(nm,mins);
       return {badge:o.badge,name:o.first+' '+o.last,rank:o.rank,order:rankOrder(o.rank),minutes:mins,night:nm,day:mins-nm,shifts:n,points:pts,last,live:!!o.activeShiftId};
     });
-    return {rows,range:(periodStart?fDate(periodStart)+' '+fTime(periodStart):'เริ่มใช้งานระบบ')+' – ปัจจุบัน',note:''};
+    return {rows,range:(periodStart?fDate(periodStart)+' '+fTime24(periodStart):'เริ่มใช้งานระบบ')+' – ปัจจุบัน',note:''};
   }
   const k=backups.find(x=>x.id===hrSrc); if(!k){hrSrc='current';return hoursRows()}
   const byS={}; (k.shifts||[]).forEach(s=>(byS[s.badge]=byS[s.badge]||[]).push(s));
