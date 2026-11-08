@@ -126,6 +126,24 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .fslb img{max-width:96vw;max-height:92vh;border-radius:8px;object-fit:contain}
 .fslb button{position:absolute;top:12px;right:16px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;font-size:26px;cursor:pointer}
 
+/* arson */
+.arrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.arrow input,.arrow select{flex:1 1 140px;min-width:0}
+.arevid,.arsigcard{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;background:var(--sunk)}
+.arph{display:flex;gap:10px;align-items:center}
+.arph input{flex:1;min-width:0}
+.arsig{background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:none;width:100%;max-width:320px;height:100px;cursor:crosshair}
+.arsigs{display:flex;flex-wrap:wrap;gap:16px}
+.arsigv{display:grid;gap:4px;min-width:200px}
+.arsigv img{background:#fff;border:1px solid var(--line);border-radius:8px;width:220px;height:auto;display:block}
+.arsigblank{width:220px;height:70px;border:1px dashed var(--line);border-radius:8px}
+.arfig{margin:0}
+.arfig figcaption{font-size:13px;margin-top:4px;color:var(--ink);overflow-wrap:anywhere}
+.ar-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.arvids{display:grid;gap:8px;margin:6px 0}
+.arvids a{font-weight:600;color:var(--red)}
+#arForm{padding:18px;display:grid;gap:14px}
+#arForm .acts{display:flex;gap:8px;flex-wrap:wrap}
 /* exams */
 .exq{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--sunk)}
 .exq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -571,7 +589,8 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <h1 id="dName"></h1>
       </div>
       <div class="spacer"></div>
-      <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
+      <button class="btn sm" id="stationBtn" title="ส่งประกาศไป Discord ห้องสำหรับแจ้งหน่วยงานอื่นว่าสถานีเปิดแล้ว">📢 แจ้งสถานีเปิด</button>
+        <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
     </div>
 
     <!-- officer view -->
@@ -636,7 +655,8 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 
     <!-- case reports view -->
     <div id="pCase" hidden>
-      <div class="case-layout">
+      <div class="fs-tabs" role="tablist" style="padding:0 0 12px;max-width:420px"><button type="button" data-casetab="general" aria-selected="true">เคสทั่วไป</button><button type="button" data-casetab="arson" aria-selected="false">ARSON</button></div>
+      <div class="case-layout" id="caseGeneral">
         <div class="card">
           <div class="card-h"><h2>รายงานเคส</h2><div class="spacer"></div><button class="btn sm primary" id="caseNew">+ เขียนเคส</button></div>
           <div class="case-filters">
@@ -650,6 +670,15 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
           <div class="empty" id="caseEmpty">ยังไม่มีเคส กด “+ เขียนเคส” เพื่อเริ่มเขียนเคสแรก</div>
         </div>
         <div class="card case-main" id="caseMain"></div>
+      </div>
+      <div class="case-layout" id="arLayout" hidden>
+        <div class="card">
+          <div class="card-h"><h2>ARSON</h2><div class="spacer"></div><button class="btn sm primary" id="arNew">+ เขียนรายงาน</button></div>
+          <div class="case-filters"><input id="arQ" placeholder="ค้นหาสถานที่ / ผู้เสียหาย / ผู้เขียน / เจ้าหน้าที่" aria-label="ค้นหารายงาน ARSON"></div>
+          <div id="arItems"></div>
+          <div class="empty" id="arEmpty">ยังไม่มีรายงาน ARSON กด “+ เขียนรายงาน” เพื่อเริ่มเขียน</div>
+        </div>
+        <div class="card case-main" id="arMain"></div>
       </div>
     </div>
 
@@ -935,7 +964,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <div class="card pwcard">
           <div class="card-h"><h2>แจ้งเตือน Discord</h2></div>
           <form id="fDiscord">
-            <label>Webhook URL<input id="dUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
+            <label>Webhook URL · ห้องแจ้งเข้า-ออกเวร และเหตุการณ์ต่างๆ<input id="dUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
             <div class="checks">
               <label class="chk"><input type="checkbox" id="dIn" checked> แจ้งเมื่อเข้าเวร</label>
               <label class="chk"><input type="checkbox" id="dOut" checked> แจ้งเมื่อออกเวร</label>
@@ -943,8 +972,9 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
               <label class="chk"><input type="checkbox" id="dCal" checked> แจ้งเมื่อมีรายการใหม่ในปฏิทิน</label>
               <label class="chk"><input type="checkbox" id="dCase" checked> แจ้งเมื่อมีเคสใหม่</label>
             </div>
+            <label>Webhook URL · ห้องประกาศ “สถานีเปิดแล้ว” (คนละห้องกับด้านบน ใช้แจ้งหน่วยงานอื่น)<input id="dStationUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
             <div id="dMsg" class="msg err" hidden></div>
-            <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ</button></div>
+            <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ (ห้องเข้า-ออกเวร)</button><button class="btn" type="button" id="dStationTest">ทดสอบห้องประกาศสถานีเปิด</button></div>
             <p class="hint">สร้าง Webhook ได้ที่ Discord: ตั้งค่าช่อง (Edit Channel) → Integrations → Webhooks → New Webhook → Copy Webhook URL · ข้อความแจ้งเตือนจะมีลิงก์กลับมาที่เว็บนี้</p>
           </form>
         </div>
@@ -1143,7 +1173,7 @@ $('#logoutBtn').onclick=logout;
 
 function enter(badge){
   stopAll(); mode='officer'; myBadge=badge; me=null; myShifts=[];
-  show('vDash'); $('#vtMe').hidden=false; $('#vtAdmin').hidden=true; setView('me'); closeManual(); closeEvForm(); resetCases(); renderMe(); subEvents(); subCases(); subFs();
+  show('vDash'); $('#vtMe').hidden=false; $('#vtAdmin').hidden=true; setView('me'); closeManual(); closeEvForm(); resetCases(); renderMe(); subEvents(); subCases(); subFs(); subAr();
   unsubs.push(db.doc('officers/'+badge).onSnapshot(s=>{
     if(!s.exists||!s.data().pwHash){toast('ไม่พบบัญชีนี้แล้ว');logout();return}
     me=s.data(); renderMe();
@@ -1252,11 +1282,11 @@ function rowHtml(s,adminDel){
 }
 
 /* ---- discord ---- */
-let DISCORD={};
+let DISCORD={}, STATION_LAST=null;
 const siteUrl=()=>location.href.split('#')[0].split('?')[0];
 function renderDiscord(){
   if(!$('#fDiscord')||$('#fDiscord').contains(document.activeElement)) return;
-  $('#dUrl').value=DISCORD.url||''; $('#dIn').checked=DISCORD.onIn!==false; $('#dOut').checked=DISCORD.onOut!==false; $('#dCut').checked=DISCORD.onCut!==false; $('#dCal').checked=DISCORD.onCal!==false; $('#dCase').checked=DISCORD.onCase!==false;
+  $('#dUrl').value=DISCORD.url||''; $('#dStationUrl').value=DISCORD.stationUrl||''; $('#dIn').checked=DISCORD.onIn!==false; $('#dOut').checked=DISCORD.onOut!==false; $('#dCut').checked=DISCORD.onCut!==false; $('#dCal').checked=DISCORD.onCal!==false; $('#dCase').checked=DISCORD.onCase!==false;
 }
 const validHook=u=>/^https:\/\/(canary\.|ptb\.)?(discord|discordapp)\.com\/api\/webhooks\/\d+\/[\w-]+/.test(u);
 async function postHook(url,payload){
@@ -1311,9 +1341,11 @@ function notify(kind,o,x){
 }
 $('#fDiscord').addEventListener('submit',async e=>{
   e.preventDefault(); err('#dMsg','');
-  const url=$('#dUrl').value.trim();
-  if(url&&!validHook(url)) return err('#dMsg','Webhook URL ไม่ถูกต้อง ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/');
-  try{await db.doc('config/bonus').set({discord:{url,onIn:$('#dIn').checked,onOut:$('#dOut').checked,onCut:$('#dCut').checked,onCal:$('#dCal').checked,onCase:$('#dCase').checked}},{merge:true});document.activeElement.blur();toast('บันทึกการแจ้งเตือน Discord แล้ว')}
+  const url=$('#dUrl').value.trim(), stationUrl=$('#dStationUrl').value.trim();
+  if(url&&!validHook(url)) return err('#dMsg','Webhook URL ห้องเข้า-ออกเวรไม่ถูกต้อง ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/');
+  if(stationUrl&&!validHook(stationUrl)) return err('#dMsg','Webhook URL ห้องประกาศสถานีเปิดไม่ถูกต้อง ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/');
+  if(url&&stationUrl&&url===stationUrl) return err('#dMsg','ห้องประกาศสถานีเปิดต้องเป็นคนละห้องกับห้องแจ้งเข้า-ออกเวร (ใช้ Webhook คนละอัน)');
+  try{await db.doc('config/bonus').set({discord:{url,stationUrl,onIn:$('#dIn').checked,onOut:$('#dOut').checked,onCut:$('#dCut').checked,onCal:$('#dCal').checked,onCase:$('#dCase').checked}},{merge:true});document.activeElement.blur();toast('บันทึกการแจ้งเตือน Discord แล้ว')}
   catch(x){err('#dMsg','บันทึกไม่สำเร็จ ลองอีกครั้ง')}
 });
 $('#dTest').onclick=async()=>{
@@ -1321,6 +1353,31 @@ $('#dTest').onclick=async()=>{
   if(!validHook(url)) return err('#dMsg','ใส่ Webhook URL ให้ถูกต้องก่อน');
   try{await postHook(url,{username:'CAD',embeds:[{title:'✅ ทดสอบการแจ้งเตือน',description:'ระบบ CAD เชื่อมต่อกับช่องนี้แล้ว',color:0xC1121F,url:siteUrl(),fields:[{name:'ดูข้อมูล',value:`[เปิดระบบ CAD](${siteUrl()})`}],footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()}]});toast('ส่งข้อความทดสอบแล้ว ตรวจดูใน Discord')}
   catch(x){err('#dMsg','ส่งไม่สำเร็จ: '+x.message)}
+};
+
+const stationEmbed=(by,test)=>({title:test?'✅ ทดสอบการประกาศสถานีเปิด':'🚒 สถานีเปิดแล้ว',description:test?'ห้องนี้ถูกตั้งเป็นห้องประกาศสถานีเปิดของระบบ CAD':'**Los Santos County of Fire Department** เปิดให้บริการแล้ว หน่วยงานอื่นโปรดรับทราบ',color:test?0xC1121F:0x1D7A4C,fields:[{name:'เวลา',value:fDate(Date.now())+' '+fTime24(Date.now())+' น.',inline:true},{name:'แจ้งโดย',value:by,inline:true}],footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()});
+$('#dStationTest').onclick=async()=>{
+  err('#dMsg',''); const url=$('#dStationUrl').value.trim();
+  if(!validHook(url)) return err('#dMsg','ใส่ Webhook URL ห้องประกาศสถานีเปิดให้ถูกต้องก่อน');
+  if(url===$('#dUrl').value.trim()) return err('#dMsg','ต้องเป็นคนละห้องกับห้องแจ้งเข้า-ออกเวร');
+  try{await postHook(url,{username:'CAD',embeds:[stationEmbed('Admin (ทดสอบ)',true)]});toast('ส่งข้อความทดสอบแล้ว ตรวจดูใน Discord')}
+  catch(x){err('#dMsg','ส่งไม่สำเร็จ: '+x.message)}
+};
+$('#stationBtn').onclick=async e=>{
+  const btn=e.currentTarget, url=DISCORD.stationUrl;
+  if(!url||!validHook(url)){toast('ยังไม่ได้ตั้งค่าห้องประกาศสถานีเปิด · ให้ Admin ใส่ Webhook ที่ ตั้งค่า > แจ้งเตือน Discord');return}
+  const by=mode==='admin'?'Admin':(me?me.first+' '+me.last+' #'+me.badge:'เจ้าหน้าที่');
+  const mins=STATION_LAST?Math.floor((Date.now()-STATION_LAST.at)/60000):null;
+  if(!btn.dataset.armed&&mins!=null&&mins<10) toast('มีการประกาศไปแล้วเมื่อ '+mins+' นาทีที่แล้วโดย '+(STATION_LAST.by||'-')+' · ถ้าต้องการส่งซ้ำ กดอีกครั้งเพื่อยืนยัน');
+  if(!armed(btn)) return;
+  btn.disabled=true;
+  try{
+    await postHook(url,{username:'CAD',embeds:[stationEmbed(by,false)]});
+    const rec={at:Date.now(),by}; STATION_LAST=rec;
+    db.doc('config/bonus').set({stationNotice:rec},{merge:true}).catch(()=>{});
+    toast('ประกาศสถานีเปิดไปยัง Discord แล้ว');
+  }catch(x){toast('ส่งไม่สำเร็จ: '+x.message)}
+  finally{btn.disabled=false;delete btn.dataset.armed}
 };
 
 /* ---- manual time entry ---- */
@@ -1602,6 +1659,7 @@ async function loadPool(){
   try{const q=await db.collection('officers').get();officerPool=q.docs.map(d=>d.data()).filter(o=>o.pwHash).map(o=>({badge:o.badge,name:o.first+' '+o.last,rank:o.rank||''})).sort((a,b)=>a.badge.localeCompare(b.badge))}catch(e){}
   if($('#unitList')) renderCrew();
   if($('#fsInspSel')) renderFsInsp();
+  if($('#arOffSel')) arRenderOff();
 }
 function openCaseForm(c){
   caseMode='form'; caseEditing=c||null; caseCrew=[]; caseUnits=c?caseUnitsOf(c):[];
@@ -1639,7 +1697,7 @@ function openCaseForm(c){
   $('#caseMain').scrollIntoView({block:'start',behavior:'smooth'}); $('#cNo').focus({preventScroll:true});
 }
 function showCase(id){caseSel=id;caseMode=id?'view':'none';caseEditing=null;renderCaseList();if(id){renderCaseView();if(window.innerWidth<900)$('#caseMain').scrollIntoView({block:'start',behavior:'smooth'})}}
-function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs();resetEx()}
+function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs();resetEx();resetAr()}
 $('#caseNew').onclick=()=>{if(caseMode==='form'&&!caseEditing){$('#cNo').focus();return}caseSel=null;openCaseForm(null)};
 ['#caseQ','#caseTypeF','#caseMine'].forEach(id=>$(id).addEventListener('input',renderCaseList));
 let leaveArm=null;
@@ -1759,7 +1817,7 @@ function setView(v){
   if(v==='cal') renderCal();
   if(v==='fs'){renderFsList();if(fsMode==='view')renderFsView()}
   if(v==='exam'){ensureExamSub();renderExList();if(exMode==='view')renderExView()}
-  if(v==='case'){renderCaseList();if(caseMode==='view')renderCaseView()}
+  if(v==='case'){if(caseTab==='arson'){renderArList();if(arMode==='view')renderArView()}else{renderCaseList();if(caseMode==='view')renderCaseView()}}
 }
 $('#vtCal').onclick=()=>setView('cal');
 $('#vtCase').onclick=()=>setView('case');
@@ -1771,7 +1829,7 @@ const ADMIN_USER='Admin', ADMIN_DEFAULT={salt:'lsfd-admin-default',pwHash:'7be4d
 async function adminCred(){try{const s=await db.doc('config/admin').get();if(s.exists&&s.data().pwHash)return s.data()}catch(e){}return ADMIN_DEFAULT}
 function enterAdmin(){
   stopAll(); mode='admin'; myBadge=null; me=null;
-  show('vDash'); $('#vtMe').hidden=true; $('#vtAdmin').hidden=false; setView('admin'); repSource=null; subTab('atOfficers'); closeEvForm(); resetCases(); subEvents(); subCases(); subFs();
+  show('vDash'); $('#vtMe').hidden=true; $('#vtAdmin').hidden=false; setView('admin'); repSource=null; subTab('atOfficers'); closeEvForm(); resetCases(); subEvents(); subCases(); subFs(); subAr();
   $('#dName').textContent='ผู้ดูแลระบบ'; $('#dBadge').textContent='ADMIN'; $('#dRank').textContent='LSFD Command';
   setupAdmin();
 }
@@ -2693,6 +2751,217 @@ $('#exMain').addEventListener('click',async ev=>{
   if(gdel){if(!armed(gdel))return;try{await db.doc('examSubs/'+sub.id).delete();exSubs=exSubs.filter(s=>s.id!==sub.id);exGrade=null;exMode='view';toast('ลบคำตอบแล้ว ผู้สอบส่งใหม่ได้');renderExView()}catch(x){fail(x)}}
 });
 
+/* ---- ARSON reports (inside Case page) ---- */
+let caseTab='general', arList=[], arSel=null, arMode='none', arEditing=null, arLeave=null;
+let arV=[], arE=[], arVid=[], arPh=[], arPlan=[], arOff=[];
+const AR_VERDICT={accident:{label:'อุบัติเหตุ',cls:' ct-acc'},arson:{label:'จงใจวางเพลิง',cls:' ct-fire'}};
+const AR_SEX=['','ชาย','หญิง','อื่นๆ'];
+function resetAr(){arList=[];arSel=null;arMode='none';arEditing=null;arLeave=null;arV=[];arE=[];arVid=[];arPh=[];arPlan=[];arOff=[];caseTab='general'}
+function subAr(){unsubs.push(db.collection('arsonReports').orderBy('at','desc').limit(300).onSnapshot(q=>{arList=q.docs.map(d=>({id:d.id,...d.data()}));renderArList();if(arMode==='view')renderArView()},()=>{}))}
+const isMineAr=c=>!!myBadge&&((c.author&&c.author.badge===myBadge)||(c.officers||[]).some(x=>x.badge===myBadge));
+const canEditAr=c=>mode==='admin'||isMineAr(c);
+const canDelAr=c=>mode==='admin'||(!!myBadge&&c.author&&c.author.badge===myBadge);
+const arPhotoIds=c=>[...(c.photos||[]),...(c.plan||[])].map(p=>p.id);
+const vName=v=>[v.first,v.last].filter(Boolean).join(' ');
+function setCaseTab(t){
+  caseTab=t;
+  document.querySelectorAll('[data-casetab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.casetab===t));
+  $('#caseGeneral').hidden=t!=='general'; $('#arLayout').hidden=t!=='arson';
+  if(t==='arson'){renderArList();if(arMode==='view')renderArView()}else{renderCaseList();if(caseMode==='view')renderCaseView()}
+}
+document.querySelectorAll('[data-casetab]').forEach(b=>b.onclick=()=>setCaseTab(b.dataset.casetab));
+function renderArList(){
+  if($('#pCase').hidden||caseTab!=='arson') return;
+  const q=$('#arQ').value.trim().toLowerCase();
+  const list=arList.filter(c=>!q||[c.loc,c.coords,c.author&&c.author.name,(c.victims||[]).map(vName).join(' '),(c.officers||[]).map(x=>x.name).join(' ')].join(' ').toLowerCase().includes(q));
+  $('#arEmpty').hidden=list.length>0;
+  $('#arEmpty').textContent=arList.length?'ไม่พบรายงานที่ตรงกับการค้นหา':'ยังไม่มีรายงาน ARSON กด “+ เขียนรายงาน” เพื่อเริ่มเขียน';
+  $('#arItems').innerHTML=list.map(c=>{const v=AR_VERDICT[c.verdict];return `<button type="button" class="ci${c.id===arSel?' sel':''}" data-id="${esc(c.id)}"><span class="ci-top"><span class="ci-no">ARSON</span><span>${fDate(c.at)} ${fTime(c.at)}</span></span><span class="ci-title">${esc(c.loc||'-')}</span><span class="ci-foot">${v?`<span class="pill${v.cls}">${v.label}</span>`:''}<span>· ผู้เขียน: ${esc(c.author?.name||'-')}</span></span></button>`}).join('');
+  if(arMode==='none') $('#arMain').innerHTML='<div class="case-ph">เลือกรายงานจากรายการเพื่อดูรายละเอียด<br>หรือกด “+ เขียนรายงาน” เพื่อเขียนรายงาน ARSON ใหม่</div>';
+}
+function showAr(id){arSel=id;arMode=id?'view':'none';arEditing=null;renderArList();if(id){renderArView();if(window.innerWidth<900)$('#arMain').scrollIntoView({block:'start',behavior:'smooth'})}}
+const arTxt=t=>`<p class="case-detail">${t?esc(t):'<span class="hint">-</span>'}</p>`;
+function renderArView(){
+  const c=arList.find(x=>x.id===arSel);
+  if(!c){arMode='none';arSel=null;renderArList();return}
+  const v=AR_VERDICT[c.verdict], ph=arImgs(c.photos), pl=arImgs(c.plan);
+  $('#arMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">ARSON</span><h2>${esc(c.loc||'-')}</h2><div class="hint">พิกัด ${esc(c.coords||'-')}</div></div>
+    <div class="fs-author"><span class="lbl">ผู้เขียนรายงาน</span><div>${whoChip(c.author||{name:'-'})}</div></div></div>
+  <div class="case-sec"><dl class="fsdl"><div><dt>Date · วันเวลาที่เกิดเหตุ</dt><dd>${fDate(c.at)} ${fTime(c.at)} น.</dd></div><div><dt>Date investigate · วันเวลาที่เข้าตรวจสอบ</dt><dd>${c.invAt?fDate(c.invAt)+' '+fTime(c.invAt)+' น.':'-'}</dd></div><div><dt>Location · สถานที่และพิกัด</dt><dd>${esc(c.loc||'-')} · <span class="mono">${esc(c.coords||'-')}</span></dd></div></dl></div>
+  <div class="case-sec"><h3>1. ชื่อผู้เสียหาย</h3>${(c.victims||[]).length?`<div class="table-wrap"><table><thead><tr><th>ชื่อ - นามสกุล</th><th>เพศ</th><th class="num">อายุ</th></tr></thead><tbody>${c.victims.map(x=>`<tr><td>${esc(vName(x)||'-')}</td><td>${esc(x.sex||'-')}</td><td class="num mono">${esc(x.age||'-')}</td></tr>`).join('')}</tbody></table></div>`:'<span class="hint">ไม่ระบุ</span>'}</div>
+  <div class="case-sec"><h3>2. รายงานก่อนตรวจสอบพื้นที่</h3><span class="lbl">ร่องรอย เช่น การงัดแงะ รอยเท้า หรือร่องรอยที่แปลกประหลาด</span>${arTxt(c.t1)}<span class="lbl">เบรกเกอร์ถูกตัดก่อนเจ้าหน้าที่เข้าถึงไหม · ร่องรอยเส้นทางที่ไฟลุกลาม</span>${arTxt(c.t2)}</div>
+  <div class="case-sec"><h3>3. รายงานสรุปเหตุเพลิงไหม้</h3><span class="lbl">จุดต้นเพลิง หรือจุดที่คาดว่าเป็นจุดเริ่มต้นของไฟ</span>${arTxt(c.t3)}<span class="lbl">สาเหตุการเกิดไฟไหม้ · สารเร่งไฟหรือเชื้อเพลิง</span>${arTxt(c.t4)}</div>
+  <div class="case-sec"><h3>4. Evidence</h3>${(c.evidence||[]).length?`<div class="table-wrap"><table><thead><tr><th>#</th><th>รายการหลักฐาน</th><th>เก็บโดย</th><th>ส่งให้</th><th>ส่งตรวจที่</th><th>เก็บไว้ที่</th></tr></thead><tbody>${c.evidence.map((x,i)=>`<tr><td class="mono">${i+1}</td><td style="white-space:normal">${esc(x.item)}</td><td>${esc(x.by||'-')}</td><td>${esc(x.to||'-')}</td><td>${esc(x.sentTo||'-')}</td><td>${esc(x.storedAt||'-')}</td></tr>`).join('')}</tbody></table></div>`:'<span class="hint">ไม่มีรายการหลักฐาน</span>'}</div>
+  <div class="case-sec"><h3>5. ภาพถ่ายและวิดีโอหลักฐาน</h3>${ph}${(c.videos||[]).length?`<span class="lbl">คลิปวิดีโอ</span><div class="arvids">${c.videos.map(x=>`<div><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">▶ ${esc(x.caption||x.url)}</a><div class="hint">${esc(x.url)}</div></div>`).join('')}</div>`:''}${(c.plan||[]).length?`<span class="lbl">แผนผังอาคาร / พื้นที่เกิดเหตุ</span>${pl}`:''}</div>
+  <div class="case-sec"><h3>6. ผลการสอบปากคำพยาน</h3><span class="lbl">คำให้การของพยานผู้พบเห็น พนักงานดับเพลิง ผู้ต้องสงสัย</span>${arTxt(c.t5)}<span class="lbl">พฤติกรรมที่น่าสงสัยของบุคคลในพื้นที่ ก่อนจนถึงหลังเกิดเหตุ</span>${arTxt(c.t6)}</div>
+  <div class="case-sec"><h3>7. สรุปผลของเหตุการณ์ด้วยความคิดเห็นของผู้เชี่ยวชาญ</h3>${v?`<div class="chips-row"><span class="pill${v.cls}" style="font-size:14px;padding:4px 14px">สรุป: ${v.label}</span></div>`:''}${arTxt(c.t7)}
+    <h3 style="margin-top:10px">เจ้าหน้าที่ Arson ที่รับผิดชอบ</h3><div class="arsigs">${(c.officers||[]).map(o=>`<div class="arsigv">${o.sig?`<img src="${o.sig}" alt="ลายมือชื่อ ${esc(o.name)}">`:'<div class="arsigblank"></div>'}<div class="arsigname"><b>${esc(o.name)}</b> <span class="mono">#${esc(o.badge)}</span></div><div class="hint">Arson Investigate Officer</div></div>`).join('')}</div></div>
+  <div class="case-sec"><div class="case-acts">${canEditAr(c)?'<button class="btn sm" id="arEdit">แก้ไขรายงาน</button>':''}${canDelAr(c)?'<button class="btn sm danger" id="arDel">ลบรายงาน</button>':''}<span class="hint">บันทึกเมื่อ ${fDate(c.createdAt||c.at)} ${fTime(c.createdAt||c.at)}${c.updatedAt&&c.updatedAt!==c.createdAt?' · แก้ไขล่าสุด '+fDate(c.updatedAt)+' '+fTime(c.updatedAt)+(c.updatedBy?' โดย '+esc(c.updatedBy):''):''}</span></div></div>`;
+  fsHydrate($('#arMain'));
+}
+function arImgs(list){return (list||[]).length?`<div class="fsgrid ar-grid">${list.map(p=>`<figure class="arfig"><img class="fsimg" src="${FS_BLANK}" data-pid="${esc(p.id)}" alt="${esc(p.caption||'')}"><figcaption>${esc(p.caption||'')}</figcaption></figure>`).join('')}</div>`:'<span class="hint">ไม่มีภาพ</span>'}
+/* form pieces */
+function arRenderV(){const b=$('#arVBox');if(!b)return;b.innerHTML=arV.map((v,i)=>`<div class="arrow"><input data-l="v" data-i="${i}" data-f="first" maxlength="40" placeholder="ชื่อ" value="${esc(v.first)}" aria-label="ชื่อ"><input data-l="v" data-i="${i}" data-f="last" maxlength="40" placeholder="นามสกุล" value="${esc(v.last)}" aria-label="นามสกุล"><select data-l="v" data-i="${i}" data-f="sex" aria-label="เพศ">${AR_SEX.map(s=>`<option value="${s}"${v.sex===s?' selected':''}>${s||'เพศ'}</option>`).join('')}</select><input data-l="v" data-i="${i}" data-f="age" type="number" min="0" max="120" placeholder="อายุ" value="${esc(v.age)}" aria-label="อายุ" style="max-width:90px"><button type="button" class="btn sm" data-arrm="v:${i}" aria-label="ลบผู้เสียหาย">×</button></div>`).join('')||'<span class="hint">ยังไม่มีผู้เสียหาย (ปล่อยว่างได้ถ้าไม่มี)</span>'}
+function arRenderE(){const b=$('#arEBox');if(!b)return;b.innerHTML=arE.map((x,i)=>`<div class="arevid"><div class="exq-h"><b>หลักฐานที่ ${i+1}</b><span class="spacer"></span><button type="button" class="btn sm danger" data-arrm="e:${i}">ลบ</button></div><label>รายการหลักฐาน<input data-l="e" data-i="${i}" data-f="item" maxlength="200" value="${esc(x.item)}" placeholder="เช่น ขวดแก๊สโซลีน 1 ขวด พบที่ห้องครัว"></label><div class="row2"><label>เก็บโดยใคร<input data-l="e" data-i="${i}" data-f="by" maxlength="80" value="${esc(x.by)}"></label><label>ส่งให้ใคร<input data-l="e" data-i="${i}" data-f="to" maxlength="80" value="${esc(x.to)}"></label></div><div class="row2"><label>ส่งไปตรวจสอบที่ไหน<input data-l="e" data-i="${i}" data-f="sentTo" maxlength="120" value="${esc(x.sentTo)}"></label><label>ถูกเก็บไว้ที่ไหน<input data-l="e" data-i="${i}" data-f="storedAt" maxlength="120" value="${esc(x.storedAt)}"></label></div></div>`).join('')||'<span class="hint">ยังไม่มีรายการหลักฐาน</span>'}
+function arRenderVid(){const b=$('#arVidBox');if(!b)return;b.innerHTML=arVid.map((x,i)=>`<div class="arrow"><input data-l="vid" data-i="${i}" data-f="url" maxlength="400" placeholder="ลิงก์วิดีโอ https://..." value="${esc(x.url)}" aria-label="ลิงก์วิดีโอ"><input data-l="vid" data-i="${i}" data-f="caption" maxlength="150" placeholder="วิดีโอนี้คืออะไร" value="${esc(x.caption)}" aria-label="คำอธิบายวิดีโอ"><button type="button" class="btn sm" data-arrm="vid:${i}" aria-label="ลบวิดีโอ">×</button></div>`).join('')||'<span class="hint">ยังไม่มีลิงก์วิดีโอ</span>'}
+function arRenderPh(k){const b=$(k==='ph'?'#arPhBox':'#arPlanBox');if(!b)return;const a=k==='ph'?arPh:arPlan;b.innerHTML=a.map((p,i)=>`<div class="arph"><div class="fsth">${p.src?`<img src="${p.src}" alt="">`:''}</div><input data-l="${k}" data-i="${i}" data-f="caption" maxlength="150" placeholder="ภาพนี้คืออะไร" value="${esc(p.caption)}" aria-label="คำอธิบายภาพ"><button type="button" class="btn sm" data-arrm="${k}:${i}" aria-label="ลบภาพ">×</button></div>`).join('');const add=$(k==='ph'?'#arPhAdd':'#arPlanAdd');if(add)add.hidden=a.length>=(k==='ph'?12:3)}
+function arRenderOff(){
+  const b=$('#arOffBox'), sel=$('#arOffSel'); if(!b||!sel) return;
+  b.innerHTML=arOff.map((o,i)=>`<div class="arsigcard"><div class="exq-h"><b>${esc(o.name)}</b> <span class="mono">#${esc(o.badge)}</span><span class="spacer"></span><button type="button" class="btn sm danger" data-arrm="off:${i}">ลบ</button></div><span class="lbl">ลงลายมือชื่อ (เซ็นด้วยเมาส์หรือนิ้ว)</span><canvas class="arsig" data-oi="${i}" width="320" height="100" aria-label="ช่องลงลายมือชื่อ ${esc(o.name)}"></canvas><div class="acts"><button type="button" class="btn sm" data-arsigclear="${i}">ล้างลายมือชื่อ</button><span class="hint">Arson Investigate Officer</span></div></div>`).join('')||'<span class="hint">ยังไม่ได้เพิ่มเจ้าหน้าที่ Arson</span>';
+  const taken=new Set(arOff.map(x=>x.badge));
+  sel.innerHTML='<option value="">+ เพิ่มเจ้าหน้าที่ Arson ที่รับผิดชอบ</option>'+officerPool.filter(o=>!taken.has(o.badge)).map(o=>`<option value="${esc(o.badge)}">#${esc(o.badge)} ${esc(o.name)} · ${esc(o.rank)}</option>`).join('');
+  document.querySelectorAll('canvas.arsig').forEach(cv=>{
+    const oi=+cv.dataset.oi, ctx=cv.getContext('2d'); ctx.lineWidth=2.4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111';
+    if(arOff[oi].sig){const im=new Image();im.onload=()=>ctx.drawImage(im,0,0,cv.width,cv.height);im.src=arOff[oi].sig}
+    let down=false,last=null;
+    const pos=e=>{const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*cv.width/r.width,y:(e.clientY-r.top)*cv.height/r.height}};
+    cv.onpointerdown=e=>{e.preventDefault();down=true;last=pos(e);try{cv.setPointerCapture(e.pointerId)}catch(x){}ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(last.x+.1,last.y+.1);ctx.stroke()};
+    cv.onpointermove=e=>{if(!down)return;const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p};
+    const end=()=>{if(!down)return;down=false;arOff[oi].sig=cv.toDataURL('image/png')};
+    cv.onpointerup=end; cv.onpointercancel=end;
+  });
+}
+const arL=()=>({v:arV,e:arE,vid:arVid,ph:arPh,plan:arPlan});
+function openArForm(c){
+  arMode='form'; arEditing=c||null; arLeave=null;
+  arV=c?(c.victims||[]).map(v=>({first:v.first||'',last:v.last||'',sex:v.sex||'',age:v.age||''})):[{first:'',last:'',sex:'',age:''}];
+  arE=c?(c.evidence||[]).map(x=>({item:x.item||'',by:x.by||'',to:x.to||'',sentTo:x.sentTo||'',storedAt:x.storedAt||''})):[];
+  arVid=c?(c.videos||[]).map(x=>({url:x.url||'',caption:x.caption||''})):[];
+  const mk=a=>(a||[]).map(p=>({id:p.id,src:fsPhotoCache.get(p.id)||null,isNew:false,caption:p.caption||''}));
+  arPh=mk(c&&c.photos); arPlan=mk(c&&c.plan);
+  arOff=c?(c.officers||[]).map(o=>({badge:o.badge,name:o.name,sig:o.sig||''})):[];
+  const at=c?c.at:Date.now(), inv=c&&c.invAt?c.invAt:Date.now(), author=c?c.author:myRef();
+  const ta=(id,label,ph)=>`<label>${label}<textarea id="${id}" rows="3" maxlength="2500" placeholder="${ph||''}"></textarea></label>`;
+  $('#arMain').innerHTML=`<div class="card-h"><h2>${c?'แก้ไขรายงาน ARSON':'เขียนรายงาน ARSON'}</h2></div>
+  <form id="arForm" novalidate>
+    <div class="row2"><label>Date · วันที่เกิดเหตุ<input type="date" id="arDate"></label><label>เวลาที่เกิดเหตุ (เวลาไทย)<input type="time" id="arTime"></label></div>
+    <div class="row2"><label>Date investigate · วันที่เข้าตรวจสอบ<input type="date" id="arInvDate"></label><label>เวลาที่เข้าตรวจสอบ (เวลาไทย)<input type="time" id="arInvTime"></label></div>
+    <div class="row2"><label>Location · สถานที่เกิดเหตุ<input id="arLoc" maxlength="120" placeholder="เช่น ร้านอาหาร ถนน Del Perro"></label><label>พิกัด<input id="arCoords" maxlength="80" placeholder="เช่น 1025 , 6045"></label></div>
+    <div class="fsblock"><div class="sec-h"><b>1. ชื่อผู้เสียหาย</b><span class="hint">ชื่อ นามสกุล เพศ และอายุ</span></div><div id="arVBox" style="display:grid;gap:8px"></div><button type="button" class="btn sm" data-aradd="v" style="justify-self:start">+ เพิ่มผู้เสียหาย</button></div>
+    <div class="fsblock"><div class="sec-h"><b>2. รายงานก่อนตรวจสอบพื้นที่</b></div>${ta('arT1','ร่องรอย เช่น การงัดแงะ รอยเท้า หรือร่องรอยที่แปลกประหลาด')}${ta('arT2','เบรกเกอร์ถูกตัดก่อนเจ้าหน้าที่เข้าถึงไหม · ร่องรอยเส้นทางที่ไฟลุกลาม')}</div>
+    <div class="fsblock"><div class="sec-h"><b>3. รายงานสรุปเหตุเพลิงไหม้</b></div>${ta('arT3','จุดต้นเพลิง หรือจุดที่คาดว่าเป็นจุดเริ่มต้นของไฟก่อนจะลุกลาม')}${ta('arT4','สาเหตุการเกิดไฟไหม้ · สารเร่งไฟหรือเชื้อเพลิง เช่น แก๊สโซลีน ร่องรอยน้ำมัน กองไม้หรือเศษผ้าที่จงใจวางเพื่อเร่งไฟ')}</div>
+    <div class="fsblock"><div class="sec-h"><b>4. Evidence</b><span class="hint">ระบุเป็นข้อ ๆ ว่าใครเก็บ ส่งให้ใคร ส่งตรวจที่ไหน และเก็บไว้ที่ไหน</span></div><div id="arEBox" style="display:grid;gap:10px"></div><button type="button" class="btn sm" data-aradd="e" style="justify-self:start">+ เพิ่มรายการหลักฐาน</button></div>
+    <div class="fsblock"><div class="sec-h"><b>5. ภาพถ่ายและวิดีโอหลักฐาน</b></div>
+      <span class="lbl">ภาพถ่ายหลักฐานในพื้นที่เกิดเหตุ (จำเป็นอย่างน้อย 1 ภาพ · สูงสุด 12 ภาพ · ต้องระบุว่าภาพคืออะไร)</span>
+      <div id="arPhBox" style="display:grid;gap:8px"></div><label class="btn sm fsadd" id="arPhAdd" style="justify-self:start"><span>+ แนบภาพถ่าย</span><input type="file" accept="image/*" multiple hidden data-arfile="ph"></label>
+      <span class="lbl">คลิปวิดีโอ (วางลิงก์ เช่น YouTube / Discord / Google Drive พร้อมระบุว่าวิดีโอคืออะไร)</span>
+      <div id="arVidBox" style="display:grid;gap:8px"></div><button type="button" class="btn sm" data-aradd="vid" style="justify-self:start">+ เพิ่มลิงก์วิดีโอ</button>
+      <span class="lbl">แผนผังอาคารหรือพื้นที่เกิดเหตุ (ถ้ามี · สูงสุด 3 ภาพ)</span>
+      <div id="arPlanBox" style="display:grid;gap:8px"></div><label class="btn sm fsadd" id="arPlanAdd" style="justify-self:start"><span>+ แนบแผนผัง</span><input type="file" accept="image/*" multiple hidden data-arfile="plan"></label></div>
+    <div class="fsblock"><div class="sec-h"><b>6. ผลการสอบปากคำพยาน</b></div>${ta('arT5','คำให้การของพยานผู้พบเห็นเหตุการณ์ พนักงานดับเพลิง ผู้ต้องสงสัย')}${ta('arT6','พฤติกรรมที่น่าสงสัยของบุคคลทุกคนในพื้นที่เกิดเหตุ ทั้งก่อนจนถึงหลังเกิดเหตุ')}</div>
+    <div class="fsblock"><div class="sec-h"><b>7. สรุปผลของเหตุการณ์ด้วยความคิดเห็นของผู้เชี่ยวชาญ</b></div>
+      ${ta('arT7','ความคิดเห็นของพนักงานดับเพลิงในฐานะผู้เชี่ยวชาญ')}
+      <div><span class="lbl">สรุปว่าเป็น</span><div class="chips-row" style="margin-top:6px"><label class="chk"><input type="radio" name="arVerdict" value="accident"> อุบัติเหตุ</label><label class="chk"><input type="radio" name="arVerdict" value="arson"> จงใจวางเพลิง</label></div></div>
+      <div><span class="lbl">เจ้าหน้าที่ Arson ที่รับผิดชอบ · ลงลายมือชื่อ · Arson Investigate Officer</span><div class="crew-pick" style="margin-top:6px"><select id="arOffSel" aria-label="เลือกเจ้าหน้าที่ Arson"></select></div><div id="arOffBox" style="display:grid;gap:10px;margin-top:8px"></div></div></div>
+    <div><span class="lbl">ผู้เขียนรายงาน</span><div class="chips-row" style="margin-top:6px">${whoChip(author)}</div></div>
+    <div id="arMsg" class="msg err" hidden></div>
+    <div class="acts"><button class="btn primary" type="submit" id="arSave">${c?'บันทึกการแก้ไข':'บันทึกรายงาน'}</button><button class="btn" type="button" id="arCancel">ยกเลิก</button></div>
+  </form>`;
+  $('#arDate').value=ymdOf(at); $('#arTime').value=hhmmOf(at); $('#arInvDate').value=ymdOf(inv); $('#arInvTime').value=hhmmOf(inv);
+  $('#arLoc').value=c?.loc||''; $('#arCoords').value=c?.coords||'';
+  ['t1','t2','t3','t4','t5','t6','t7'].forEach((k,i)=>{$('#arT'+(i+1)).value=c?.[k]||''});
+  if(c&&c.verdict){const r=document.querySelector(`input[name="arVerdict"][value="${c.verdict}"]`);if(r)r.checked=true}
+  arRenderV();arRenderE();arRenderVid();arRenderPh('ph');arRenderPh('plan');
+  [['ph',arPh],['plan',arPlan]].forEach(([k,a])=>a.forEach(async p=>{if(!p.src){p.src=await fsGetPhoto(p.id);arRenderPh(k)}}));
+  loadPool(); arRenderOff(); renderArList();
+  $('#arMain').scrollIntoView({block:'start',behavior:'smooth'});
+}
+$('#arNew').onclick=()=>{if(arMode==='form'&&!arEditing){$('#arLoc').focus();return}arSel=null;openArForm(null)};
+$('#arQ').addEventListener('input',renderArList);
+$('#arItems').addEventListener('click',e=>{
+  const b=e.target.closest('.ci'); if(!b) return;
+  if(arMode==='form'&&arLeave!==b.dataset.id){arLeave=b.dataset.id;err('#arMsg','ยังไม่ได้บันทึกรายงานที่กำลังเขียน กดรายการเดิมอีกครั้งเพื่อออกโดยไม่บันทึก');return}
+  arLeave=null; showAr(b.dataset.id);
+});
+$('#arMain').addEventListener('input',e=>{
+  const t=e.target; if(!t.dataset||!t.dataset.l) return;
+  const o=arL()[t.dataset.l]&&arL()[t.dataset.l][+t.dataset.i]; if(o) o[t.dataset.f]=t.value;
+});
+$('#arMain').addEventListener('change',async e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.l&&t.tagName==='SELECT'){const o=arL()[t.dataset.l][+t.dataset.i];if(o)o[t.dataset.f]=t.value;return}
+  if(t.id==='arOffSel'&&t.value){const o=officerPool.find(x=>x.badge===t.value);if(o&&!arOff.some(x=>x.badge===o.badge))arOff.push({badge:o.badge,name:o.name,sig:''});arRenderOff();return}
+  if(t.dataset&&t.dataset.arfile){
+    const k=t.dataset.arfile, a=k==='ph'?arPh:arPlan, max=k==='ph'?12:3, room=max-a.length, all=[...t.files]; t.value='';
+    if(all.length>room) toast('แนบได้สูงสุด '+max+' ภาพในหัวข้อนี้');
+    for(const f of all.slice(0,Math.max(0,room))){
+      if(!/^image\//.test(f.type)){toast('ไฟล์ '+f.name+' ไม่ใช่รูปภาพ');continue}
+      try{const src=await fsCompress(f);a.push({id:db.collection('inspectionPhotos').doc().id,src,isNew:true,caption:''});arRenderPh(k)}catch(x){toast('อ่านรูป '+f.name+' ไม่สำเร็จ')}
+    }
+  }
+});
+$('#arMain').addEventListener('click',async e=>{
+  const t=e.target;
+  const im=t.closest('.fsimg,.fsth img'); if(im&&im.src&&im.src!==FS_BLANK){fsLightbox(im.src);return}
+  const ad=t.closest('[data-aradd]');
+  if(ad){const k=ad.dataset.aradd;if(k==='v'){arV.push({first:'',last:'',sex:'',age:''});arRenderV()}else if(k==='e'){arE.push({item:'',by:'',to:'',sentTo:'',storedAt:''});arRenderE()}else if(k==='vid'){if(arVid.length>=6){toast('เพิ่มลิงก์วิดีโอได้สูงสุด 6 รายการ');return}arVid.push({url:'',caption:''});arRenderVid()}return}
+  const rm=t.closest('[data-arrm]');
+  if(rm){const [k,i]=rm.dataset.arrm.split(':');const idx=+i;
+    if(k==='v'){arV.splice(idx,1);arRenderV()}else if(k==='e'){arE.splice(idx,1);arRenderE()}else if(k==='vid'){arVid.splice(idx,1);arRenderVid()}else if(k==='ph'){arPh.splice(idx,1);arRenderPh('ph')}else if(k==='plan'){arPlan.splice(idx,1);arRenderPh('plan')}else if(k==='off'){arOff.splice(idx,1);arRenderOff()}
+    return}
+  const sc=t.closest('[data-arsigclear]'); if(sc){const i=+sc.dataset.arsigclear;if(arOff[i]){arOff[i].sig='';const cv=document.querySelector(`canvas.arsig[data-oi="${i}"]`);if(cv)cv.getContext('2d').clearRect(0,0,cv.width,cv.height)}return}
+  if(t.closest('#arCancel')){arEditing&&arSel?showAr(arSel):showAr(null);return}
+  if(t.closest('#arEdit')){const c=arList.find(x=>x.id===arSel);if(c&&canEditAr(c))openArForm(c);return}
+  const del=t.closest('#arDel');
+  if(del){
+    const c=arList.find(x=>x.id===arSel); if(!c||!canDelAr(c)||!armed(del)) return;
+    try{await db.doc('arsonReports/'+c.id).delete();await Promise.all(arPhotoIds(c).map(pid=>db.doc('inspectionPhotos/'+pid).delete().catch(()=>{})));showAr(null);toast('ลบรายงาน ARSON แล้ว')}catch(x){toast('ลบไม่สำเร็จ ลองอีกครั้ง')}
+  }
+});
+$('#arMain').addEventListener('submit',async e=>{
+  if(e.target.id!=='arForm') return; e.preventDefault(); err('#arMsg','');
+  const fail=m=>err('#arMsg',m);
+  const at=tsOf($('#arDate').value,$('#arTime').value), invAt=tsOf($('#arInvDate').value,$('#arInvTime').value);
+  if(isNaN(at)) return fail('กรุณาระบุวันที่และเวลาที่เกิดเหตุ');
+  if(isNaN(invAt)) return fail('กรุณาระบุวันที่และเวลาที่เข้าตรวจสอบ');
+  if(invAt<at) return fail('เวลาที่เข้าตรวจสอบต้องไม่ก่อนเวลาที่เกิดเหตุ');
+  if(invAt>Date.now()+5*60000) return fail('เวลาที่เข้าตรวจสอบต้องไม่เกินเวลาปัจจุบัน');
+  const loc=$('#arLoc').value.trim(), coords=$('#arCoords').value.trim();
+  if(!loc) return fail('กรุณาใส่สถานที่เกิดเหตุ');
+  if(!coords) return fail('กรุณาใส่พิกัด');
+  const labels={1:'2. รายงานก่อนตรวจสอบพื้นที่ (ร่องรอย)',2:'2. รายงานก่อนตรวจสอบพื้นที่ (เบรกเกอร์/เส้นทางไฟ)',3:'3. จุดต้นเพลิง',4:'3. สาเหตุ/สารเร่งไฟ',5:'6. คำให้การพยาน',6:'6. พฤติกรรมน่าสงสัย',7:'7. ความคิดเห็นผู้เชี่ยวชาญ'};
+  const T={}; for(let i=1;i<=7;i++){T['t'+i]=$('#arT'+i).value.trim();if(!T['t'+i])return fail('หัวข้อ “'+labels[i]+'”: กรุณาเขียนรายละเอียด (ถ้าไม่มี ให้เขียนว่า “ไม่มี”)')}
+  const victims=arV.map(v=>({first:v.first.trim(),last:v.last.trim(),sex:v.sex,age:String(v.age||'').trim()})).filter(v=>v.first||v.last||v.sex||v.age);
+  for(const v of victims) if(!v.first&&!v.last) return fail('ผู้เสียหาย: กรุณาใส่ชื่อหรือนามสกุล');
+  const evidence=arE.map(x=>({item:x.item.trim(),by:x.by.trim(),to:x.to.trim(),sentTo:x.sentTo.trim(),storedAt:x.storedAt.trim()})).filter(x=>x.item||x.by||x.to||x.sentTo||x.storedAt);
+  for(const [i,x] of evidence.entries()) if(!x.item) return fail('หลักฐานที่ '+(i+1)+': กรุณาระบุรายการหลักฐาน');
+  if(!arPh.length) return fail('กรุณาแนบภาพถ่ายหลักฐานอย่างน้อย 1 ภาพ');
+  for(const [i,p] of arPh.entries()) if(!p.caption.trim()) return fail('ภาพถ่ายที่ '+(i+1)+': กรุณาระบุว่าภาพนี้คืออะไร');
+  for(const [i,p] of arPlan.entries()) if(!p.caption.trim()) return fail('แผนผังที่ '+(i+1)+': กรุณาระบุคำอธิบาย');
+  const videos=arVid.map(x=>({url:x.url.trim(),caption:x.caption.trim()})).filter(x=>x.url||x.caption);
+  for(const [i,x] of videos.entries()){if(!/^https?:\/\/\S+$/i.test(x.url)) return fail('วิดีโอที่ '+(i+1)+': ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://');if(!x.caption) return fail('วิดีโอที่ '+(i+1)+': กรุณาระบุว่าวิดีโอนี้คืออะไร')}
+  if(Object.values({a:arPh,b:arPlan}).some(a=>a.some(p=>!p.src))) return fail('รูปเดิมยังโหลดไม่เสร็จ รอสักครู่แล้วกดบันทึกอีกครั้ง');
+  const vd=(document.querySelector('input[name="arVerdict"]:checked')||{}).value;
+  if(!vd) return fail('กรุณาเลือกสรุปผล: อุบัติเหตุ หรือ จงใจวางเพลิง');
+  if(!arOff.length) return fail('กรุณาเพิ่มเจ้าหน้าที่ Arson ที่รับผิดชอบอย่างน้อย 1 คน');
+  for(const o of arOff) if(!o.sig) return fail('กรุณาลงลายมือชื่อของ '+o.name);
+  const btn=$('#arSave'); btn.disabled=true;
+  const now=Date.now(), rid=arEditing?arEditing.id:db.collection('arsonReports').doc().id;
+  try{
+    const fresh=[...arPh,...arPlan].filter(p=>p.isNew);
+    for(let i=0;i<fresh.length;i+=3){
+      btn.textContent='กำลังอัปโหลดรูป '+Math.min(i+3,fresh.length)+'/'+fresh.length+'…';
+      await Promise.all(fresh.slice(i,i+3).map(p=>db.doc('inspectionPhotos/'+p.id).set({data:p.src,reportId:rid,createdAt:now})));
+    }
+    fresh.forEach(p=>{fsPhotoCache.set(p.id,p.src);p.isNew=false});
+    const data={at,invAt,loc,coords,victims,...T,evidence,photos:arPh.map(p=>({id:p.id,caption:p.caption.trim()})),plan:arPlan.map(p=>({id:p.id,caption:p.caption.trim()})),videos,verdict:vd,officers:arOff.map(o=>({badge:o.badge,name:o.name,sig:o.sig})),updatedAt:now};
+    if(arEditing){
+      if(!canEditAr(arEditing)) throw new Error('คุณไม่มีสิทธิ์แก้ไขรายงานนี้');
+      await db.doc('arsonReports/'+rid).update({...data,updatedBy:myRef().name});
+      const keep=new Set(arPhotoIds(data));
+      await Promise.all(arPhotoIds(arEditing).filter(id=>!keep.has(id)).map(id=>db.doc('inspectionPhotos/'+id).delete().catch(()=>{})));
+      toast('บันทึกการแก้ไขรายงานแล้ว'); showAr(rid);
+    }else{
+      await db.doc('arsonReports/'+rid).set({...data,author:myRef(),createdAt:now});
+      if(!arList.some(x=>x.id===rid)) arList.unshift({id:rid,...data,author:myRef(),createdAt:now});
+      toast('บันทึกรายงาน ARSON แล้ว'); arSel=rid; arMode='view'; renderArList(); renderArView();
+    }
+  }catch(x){
+    fail(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ไปที่ Firebase Console > Firestore > Rules แล้วกด Publish กฎล่าสุด (ต้องมีส่วน arsonReports)':'บันทึกไม่สำเร็จ ['+(x.code||'error')+'] '+(x.message||''));
+    btn.disabled=false; btn.textContent=arEditing?'บันทึกการแก้ไข':'บันทึกรายงาน';
+  }
+});
+
 /* ---- case types (admin) ---- */
 let ctDirty=false;
 const ctRow=n=>`<tr data-orig="${esc(n||'')}"><td><input class="ct" maxlength="40" value="${esc(n||'')}" placeholder="เช่น ไฟไหม้อาคาร"></td><td><button type="button" class="btn sm danger" data-delct>ลบ</button></td></tr>`;
@@ -3000,7 +3269,7 @@ show('vAuth');
   if(typeof firebaseConfig==='undefined'){show('vNoDb');$('#noDbMsg').textContent='ไม่พบไฟล์ config.js ให้อัปโหลด config.js ไว้ในที่เดียวกับ index.html';return}
   if(!firebaseConfig.apiKey||firebaseConfig.apiKey==='PASTE_HERE'){show('vNoDb');$('#noDbMsg').textContent='ยังไม่ได้ใส่ค่า firebaseConfig ในไฟล์ config.js';return}
   try{firebase.initializeApp(firebaseConfig);db=firebase.firestore()}catch(e){show('vNoDb');$('#noDbMsg').textContent='เชื่อมต่อ Firebase ไม่สำเร็จ: '+e.message;return}
-  db.doc('config/bonus').onSnapshot(s=>{const d=s.exists?s.data():{};if(Array.isArray(d.ranks)&&d.ranks.length)RANKCFG=d.ranks;CUR=d.currency||'LSD';if(typeof d.signer==='string')SIGNER=d.signer;CASETYPES=(Array.isArray(d.caseTypes)&&d.caseTypes.length)?d.caseTypes.filter(x=>typeof x==='string'&&x):[...DEFAULT_CASE_TYPES];CASERATES={...DEFAULT_CASE_RATES,...(d.caseRates||{})};if(typeof renderCaseTypes==='function'){renderCaseTypes();fillCaseTypeSelect()}if(typeof renderCaseFee==='function'&&mode==='admin'){fillCaseRates();renderCaseFee()}DISCORD=d.discord||{};renderDiscord();fillRankSelect();renderRates();if(mode==='admin')renderAdmin()},()=>{});
+  db.doc('config/bonus').onSnapshot(s=>{const d=s.exists?s.data():{};if(Array.isArray(d.ranks)&&d.ranks.length)RANKCFG=d.ranks;CUR=d.currency||'LSD';if(typeof d.signer==='string')SIGNER=d.signer;CASETYPES=(Array.isArray(d.caseTypes)&&d.caseTypes.length)?d.caseTypes.filter(x=>typeof x==='string'&&x):[...DEFAULT_CASE_TYPES];CASERATES={...DEFAULT_CASE_RATES,...(d.caseRates||{})};if(typeof renderCaseTypes==='function'){renderCaseTypes();fillCaseTypeSelect()}if(typeof renderCaseFee==='function'&&mode==='admin'){fillCaseRates();renderCaseFee()}DISCORD=d.discord||{};STATION_LAST=d.stationNotice||null;renderDiscord();fillRankSelect();renderRates();if(mode==='admin')renderAdmin()},()=>{});
   if(lsGet('lsfd_admin')==='1'){enterAdmin();return}
   const saved=lsGet('lsfd_badge');
   if(saved){try{const s=await db.doc('officers/'+saved).get();if(s.exists&&s.data().pwHash){enter(saved);return}}catch(e){}lsSet('lsfd_badge',null)}
