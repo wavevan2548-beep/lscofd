@@ -174,6 +174,25 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .exq .exopt.chk{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer}
 #exForm .acts{display:flex;gap:8px;flex-wrap:wrap}
 #atCaseFee>.card{margin-bottom:20px}
+/* station open/close bar */
+.station-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 18px;margin-bottom:18px;border:1px solid var(--line);border-left:8px solid var(--muted);border-radius:var(--r);background:var(--surface)}
+.station-bar.open{border-left-color:#1D7A4C;background:rgba(29,122,76,.10)}
+.station-bar.closed{border-left-color:var(--red);background:rgba(212,39,50,.09)}
+.sn-info{display:flex;align-items:center;gap:14px;min-width:0}
+.sn-info b{display:block;font-size:20px;line-height:1.2}
+.sn-info small{display:block;color:var(--muted);margin-top:2px}
+.sn-dot{flex:none;width:18px;height:18px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px rgba(128,128,128,.2)}
+.station-bar.open .sn-dot{background:#1D7A4C;box-shadow:0 0 0 5px rgba(29,122,76,.28);animation:snpulse 2s infinite}
+.station-bar.closed .sn-dot{background:var(--red);box-shadow:0 0 0 5px rgba(212,39,50,.25)}
+@keyframes snpulse{50%{box-shadow:0 0 0 9px rgba(29,122,76,0)}}
+.sn-btns{display:flex;gap:10px;flex-wrap:wrap}
+.sn-btn{min-height:46px;padding:0 22px;border-radius:10px;border:2px solid transparent;font-size:16px;font-weight:700;cursor:pointer;color:#fff;font-family:inherit}
+.sn-open{background:#1D7A4C}
+.sn-close{background:var(--red-deep)}
+.sn-btn:hover:not(:disabled){filter:brightness(1.12)}
+.sn-btn:disabled{opacity:.35;cursor:not-allowed}
+.sn-btn.arm{outline:3px solid var(--amber);outline-offset:2px}
+@media (max-width:640px){.sn-btns{width:100%}.sn-btn{flex:1}}
 /* sidebar navigation */
 main.wrap:has(#vDash:not([hidden])),body:has(#vDash:not([hidden])) .band .wrap,body:has(#vDash:not([hidden])) .site-foot .wrap{max-width:1360px}
 .dash-layout{display:grid;grid-template-columns:232px minmax(0,1fr);gap:24px;align-items:start}
@@ -589,9 +608,13 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <h1 id="dName"></h1>
       </div>
       <div class="spacer"></div>
-      <button class="btn sm" id="stationBtn" title="ส่งประกาศไป Discord ห้องสำหรับแจ้งหน่วยงานอื่นว่าสถานีเปิดแล้ว">📢 แจ้งสถานีเปิด</button>
-        <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
+      <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
     </div>
+
+      <div class="station-bar unknown" id="snBar" role="region" aria-label="สถานะสถานี">
+        <div class="sn-info"><span class="sn-dot" aria-hidden="true"></span><div><b id="snTitle">ยังไม่ทราบสถานะสถานี</b><small id="snSub"></small></div></div>
+        <div class="sn-btns"><button type="button" class="sn-btn sn-open" id="snOpen">🟢 เปิดสถานี</button><button type="button" class="sn-btn sn-close" id="snClose">🔴 ปิดสถานี</button></div>
+      </div>
 
     <!-- officer view -->
     <div id="pMe">
@@ -972,9 +995,9 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
               <label class="chk"><input type="checkbox" id="dCal" checked> แจ้งเมื่อมีรายการใหม่ในปฏิทิน</label>
               <label class="chk"><input type="checkbox" id="dCase" checked> แจ้งเมื่อมีเคสใหม่</label>
             </div>
-            <label>Webhook URL · ห้องประกาศ “สถานีเปิดแล้ว” (คนละห้องกับด้านบน ใช้แจ้งหน่วยงานอื่น)<input id="dStationUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
+            <label>Webhook URL · ห้องประกาศ “สถานีเปิด / ปิด” (คนละห้องกับด้านบน ใช้แจ้งหน่วยงานอื่น)<input id="dStationUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
             <div id="dMsg" class="msg err" hidden></div>
-            <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ (ห้องเข้า-ออกเวร)</button><button class="btn" type="button" id="dStationTest">ทดสอบห้องประกาศสถานีเปิด</button></div>
+            <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ (ห้องเข้า-ออกเวร)</button><button class="btn" type="button" id="dStationTest">ทดสอบห้องประกาศสถานีเปิด/ปิด</button></div>
             <p class="hint">สร้าง Webhook ได้ที่ Discord: ตั้งค่าช่อง (Edit Channel) → Integrations → Webhooks → New Webhook → Copy Webhook URL · ข้อความแจ้งเตือนจะมีลิงก์กลับมาที่เว็บนี้</p>
           </form>
         </div>
@@ -1009,6 +1032,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 (function(){
 const $=s=>document.querySelector(s);
 const TZ='Asia/Bangkok', GOAL=30;
+let STATION=null;
 let TF12=(()=>{try{return localStorage.getItem('cad_timefmt')==='12'}catch(e){return false}})();
 let db=null, usr=null, isEditor=false, isOwner=false;
 let myBadge=null, me=null, myShifts=[], allOfficers=[], allShifts=[];
@@ -1106,7 +1130,7 @@ function refreshTimes(){
   }
 }
 function tick(){
-  const now=Date.now(); updateExamNav();
+  const now=Date.now(); updateExamNav(); try{renderStation()}catch(e){}
   $('#clock').textContent=fClock(now);
   $('#clockDate').textContent=fDate(now)+' · เวลาไทย';
   if(!$('#vDash').hidden){
@@ -1282,7 +1306,7 @@ function rowHtml(s,adminDel){
 }
 
 /* ---- discord ---- */
-let DISCORD={}, STATION_LAST=null;
+let DISCORD={};
 const siteUrl=()=>location.href.split('#')[0].split('?')[0];
 function renderDiscord(){
   if(!$('#fDiscord')||$('#fDiscord').contains(document.activeElement)) return;
@@ -1355,30 +1379,47 @@ $('#dTest').onclick=async()=>{
   catch(x){err('#dMsg','ส่งไม่สำเร็จ: '+x.message)}
 };
 
-const stationEmbed=(by,test)=>({title:test?'✅ ทดสอบการประกาศสถานีเปิด':'🚒 สถานีเปิดแล้ว',description:test?'ห้องนี้ถูกตั้งเป็นห้องประกาศสถานีเปิดของระบบ CAD':'**Los Santos County of Fire Department** เปิดให้บริการแล้ว หน่วยงานอื่นโปรดรับทราบ',color:test?0xC1121F:0x1D7A4C,fields:[{name:'เวลา',value:fDate(Date.now())+' '+fTime24(Date.now())+' น.',inline:true},{name:'แจ้งโดย',value:by,inline:true}],footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()});
+const durTxt=ms=>{const m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);return (h?h+' ชม. ':'')+(m%60)+' นาที'};
+function renderStation(){
+  const bar=$('#snBar'); if(!bar) return;
+  const st=STATION, open=st?st.open:null;
+  bar.className='station-bar '+(open===true?'open':open===false?'closed':'unknown');
+  $('#snTitle').textContent=open===true?'สถานีเปิดให้บริการอยู่':open===false?'สถานีปิดอยู่':'ยังไม่ทราบสถานะสถานี';
+  $('#snSub').textContent=open==null?'กดปุ่มด้านขวาเพื่อประกาศสถานะให้หน่วยงานอื่นทราบ':(open?'เปิดโดย ':'ปิดโดย ')+(st.by||'-')+' · '+fDate(st.at)+' '+fTime(st.at)+' น.'+(open?' · เปิดมาแล้ว '+durTxt(Date.now()-st.at):'');
+  $('#snOpen').disabled=open===true; $('#snClose').disabled=open===false;
+}
+const stationEmbed=(kind,by,extra)=>{
+  const f=[{name:'เวลา',value:fDate(Date.now())+' '+fTime24(Date.now())+' น.',inline:true},{name:'แจ้งโดย',value:by,inline:true}];
+  if(extra) f.push({name:'ระยะเวลาที่เปิดให้บริการ',value:extra,inline:true});
+  const m={open:{t:'🟢 สถานีเปิดแล้ว',d:'**Los Santos County of Fire Department** เปิดให้บริการแล้ว หน่วยงานอื่นโปรดรับทราบ',c:0x1D7A4C},close:{t:'🔴 สถานีปิดแล้ว',d:'**Los Santos County of Fire Department** ปิดให้บริการแล้ว หน่วยงานอื่นโปรดรับทราบ',c:0xC1121F},test:{t:'✅ ทดสอบการประกาศสถานีเปิด/ปิด',d:'ห้องนี้ถูกตั้งเป็นห้องประกาศสถานีเปิด/ปิดของระบบ CAD',c:0x9A6A00}}[kind];
+  return {title:m.t,description:m.d,color:m.c,fields:f,footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()};
+};
 $('#dStationTest').onclick=async()=>{
   err('#dMsg',''); const url=$('#dStationUrl').value.trim();
-  if(!validHook(url)) return err('#dMsg','ใส่ Webhook URL ห้องประกาศสถานีเปิดให้ถูกต้องก่อน');
+  if(!validHook(url)) return err('#dMsg','ใส่ Webhook URL ห้องประกาศสถานีเปิด/ปิดให้ถูกต้องก่อน');
   if(url===$('#dUrl').value.trim()) return err('#dMsg','ต้องเป็นคนละห้องกับห้องแจ้งเข้า-ออกเวร');
-  try{await postHook(url,{username:'CAD',embeds:[stationEmbed('Admin (ทดสอบ)',true)]});toast('ส่งข้อความทดสอบแล้ว ตรวจดูใน Discord')}
+  try{await postHook(url,{username:'Dispatcher LSCoFD',embeds:[stationEmbed('test','Admin (ทดสอบ)')]});toast('ส่งข้อความทดสอบแล้ว ตรวจดูใน Discord')}
   catch(x){err('#dMsg','ส่งไม่สำเร็จ: '+x.message)}
 };
-$('#stationBtn').onclick=async e=>{
-  const btn=e.currentTarget, url=DISCORD.stationUrl;
-  if(!url||!validHook(url)){toast('ยังไม่ได้ตั้งค่าห้องประกาศสถานีเปิด · ให้ Admin ใส่ Webhook ที่ ตั้งค่า > แจ้งเตือน Discord');return}
-  const by=mode==='admin'?'Admin':(me?me.first+' '+me.last+' #'+me.badge:'เจ้าหน้าที่');
-  const mins=STATION_LAST?Math.floor((Date.now()-STATION_LAST.at)/60000):null;
-  if(!btn.dataset.armed&&mins!=null&&mins<10) toast('มีการประกาศไปแล้วเมื่อ '+mins+' นาทีที่แล้วโดย '+(STATION_LAST.by||'-')+' · ถ้าต้องการส่งซ้ำ กดอีกครั้งเพื่อยืนยัน');
+const snReset=btn=>{btn.textContent=btn.id==='snOpen'?'🟢 เปิดสถานี':'🔴 ปิดสถานี';btn.classList.remove('arm');delete btn.dataset.armed};
+async function setStation(open,btn){
   if(!armed(btn)) return;
-  btn.disabled=true;
+  const by=mode==='admin'?'Admin':(me?me.first+' '+me.last+' #'+me.badge:'เจ้าหน้าที่');
+  const prev=STATION, now=Date.now(), rec={open,at:now,by};
+  $('#snOpen').disabled=true; $('#snClose').disabled=true;
+  try{await db.doc('config/bonus').set({stationState:rec},{merge:true});STATION=rec;renderStation()}
+  catch(x){toast('บันทึกสถานะสถานีไม่สำเร็จ ลองอีกครั้ง');renderStation();snReset(btn);return}
+  snReset(btn);
+  const url=DISCORD.stationUrl;
+  if(!url||!validHook(url)){toast((open?'บันทึกว่าสถานีเปิดแล้ว':'บันทึกว่าสถานีปิดแล้ว')+' · แต่ยังไม่ได้ตั้งค่า Webhook ห้องประกาศ จึงไม่ได้ส่ง Discord (Admin ตั้งค่าที่ ตั้งค่า > แจ้งเตือน Discord)');return}
   try{
-    await postHook(url,{username:'CAD',embeds:[stationEmbed(by,false)]});
-    const rec={at:Date.now(),by}; STATION_LAST=rec;
-    db.doc('config/bonus').set({stationNotice:rec},{merge:true}).catch(()=>{});
-    toast('ประกาศสถานีเปิดไปยัง Discord แล้ว');
-  }catch(x){toast('ส่งไม่สำเร็จ: '+x.message)}
-  finally{btn.disabled=false;delete btn.dataset.armed}
-};
+    await postHook(url,{username:'Dispatcher LSCoFD',embeds:[stationEmbed(open?'open':'close',by,(!open&&prev&&prev.open)?durTxt(now-prev.at):null)]});
+    toast(open?'ประกาศ “สถานีเปิดแล้ว” ไปยัง Discord แล้ว':'ประกาศ “สถานีปิดแล้ว” ไปยัง Discord แล้ว');
+  }catch(x){toast('บันทึกสถานะแล้ว แต่ส่ง Discord ไม่สำเร็จ: '+x.message)}
+}
+$('#snOpen').onclick=e=>setStation(true,e.currentTarget);
+$('#snClose').onclick=e=>setStation(false,e.currentTarget);
+renderStation();
 
 /* ---- manual time entry ---- */
 const DAY=864e5, MAX_BACK=14*DAY, MAX_SHIFT=24*3600000;
@@ -3269,7 +3310,7 @@ show('vAuth');
   if(typeof firebaseConfig==='undefined'){show('vNoDb');$('#noDbMsg').textContent='ไม่พบไฟล์ config.js ให้อัปโหลด config.js ไว้ในที่เดียวกับ index.html';return}
   if(!firebaseConfig.apiKey||firebaseConfig.apiKey==='PASTE_HERE'){show('vNoDb');$('#noDbMsg').textContent='ยังไม่ได้ใส่ค่า firebaseConfig ในไฟล์ config.js';return}
   try{firebase.initializeApp(firebaseConfig);db=firebase.firestore()}catch(e){show('vNoDb');$('#noDbMsg').textContent='เชื่อมต่อ Firebase ไม่สำเร็จ: '+e.message;return}
-  db.doc('config/bonus').onSnapshot(s=>{const d=s.exists?s.data():{};if(Array.isArray(d.ranks)&&d.ranks.length)RANKCFG=d.ranks;CUR=d.currency||'LSD';if(typeof d.signer==='string')SIGNER=d.signer;CASETYPES=(Array.isArray(d.caseTypes)&&d.caseTypes.length)?d.caseTypes.filter(x=>typeof x==='string'&&x):[...DEFAULT_CASE_TYPES];CASERATES={...DEFAULT_CASE_RATES,...(d.caseRates||{})};if(typeof renderCaseTypes==='function'){renderCaseTypes();fillCaseTypeSelect()}if(typeof renderCaseFee==='function'&&mode==='admin'){fillCaseRates();renderCaseFee()}DISCORD=d.discord||{};STATION_LAST=d.stationNotice||null;renderDiscord();fillRankSelect();renderRates();if(mode==='admin')renderAdmin()},()=>{});
+  db.doc('config/bonus').onSnapshot(s=>{const d=s.exists?s.data():{};if(Array.isArray(d.ranks)&&d.ranks.length)RANKCFG=d.ranks;CUR=d.currency||'LSD';if(typeof d.signer==='string')SIGNER=d.signer;CASETYPES=(Array.isArray(d.caseTypes)&&d.caseTypes.length)?d.caseTypes.filter(x=>typeof x==='string'&&x):[...DEFAULT_CASE_TYPES];CASERATES={...DEFAULT_CASE_RATES,...(d.caseRates||{})};if(typeof renderCaseTypes==='function'){renderCaseTypes();fillCaseTypeSelect()}if(typeof renderCaseFee==='function'&&mode==='admin'){fillCaseRates();renderCaseFee()}DISCORD=d.discord||{};STATION=d.stationState||null;renderStation();renderDiscord();fillRankSelect();renderRates();if(mode==='admin')renderAdmin()},()=>{});
   if(lsGet('lsfd_admin')==='1'){enterAdmin();return}
   const saved=lsGet('lsfd_badge');
   if(saved){try{const s=await db.doc('officers/'+saved).get();if(s.exists&&s.data().pwHash){enter(saved);return}}catch(e){}lsSet('lsfd_badge',null)}
