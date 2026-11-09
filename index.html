@@ -193,6 +193,12 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .sn-btn:disabled{opacity:.35;cursor:not-allowed}
 .sn-btn.arm{outline:3px solid var(--amber);outline-offset:2px}
 @media (max-width:640px){.sn-btns{width:100%}.sn-btn{flex:1}}
+.pf-back{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
+.pf-back[hidden]{display:none}
+.pf-box{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;width:min(480px,100%);max-height:92vh;overflow:auto;padding:18px;display:grid;gap:14px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.pf-box form{display:grid;gap:10px}
+.pf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:18px}
+.pf-info{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
 /* bell notifications */
 .theme-btn.bell-btn{position:relative}
 .theme-btn.bell-btn[hidden]{display:none}
@@ -525,6 +531,26 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
   </div>
 </header>
 
+<div class="pf-back" id="profModal" hidden>
+  <div class="pf-box" role="dialog" aria-modal="true" aria-label="โปรไฟล์ของฉัน">
+    <div class="pf-head"><b>⚙ โปรไฟล์ของฉัน</b><button type="button" class="bell-x" id="pfX" aria-label="ปิด">×</button></div>
+    <div class="pf-info"><span class="hint">Badge</span> <b class="mono" id="pfBadge"></b> <span class="hint">· ตำแหน่ง</span> <b id="pfRank"></b><div class="hint">Badge Number และตำแหน่งแก้ไขได้เฉพาะ Admin</div></div>
+    <form id="fProfile" novalidate>
+      <div class="row2"><label>ชื่อ<input id="pfFirst" maxlength="40" autocomplete="off"></label><label>นามสกุล<input id="pfLast" maxlength="40" autocomplete="off"></label></div>
+      <div id="pfMsg" class="msg err" hidden></div>
+      <button class="btn primary" type="submit" id="pfSave" style="justify-self:start">บันทึกชื่อ</button>
+      <p class="hint" style="margin:0">ชื่อที่เปลี่ยนจะใช้กับรายการใหม่ ส่วนเวร เคส และรายงานที่บันทึกไว้ก่อนหน้านี้จะยังแสดงชื่อเดิม</p>
+    </form>
+    <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:0">
+    <form id="fPwChange" novalidate autocomplete="off">
+      <b>เปลี่ยนรหัสผ่าน</b>
+      <label>รหัสผ่านปัจจุบัน<input id="pfCur" type="password" autocomplete="current-password"></label>
+      <div class="row2"><label>รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)<input id="pfNew" type="password" autocomplete="new-password"></label><label>ยืนยันรหัสผ่านใหม่<input id="pfNew2" type="password" autocomplete="new-password"></label></div>
+      <div id="pfPwMsg" class="msg err" hidden></div>
+      <button class="btn primary" type="submit" id="pfPwSave" style="justify-self:start">เปลี่ยนรหัสผ่าน</button>
+    </form>
+  </div>
+</div>
 <div class="bell-panel" id="bellPanel" role="dialog" aria-label="การแจ้งเตือนปฏิทิน" hidden>
   <div class="bell-head"><b>🔔 แจ้งเตือนปฏิทิน</b><label class="bell-sw"><input type="checkbox" id="bellSwitch"><span>เปิดแจ้งเตือน</span></label><button type="button" class="bell-x" id="bellX" aria-label="ปิดหน้าต่างแจ้งเตือน">×</button></div>
   <div id="bellList" class="bell-list"></div>
@@ -636,6 +662,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <h1 id="dName"></h1>
       </div>
       <div class="spacer"></div>
+      <button class="btn sm" id="profBtn" hidden>⚙ โปรไฟล์</button>
       <button class="btn sm" id="logoutBtn">ออกจากระบบ</button>
     </div>
 
@@ -678,7 +705,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
             <div class="rules">
               <div><span>02:01–17:59</span> กลางวัน = 1 แต้ม / ชั่วโมง</div>
               <div><span>18:00–02:00</span> กลางคืน = 2 แต้ม / ชั่วโมง</div>
-              <div>นับเฉพาะชั่วโมงที่ครบเต็ม (เศษไม่ถึง 1 ชม. ไม่นับ) อัตราของแต่ละชั่วโมงดูจากเวลาที่ชั่วโมงนั้นเริ่ม · ได้แต้มเมื่อกดออกเวร · ครบ 30 แต้มรับโบนัส</div>
+              <div>นับตามเวลาจริงทุกนาที เศษชั่วโมงนับตามสัดส่วน (เช่น กลางคืน 30 นาที = 1 แต้ม) · ได้แต้มเมื่อกดออกเวร · ครบ 30 แต้มรับโบนัส</div>
             </div>
           </div>
         </div>
@@ -709,7 +736,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
       <div class="fs-tabs" role="tablist" style="padding:0 0 12px;max-width:420px"><button type="button" data-casetab="general" aria-selected="true">เคสทั่วไป</button><button type="button" data-casetab="arson" aria-selected="false">ARSON</button></div>
       <div class="case-layout" id="caseGeneral">
         <div class="card">
-          <div class="card-h"><h2>Case Report</h2><div class="spacer"></div><button class="btn sm primary" id="caseNew">+ เขียนเคส</button></div>
+          <div class="card-h"><h2>รายงานเคส</h2><div class="spacer"></div><button class="btn sm primary" id="caseNew">+ เขียนเคส</button></div>
           <div class="case-filters">
             <input id="caseQ" placeholder="ค้นหาเลขที่เคส / ชื่อเคส / ชื่อผู้บาดเจ็บ" aria-label="ค้นหาเคส">
             <div class="row2">
@@ -1133,8 +1160,10 @@ const fTime=ts=>{const p=parts(ts);return TF12?h12(p.hour,p.minute):`${p.hour}:$
 const fClock=ts=>{const p=parts(ts);return TF12?h12(p.hour,p.minute,p.second):`${p.hour}:${p.minute}:${p.second}`};
 function pointsFor(ts){const p=parts(ts);const m=+p.hour*60+ +p.minute;return (m>=121&&m<=1079)?1:2}
 const HOUR=3600000;
-function shiftPoints(start,end){let p=0;for(let t=start;t+HOUR<=end;t+=HOUR)p+=pointsFor(t);return p}
-function liveRate(start,now){const done=Math.floor((now-start)/HOUR);const blockStart=start+done*HOUR;const r=pointsFor(blockStart);const left=blockStart+HOUR-now;const mm=Math.ceil(left/60000);return `สะสม ${shiftPoints(start,now)} แต้ม · อีก ${mm} น. ได้ +${r}`}
+function shiftPoints(start,end){let p=0;for(let t=start;t<end;t+=60000){p+=pointsFor(t)*Math.min(60000,end-t)/HOUR}return Math.round(p*100)/100}
+function ptsOf(s){return s&&s.end?shiftPoints(s.start,s.end):0}
+function fmtP(n){n=Math.round((+n||0)*10)/10;return Number.isInteger(n)?String(n):n.toFixed(1)}
+function liveRate(start,now){const done=Math.floor((now-start)/HOUR);const blockStart=start+done*HOUR;const r=pointsFor(blockStart);const left=blockStart+HOUR-now;const mm=Math.ceil(left/60000);return `สะสม ${fmtP(shiftPoints(start,now))} แต้ม · อีก ${mm} น. ได้ +${r}`}
 const pad=n=>String(n).padStart(2,'0');
 function hms(ms){const s=Math.max(0,Math.floor(ms/1000));return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`}
 function hm(min){min=Math.round(min);return `${Math.floor(min/60)} ชม. ${pad(min%60)} น.`}
@@ -1143,7 +1172,8 @@ const hours1=min=>(min/60).toFixed(1);
 /* ---- stats ---- */
 function statsFor(officer,shifts){
   let minutes=0,points=0,done=0;
-  for(const s of shifts){ if(s.end){minutes+=s.minutes||0;points+=s.points||0;done++} }
+  for(const s of shifts){ if(s.end){minutes+=s.minutes||0;points+=ptsOf(s);done++} }
+  points=Math.round(points*100)/100;
   if(officer&&officer.activeStart) minutes+=(Date.now()-officer.activeStart)/60000;
   const redeemed=officer?.bonusRedeemed||0;
   const avail=Math.max(0,points-redeemed);
@@ -1175,7 +1205,7 @@ function refreshTimes(){
   }
 }
 function tick(){
-  const now=Date.now(); updateExamNav(); try{renderStation()}catch(e){} try{notifVis()}catch(e){}
+  const now=Date.now(); updateExamNav(); try{pfVis()}catch(e){} try{renderStation()}catch(e){} try{notifVis()}catch(e){}
   $('#clock').textContent=fClock(now);
   $('#clockDate').textContent=fDate(now)+' · เวลาไทย';
   if(!$('#vDash').hidden){
@@ -1279,11 +1309,11 @@ function renderMe(){
   const st=statsFor(me,myShifts);
   $('#sHours').innerHTML=hours1(st.minutes)+'<small> ชม.</small>';
   $('#sShifts').textContent=st.done+' กะที่เสร็จสิ้น';
-  $('#sPts').innerHTML=st.avail+'<small> / '+GOAL+'</small>';
+  $('#sPts').innerHTML=fmtP(st.avail)+'<small> / '+GOAL+'</small>';
   $('#sBar').style.width=Math.min(100,st.avail/GOAL*100)+'%';
   const bc=$('#sBonusCard');
   if(st.eligible>0){bc.classList.add('bonus');$('#sBonus').textContent='ได้รับเงินโบนัส';$('#sBonusSub').textContent='ครบ '+GOAL+' แต้มแล้ว'+(st.eligible>1?' ('+st.eligible+' ครั้ง)':'')+' · ติดต่อ Admin';}
-  else{bc.classList.remove('bonus');$('#sBonus').textContent='ยังไม่ถึง';$('#sBonusSub').textContent='อีก '+(GOAL-st.avail)+' แต้ม'+(st.paid?' · รับไปแล้ว '+st.paid+' ครั้ง':'');}
+  else{bc.classList.remove('bonus');$('#sBonus').textContent='ยังไม่ถึง';$('#sBonusSub').textContent='อีก '+fmtP(GOAL-st.avail)+' แต้ม'+(st.paid?' · รับไปแล้ว '+st.paid+' ครั้ง':'');}
   $('#histBody').innerHTML=myShifts.map(x=>rowHtml(x)).join('');
   $('#histEmpty').hidden=myShifts.length>0;
   $('#histCount').textContent=(myShifts.length?myShifts.length+' รายการ · ':'')+(periodStart?'รอบเริ่ม '+fDate(periodStart):'รอบปัจจุบัน');
@@ -1313,7 +1343,7 @@ function shPreview(){
   const en=s.end?tsOf($('#shOutD').value,$('#shOutT').value):null;
   const pv=$('#shPv');
   if(isNaN(st)||(s.end&&isNaN(en))){pv.textContent='';return}
-  pv.textContent=s.end?(en>st?'ระยะเวลาใหม่ '+hm((en-st)/60000)+' · '+shiftPoints(st,en)+' แต้ม (เดิม '+hm(s.minutes||0)+' · '+(s.points||0)+' แต้ม)':'เวลาออกต้องอยู่หลังเวลาเข้า'):'เวลาเข้าเวรใหม่ '+fDate(st)+' '+fTime(st)+' น.';
+  pv.textContent=s.end?(en>st?'ระยะเวลาใหม่ '+hm((en-st)/60000)+' · '+fmtP(shiftPoints(st,en))+' แต้ม (เดิม '+hm(s.minutes||0)+' · '+fmtP(ptsOf(s))+' แต้ม)':'เวลาออกต้องอยู่หลังเวลาเข้า'):'เวลาเข้าเวรใหม่ '+fDate(st)+' '+fTime(st)+' น.';
 }
 document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#shEditForm'))shPreview()});
 document.addEventListener('submit',async e=>{
@@ -1349,7 +1379,7 @@ function rowHtml(s,adminDel){
   const night=pointsFor(s.start)===2;
   const dur=s.end?hm(s.minutes||0):'<span class="pill live">กำลังปฏิบัติ</span>';
   const mk='<span class="pill man" title="ระบุเวลาเอง">ระบุเอง</span>';
-  return `<tr><td class="mono">${fDate(s.start)}</td><td class="mono">${fTime(s.start)}${s.manual?' '+mk:''}</td><td class="mono">${s.end?fTime(s.end)+(fDate(s.end)!==fDate(s.start)?' <span class="hint">(+1)</span>':'')+(s.manualEnd?' '+mk:''):'—'}</td><td class="num">${dur}</td><td><span class="pill ${night?'night':''}">${night?'กลางคืน':'กลางวัน'}</span></td><td class="num mono">${s.end?'+'+s.points:'('+shiftPoints(s.start,Date.now())+')'}</td>${adminDel?`<td style="white-space:nowrap"><button class="btn sm" data-act="editshift" data-id="${esc(s.id)}">แก้เวลา</button> <button class="btn sm danger" data-act="delshift" data-id="${esc(s.id)}">ลบ</button></td>`:''}</tr>${adminDel&&shEditId===s.id?shiftEditRow(s):''}`;
+  return `<tr><td class="mono">${fDate(s.start)}</td><td class="mono">${fTime(s.start)}${s.manual?' '+mk:''}</td><td class="mono">${s.end?fTime(s.end)+(fDate(s.end)!==fDate(s.start)?' <span class="hint">(+1)</span>':'')+(s.manualEnd?' '+mk:''):'—'}</td><td class="num">${dur}</td><td><span class="pill ${night?'night':''}">${night?'กลางคืน':'กลางวัน'}</span></td><td class="num mono">${s.end?'+'+fmtP(ptsOf(s)):'('+fmtP(shiftPoints(s.start,Date.now()))+')'}</td>${adminDel?`<td style="white-space:nowrap"><button class="btn sm" data-act="editshift" data-id="${esc(s.id)}">แก้เวลา</button> <button class="btn sm danger" data-act="delshift" data-id="${esc(s.id)}">ลบ</button></td>`:''}</tr>${adminDel&&shEditId===s.id?shiftEditRow(s):''}`;
 }
 
 /* ---- discord ---- */
@@ -1382,13 +1412,13 @@ function notify(kind,o,x){
     embed={title:x.forced?'⛔ ถูกบังคับออกเวร (โดย Admin)':x.manual?'🔴 ออกเวร (ระบุเวลาเอง)':'🔴 ออกเวร',color:x.forced?0x8E0D17:0xC1121F,description:`**${o.first} ${o.last}** ออกจากการปฏิบัติหน้าที่`,fields:[
       {name:'Badge',value:'#'+o.badge,inline:true},{name:'ตำแหน่ง',value:o.rank||'-',inline:true},
       {name:'เวลา',value:fTime24(x.start)+' – '+fTime24(x.end)+' น. ('+fDate(x.end)+')',inline:true},
-      {name:'ระยะเวลา',value:hm(x.minutes),inline:true},{name:'แต้มที่ได้',value:'+'+x.points,inline:true},
-      {name:'แต้มสะสมรอบนี้',value:(x.total??'-')+' / '+GOAL+(x.total>=GOAL?' 🏅 ได้รับโบนัส':''),inline:true}]};
+      {name:'ระยะเวลา',value:hm(x.minutes),inline:true},{name:'แต้มที่ได้',value:'+'+fmtP(x.points),inline:true},
+      {name:'แต้มสะสมรอบนี้',value:(x.total==null?'-':fmtP(x.total))+' / '+GOAL+(x.total>=GOAL?' 🏅 ได้รับโบนัส':''),inline:true}]};
   }else if(kind==='manual'){
     embed={title:'📝 ลงเวลาย้อนหลัง',color:0x9A6A00,description:`**${o.first} ${o.last}** ลงเวลาเข้า–ออกเวรย้อนหลัง`,fields:[
       {name:'Badge',value:'#'+o.badge,inline:true},{name:'ตำแหน่ง',value:o.rank||'-',inline:true},
       {name:'เวลา',value:fDate(x.start)+' '+fTime24(x.start)+' – '+fDate(x.end)+' '+fTime24(x.end)+' น.'},
-      {name:'ระยะเวลา',value:hm(x.minutes),inline:true},{name:'แต้มที่ได้',value:'+'+x.points,inline:true},
+      {name:'ระยะเวลา',value:hm(x.minutes),inline:true},{name:'แต้มที่ได้',value:'+'+fmtP(x.points),inline:true},
       {name:'หมายเหตุ',value:x.note||'-',inline:true}]};
   }else if(kind==='case'){
     const w=worstTri(x), pts=x.patients||[];
@@ -1494,7 +1524,7 @@ function syncManual(){
   const end=still?Date.now():tsOf($('#mOutD').value,$('#mOutT').value);
   const pv=$('#manPreview');
   if(!start||isNaN(start)||isNaN(end)||end<=start){pv.textContent='';return}
-  pv.textContent=(still?'ถึงตอนนี้ ':'')+'ระยะเวลา '+hm((end-start)/60000)+' · '+shiftPoints(start,end)+' แต้ม';
+  pv.textContent=(still?'ถึงตอนนี้ ':'')+'ระยะเวลา '+hm((end-start)/60000)+' · '+fmtP(shiftPoints(start,end))+' แต้ม';
 }
 $('#manToggle').onclick=openManual;
 $('#mCancel').onclick=closeManual;
@@ -1545,7 +1575,7 @@ $('#fManual').addEventListener('submit',async e=>{
         const minutes=Math.round((end-start)/60000), points=shiftPoints(start,end);
         await db.collection('shifts').doc().set({badge:myBadge,name:me.first+' '+me.last,start,end,minutes,points,manual:true,manualEnd:true,enteredAt:now,...(note?{note}:{})});
         notify('manual',me,{start,end,minutes,points,note});
-        closeManual(); toast('บันทึกกะย้อนหลังแล้ว +'+points+' แต้ม');
+        closeManual(); toast('บันทึกกะย้อนหลังแล้ว +'+fmtP(points)+' แต้ม');
       }
     }
   }catch(x){err('#mMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase':(x.message||'บันทึกไม่สำเร็จ'))}
@@ -1557,7 +1587,7 @@ function renderManualList(){
   const list=allShifts.filter(s=>s.manual||s.manualEnd).sort((a,b)=>(b.enteredAt||b.start)-(a.enteredAt||a.start));
   const mk='<span class="pill man">ระบุเอง</span>';
   $('#manEmpty').hidden=list.length>0; $('#manCount').textContent=list.length?list.length+' รายการในรอบนี้':'';
-  $('#manBody').innerHTML=list.map(s=>`<tr><td>${esc(s.name||'')} <span class="hint">#${esc(s.badge)}</span></td><td class="mono">${fDate(s.start)}</td><td class="mono">${fTime(s.start)}${s.manual?' '+mk:''}</td><td class="mono">${s.end?fTime(s.end)+(s.manualEnd?' '+mk:''):'—'}</td><td class="num">${s.end?hm(s.minutes||0):'กำลังปฏิบัติ'}</td><td class="num mono">${s.end?'+'+(s.points||0):'—'}</td><td style="white-space:normal;min-width:140px">${esc(s.note||'—')}</td><td><button class="btn sm danger" data-del="${esc(s.id)}">ลบ</button></td></tr>`).join('');
+  $('#manBody').innerHTML=list.map(s=>`<tr><td>${esc(s.name||'')} <span class="hint">#${esc(s.badge)}</span></td><td class="mono">${fDate(s.start)}</td><td class="mono">${fTime(s.start)}${s.manual?' '+mk:''}</td><td class="mono">${s.end?fTime(s.end)+(s.manualEnd?' '+mk:''):'—'}</td><td class="num">${s.end?hm(s.minutes||0):'กำลังปฏิบัติ'}</td><td class="num mono">${s.end?'+'+fmtP(ptsOf(s)):'—'}</td><td style="white-space:normal;min-width:140px">${esc(s.note||'—')}</td><td><button class="btn sm danger" data-del="${esc(s.id)}">ลบ</button></td></tr>`).join('');
 }
 $('#manBody').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-del]'); if(!b||!armed(b)) return;
@@ -1893,7 +1923,7 @@ async function closeShift(badge,o,opt={}){
   await db.doc('officers/'+badge).update({activeShiftId:null,activeStart:null});
   let total=null;
   if(badge===myBadge&&me) total=statsFor(me,myShifts).avail+points;
-  else { const sh=allShifts.filter(x=>x.badge===badge&&x.end); total=Math.max(0,sh.reduce((a,x)=>a+(x.points||0),0)-(o.bonusRedeemed||0))+points; }
+  else { const sh=allShifts.filter(x=>x.badge===badge&&x.end); total=Math.max(0,sh.reduce((a,x)=>a+ptsOf(x),0)-(o.bonusRedeemed||0))+points; }
   notify('out',o,{start,end,minutes,points,total,forced:!!opt.forced,manual:!!opt.manual});
 }
 
@@ -2020,7 +2050,7 @@ function renderAdminRows(){
   $('#aEmpty').hidden=allOfficers.length>0;
   $('#aBody').innerHTML=shown.map(({o,st,shifts})=>{
     const open=openRow===o.badge;
-    let h=`<tr class="officer" data-badge="${esc(o.badge)}"><td class="badge-no">${esc(o.badge)}</td><td>${esc(o.first+' '+o.last)} </td><td>${esc(o.rank)}</td><td>${o.activeShiftId?'<span class="pill live">● เข้าเวร '+fTime(o.activeStart)+'</span>':'<span class="pill">นอกเวร</span>'}</td><td class="num mono">${hours1(st.minutes)}</td><td class="num mono">${st.avail}</td><td class="num mono">${st.points}</td><td>${st.eligible?'<span class="pill gold">ได้รับโบนัส'+(st.eligible>1?' ×'+st.eligible:'')+'</span>':(st.paid?'<span class="hint">จ่ายแล้ว '+st.paid+' ครั้ง</span>':'<span class="hint">—</span>')}</td></tr>`;
+    let h=`<tr class="officer" data-badge="${esc(o.badge)}"><td class="badge-no">${esc(o.badge)}</td><td>${esc(o.first+' '+o.last)} </td><td>${esc(o.rank)}</td><td>${o.activeShiftId?'<span class="pill live">● เข้าเวร '+fTime(o.activeStart)+'</span>':'<span class="pill">นอกเวร</span>'}</td><td class="num mono">${hours1(st.minutes)}</td><td class="num mono">${fmtP(st.avail)}</td><td class="num mono">${fmtP(st.points)}</td><td>${st.eligible?'<span class="pill gold">ได้รับโบนัส'+(st.eligible>1?' ×'+st.eligible:'')+'</span>':(st.paid?'<span class="hint">จ่ายแล้ว '+st.paid+' ครั้ง</span>':'<span class="hint">—</span>')}</td></tr>`;
     if(open){
       h+=`<tr class="detail"><td colspan="8"><div class="detail-actions">
         <button class="btn sm" data-act="edit" data-badge="${esc(o.badge)}">${editRow===o.badge?'ปิดการแก้ไข':'แก้ไขข้อมูล'}</button>
@@ -3124,7 +3154,9 @@ function auditDescribe(op,path,a,ac){
         if(d.bonusRedeemed===0&&Array.isArray(d.bonusLog)&&!d.bonusLog.length) return null;
         return ['admin','บันทึกจ่ายโบนัส','#'+id];
       }
-      if(keys.includes('pwHash')) return [ac.role==='admin'?'admin':'login','เปลี่ยน/รีเซ็ตรหัสผ่านเจ้าหน้าที่','#'+id];
+      const self=ac.role==='officer'&&ac.badge===id;
+      if(keys.includes('pwHash')) return self?['login','เปลี่ยนรหัสผ่านของตนเอง','']:[ac.role==='admin'?'admin':'login','เปลี่ยน/รีเซ็ตรหัสผ่านเจ้าหน้าที่','#'+id];
+      if(self) return ['login','แก้ไขโปรไฟล์ของตนเอง',tx(d.first,d.last)];
       return [ac.role==='admin'?'admin':'login','แก้ไขข้อมูลเจ้าหน้าที่','#'+id];
     }
     case 'config':{
@@ -3265,6 +3297,51 @@ $('#bellBrowser').onclick=async()=>{
 };
 setInterval(()=>{try{notifRefresh(false)}catch(e){}},60000);
 
+/* ---- my profile (officer) ---- */
+function pfOpen(){
+  if(mode!=='officer'||!me) return;
+  $('#pfFirst').value=me.first||''; $('#pfLast').value=me.last||'';
+  $('#pfBadge').textContent='#'+me.badge; $('#pfRank').textContent=me.rank||'-';
+  ['#pfCur','#pfNew','#pfNew2'].forEach(id=>$(id).value=''); err('#pfMsg',''); err('#pfPwMsg','');
+  $('#profModal').hidden=false; $('#pfFirst').focus();
+}
+function pfClose(){$('#profModal').hidden=true}
+function pfVis(){const b=$('#profBtn');if(b){const ok=mode==='officer';if(b.hidden===ok)b.hidden=!ok}}
+$('#profBtn').onclick=pfOpen;
+$('#pfX').onclick=pfClose;
+$('#profModal').addEventListener('click',e=>{if(e.target===$('#profModal'))pfClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#profModal').hidden)pfClose()});
+$('#fProfile').addEventListener('submit',async e=>{
+  e.preventDefault(); err('#pfMsg','');
+  if(mode!=='officer'||!me) return;
+  const first=$('#pfFirst').value.trim(), last=$('#pfLast').value.trim();
+  if(!first||!last) return err('#pfMsg','กรุณากรอกชื่อและนามสกุล');
+  if(first.length>40||last.length>40) return err('#pfMsg','ชื่อและนามสกุลต้องไม่เกิน 40 ตัวอักษร');
+  if(first===me.first&&last===me.last){toast('ไม่มีการเปลี่ยนแปลง');return}
+  const btn=$('#pfSave'); btn.disabled=true;
+  try{await db.doc('officers/'+me.badge).update({first,last});toast('บันทึกโปรไฟล์แล้ว');pfClose()}
+  catch(x){err('#pfMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase':'บันทึกไม่สำเร็จ ['+(x.code||'error')+']')}
+  finally{btn.disabled=false}
+});
+$('#fPwChange').addEventListener('submit',async e=>{
+  e.preventDefault(); err('#pfPwMsg','');
+  if(mode!=='officer'||!me) return;
+  const cur=$('#pfCur').value, nw=$('#pfNew').value, nw2=$('#pfNew2').value;
+  if(!cur) return err('#pfPwMsg','กรุณากรอกรหัสผ่านปัจจุบัน');
+  if(nw.length<4) return err('#pfPwMsg','รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร');
+  if(nw!==nw2) return err('#pfPwMsg','รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน');
+  if(nw===cur) return err('#pfPwMsg','รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม');
+  const btn=$('#pfPwSave'); btn.disabled=true;
+  try{
+    if(await hashPw(cur,me.salt)!==me.pwHash) throw new Error('รหัสผ่านปัจจุบันไม่ถูกต้อง');
+    const salt=newSalt(), pwHash=await hashPw(nw,salt);
+    await db.doc('officers/'+me.badge).update({salt,pwHash});
+    ['#pfCur','#pfNew','#pfNew2'].forEach(id=>$(id).value='');
+    toast('เปลี่ยนรหัสผ่านแล้ว ใช้รหัสผ่านใหม่ในการเข้าสู่ระบบครั้งถัดไป'); pfClose();
+  }catch(x){err('#pfPwMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase':(x.message||'เปลี่ยนรหัสผ่านไม่สำเร็จ'))}
+  finally{btn.disabled=false}
+});
+
 /* ---- case types (admin) ---- */
 let ctDirty=false;
 const ctRow=n=>`<tr data-orig="${esc(n||'')}"><td><input class="ct" maxlength="40" value="${esc(n||'')}" placeholder="เช่น ไฟไหม้อาคาร"></td><td><button type="button" class="btn sm danger" data-delct>ลบ</button></td></tr>`;
@@ -3398,7 +3475,7 @@ function renderReport(){
   $('#repBack').hidden=!repSource; $('#cutBtn').disabled=!!repSource;
   $('#repCount').textContent=el.length+' คน'; $('#repTotal').textContent=m(totalOf(r)); $('#repRange').textContent=rangeTxt(r);
   $('#repEmpty').hidden=el.length>0;
-  $('#repBody').innerHTML=el.length?el.map((x,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(x.category||'—')}</td><td>${esc(x.rank)}</td><td>${esc(x.first+' '+x.last)} <span class="hint">(${esc(x.badge)})</span></td><td class="num mono">${hours1(x.minutes)}</td><td class="num mono">${x.points}</td><td class="num mono">${x.times}</td><td class="num mono">${m(x.rate)}</td><td class="num mono"><b>${m(x.amount)}</b></td></tr>`).join('')+`<tr class="total"><td colspan="8">รวมทั้งหมด</td><td class="num mono">${m(totalOf(r))}</td></tr>`:'';
+  $('#repBody').innerHTML=el.length?el.map((x,i)=>`<tr><td class="mono">${i+1}</td><td>${esc(x.category||'—')}</td><td>${esc(x.rank)}</td><td>${esc(x.first+' '+x.last)} <span class="hint">(${esc(x.badge)})</span></td><td class="num mono">${hours1(x.minutes)}</td><td class="num mono">${fmtP(x.points)}</td><td class="num mono">${x.times}</td><td class="num mono">${m(x.rate)}</td><td class="num mono"><b>${m(x.amount)}</b></td></tr>`).join('')+`<tr class="total"><td colspan="8">รวมทั้งหมด</td><td class="num mono">${m(totalOf(r))}</td></tr>`:'';
 }
 $('#repBack').onclick=()=>{repSource=null;renderReport()};
 
@@ -3411,7 +3488,7 @@ $('#cutBtn').onclick=async e=>{
     const doc={createdAt:now,periodStart:r.periodStart,firstShift:r.firstShift,periodEnd:now,currency:CUR,signer:SIGNER,ranks:RANKCFG,goal:GOAL,
       officerCount:r.rows.length,eligibleCount:eligibleOf(r).length,totalAmount:totalOf(r),rows:r.rows,
       bonusPaidLog:allOfficers.filter(o=>(o.bonusLog||[]).length).map(o=>({badge:o.badge,log:o.bonusLog})),
-      shifts:allShifts.filter(s=>s.end).map(s=>({badge:s.badge,name:s.name,start:s.start,end:s.end,minutes:s.minutes,points:s.points}))};
+      shifts:allShifts.filter(s=>s.end).map(s=>({badge:s.badge,name:s.name,start:s.start,end:s.end,minutes:s.minutes,points:ptsOf(s)}))};
     if(JSON.stringify(doc).length>230000){doc.shifts=[];doc.shiftsOmitted=true}
     await db.collection('backups').doc('cut-'+now).set(doc);
     await db.doc('config/period').set({start:now,lastCutId:'cut-'+now});
@@ -3429,9 +3506,9 @@ function hoursRows(){
     const now=Date.now(), by={}; allShifts.forEach(s=>(by[s.badge]=by[s.badge]||[]).push(s));
     const rows=allOfficers.map(o=>{
       let mins=0,nm=0,n=0,pts=0,last=null;
-      for(const s of by[o.badge]||[]){const e=s.end||now;mins+=s.end?(s.minutes||0):(now-s.start)/60000;nm+=nightMin(s.start,e);if(s.end){n++;pts+=s.points||0}last=Math.max(last||0,s.start)}
+      for(const s of by[o.badge]||[]){const e=s.end||now;mins+=s.end?(s.minutes||0):(now-s.start)/60000;nm+=nightMin(s.start,e);if(s.end){n++;pts+=ptsOf(s)}last=Math.max(last||0,s.start)}
       mins=Math.round(mins); nm=Math.min(nm,mins);
-      return {badge:o.badge,name:o.first+' '+o.last,rank:o.rank,order:rankOrder(o.rank),minutes:mins,night:nm,day:mins-nm,shifts:n,points:pts,last,live:!!o.activeShiftId};
+      return {badge:o.badge,name:o.first+' '+o.last,rank:o.rank,order:rankOrder(o.rank),minutes:mins,night:nm,day:mins-nm,shifts:n,points:Math.round(pts*100)/100,last,live:!!o.activeShiftId};
     });
     return {rows,range:(periodStart?fDate(periodStart)+' '+fTime24(periodStart):'เริ่มใช้งานระบบ')+' – ปัจจุบัน',note:''};
   }
@@ -3465,7 +3542,7 @@ function renderHours(){
   const list=rows.filter(r=>!q||(r.badge+' '+r.name+' '+r.rank).toLowerCase().includes(q))
     .sort(sort==='rank'?(a,b)=>a.order-b.order||b.minutes-a.minutes:sort==='badge'?(a,b)=>a.badge.localeCompare(b.badge):(a,b)=>b.minutes-a.minutes||a.badge.localeCompare(b.badge));
   $('#hrEmpty').hidden=rows.length>0;
-  $('#hrBody').innerHTML=list.map(r=>`<tr><td class="num mono">${pos[r.badge]??'–'}</td><td class="badge-no">${esc(r.badge)}</td><td>${esc(r.name)}${r.live?' <span class="pill live">● เข้าเวร</span>':''}</td><td>${esc(r.rank||'-')}</td><td><div class="hbar"><b>${hours1(r.minutes)}</b><span class="track"><i class="${r.minutes?'':'zero'}" style="width:${(r.minutes/max*100).toFixed(1)}%"></i></span></div></td><td class="num mono">${r.day==null?'–':hours1(r.day)}</td><td class="num mono">${r.night==null?'–':hours1(r.night)}</td><td class="num mono">${r.shifts}</td><td class="num mono">${r.points}</td><td class="mono">${r.last?fDate(r.last):'–'}</td></tr>`).join('');
+  $('#hrBody').innerHTML=list.map(r=>`<tr><td class="num mono">${pos[r.badge]??'–'}</td><td class="badge-no">${esc(r.badge)}</td><td>${esc(r.name)}${r.live?' <span class="pill live">● เข้าเวร</span>':''}</td><td>${esc(r.rank||'-')}</td><td><div class="hbar"><b>${hours1(r.minutes)}</b><span class="track"><i class="${r.minutes?'':'zero'}" style="width:${(r.minutes/max*100).toFixed(1)}%"></i></span></div></td><td class="num mono">${r.day==null?'–':hours1(r.day)}</td><td class="num mono">${r.night==null?'–':hours1(r.night)}</td><td class="num mono">${r.shifts}</td><td class="num mono">${fmtP(r.points)}</td><td class="mono">${r.last?fDate(r.last):'–'}</td></tr>`).join('');
 }
 $('#hrSrc').addEventListener('change',e=>{hrSrc=e.target.value;renderHours()});
 ['#hrQ','#hrSort'].forEach(id=>$(id).addEventListener('input',renderHours));
