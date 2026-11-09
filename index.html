@@ -641,13 +641,13 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <button id="vtMe" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Duty</span></button>
         <button id="vtAdmin" aria-selected="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span>Admin</span></button>
         <div class="subtabs" role="tablist" aria-label="เมนูผู้ดูแลระบบ">
-          <button data-sub="atOfficers" aria-selected="true">Officer</button>
-          <button data-sub="atReport" aria-selected="false">Bonus Weekly</button>
-          <button data-sub="atHours" aria-selected="false">Duty hours</button>
-          <button data-sub="atCaseFee" aria-selected="false">Income Case</button>
-          <button data-sub="atBackups" aria-selected="false">Backup Data</button>
-          <button data-sub="atActivity" aria-selected="false">History Activity</button>
-          <button data-sub="atSettings" aria-selected="false">Setting Systems</button>
+          <button data-sub="atOfficers" aria-selected="true">เจ้าหน้าที่</button>
+          <button data-sub="atReport" aria-selected="false">รายงานโบนัส & ตัดยอด</button>
+          <button data-sub="atHours" aria-selected="false">ชั่วโมงเจ้าหน้าที่</button>
+          <button data-sub="atCaseFee" aria-selected="false">ค่าเคส</button>
+          <button data-sub="atBackups" aria-selected="false">ข้อมูลสำรอง</button>
+          <button data-sub="atActivity" aria-selected="false">ประวัติกิจกรรม</button>
+          <button data-sub="atSettings" aria-selected="false">ตั้งค่า</button>
         </div>
         <button id="vtCase" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Case</span></button>
         <button id="vtFs" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2 0-3-1-5 1-8z"/></svg><span>Fire Safety</span></button>
@@ -705,7 +705,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
             <div class="rules">
               <div><span>02:01–17:59</span> กลางวัน = 1 แต้ม / ชั่วโมง</div>
               <div><span>18:00–02:00</span> กลางคืน = 2 แต้ม / ชั่วโมง</div>
-              <div>นับตามเวลาจริงทุกนาที เศษชั่วโมงนับตามสัดส่วน (เช่น กลางคืน 30 นาที = 1 แต้ม) · ได้แต้มเมื่อกดออกเวร · ครบ 30 แต้มรับโบนัส</div>
+              <div>สะสมชั่วโมงจากทุกกะ ครบ 1 ชม. กลางวัน = 1 แต้ม · ครบ 1 ชม. กลางคืน = 2 แต้ม (เศษที่ยังไม่ครบ 1 ชม. สะสมต่อไปยังกะถัดไป ไม่หายไป ไม่มีขั้นต่ำต่อกะ) · ได้แต้มเมื่อกดออกเวร · ครบ 30 แต้มรับโบนัส · แต้มต่อกะในตารางเป็นค่าประมาณตามสัดส่วน</div>
             </div>
           </div>
         </div>
@@ -1162,8 +1162,11 @@ function pointsFor(ts){const p=parts(ts);const m=+p.hour*60+ +p.minute;return (m
 const HOUR=3600000;
 function shiftPoints(start,end){let p=0;for(let t=start;t<end;t+=60000){p+=pointsFor(t)*Math.min(60000,end-t)/HOUR}return Math.round(p*100)/100}
 function ptsOf(s){return s&&s.end?shiftPoints(s.start,s.end):0}
+function splitMs(start,end){let day=0,night=0;for(let t=start;t<end;t+=60000){const l=Math.min(60000,end-t);if(pointsFor(t)===2)night+=l;else day+=l}return {day,night}}
+const accPoints=(d,n)=>Math.floor(d/HOUR)+2*Math.floor(n/HOUR);
+function accFor(shifts){let d=0,n=0;for(const s of shifts){if(s&&s.end){const x=splitMs(s.start,s.end);d+=x.day;n+=x.night}}return {dayMs:d,nightMs:n,points:accPoints(d,n)}}
 function fmtP(n){n=Math.round((+n||0)*10)/10;return Number.isInteger(n)?String(n):n.toFixed(1)}
-function liveRate(start,now){const done=Math.floor((now-start)/HOUR);const blockStart=start+done*HOUR;const r=pointsFor(blockStart);const left=blockStart+HOUR-now;const mm=Math.ceil(left/60000);return `สะสม ${fmtP(shiftPoints(start,now))} แต้ม · อีก ${mm} น. ได้ +${r}`}
+function liveRate(start,now){const r=pointsFor(now);return (r===2?'กลางคืน · 2 แต้ม/ชม.':'กลางวัน · 1 แต้ม/ชม.')+' · กะนี้ ≈ '+fmtP(shiftPoints(start,now))+' แต้ม'}
 const pad=n=>String(n).padStart(2,'0');
 function hms(ms){const s=Math.max(0,Math.floor(ms/1000));return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`}
 function hm(min){min=Math.round(min);return `${Math.floor(min/60)} ชม. ${pad(min%60)} น.`}
@@ -1171,13 +1174,13 @@ const hours1=min=>(min/60).toFixed(1);
 
 /* ---- stats ---- */
 function statsFor(officer,shifts){
-  let minutes=0,points=0,done=0;
-  for(const s of shifts){ if(s.end){minutes+=s.minutes||0;points+=ptsOf(s);done++} }
-  points=Math.round(points*100)/100;
+  let minutes=0,done=0,dayMs=0,nightMs=0;
+  for(const s of shifts){ if(s.end){minutes+=s.minutes||0;done++;const x=splitMs(s.start,s.end);dayMs+=x.day;nightMs+=x.night} }
+  const points=accPoints(dayMs,nightMs);
   if(officer&&officer.activeStart) minutes+=(Date.now()-officer.activeStart)/60000;
   const redeemed=officer?.bonusRedeemed||0;
   const avail=Math.max(0,points-redeemed);
-  return {minutes,points,done,redeemed,avail,paid:Math.floor(redeemed/GOAL),eligible:Math.floor(avail/GOAL)};
+  return {minutes,points,dayMs,nightMs,done,redeemed,avail,paid:Math.floor(redeemed/GOAL),eligible:Math.floor(avail/GOAL)};
 }
 
 /* ---- crypto ---- */
@@ -1572,10 +1575,11 @@ $('#fManual').addEventListener('submit',async e=>{
         if(end-start>MAX_SHIFT) throw new Error('กะเดียวยาวเกิน 24 ชั่วโมง');
         if(end<floor) throw new Error(floorMsg);
         const c=clashWith(start,end); if(c) throw new Error(clashMsg(c));
-        const minutes=Math.round((end-start)/60000), points=shiftPoints(start,end);
+        const minutes=Math.round((end-start)/60000), pts=shiftPoints(start,end), points=pts;
+        const sp=splitMs(start,end), b0=statsFor({...me,activeStart:null},myShifts), gained=accPoints(b0.dayMs+sp.day,b0.nightMs+sp.night)-b0.points;
         await db.collection('shifts').doc().set({badge:myBadge,name:me.first+' '+me.last,start,end,minutes,points,manual:true,manualEnd:true,enteredAt:now,...(note?{note}:{})});
-        notify('manual',me,{start,end,minutes,points,note});
-        closeManual(); toast('บันทึกกะย้อนหลังแล้ว +'+fmtP(points)+' แต้ม');
+        notify('manual',me,{start,end,minutes,points:gained,note});
+        closeManual(); toast('บันทึกกะย้อนหลังแล้ว · ได้เพิ่ม '+gained+' แต้ม (ชั่วโมงที่ยังไม่ครบ 1 ชม. สะสมต่อไป)');
       }
     }
   }catch(x){err('#mMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase':(x.message||'บันทึกไม่สำเร็จ'))}
@@ -1921,10 +1925,10 @@ async function closeShift(badge,o,opt={}){
   const upd={end,minutes,points}; if(opt.manual){upd.manualEnd=true;upd.enteredAt=now;if(opt.note)upd.note=opt.note}
   await db.doc('shifts/'+o.activeShiftId).update(upd);
   await db.doc('officers/'+badge).update({activeShiftId:null,activeStart:null});
-  let total=null;
-  if(badge===myBadge&&me) total=statsFor(me,myShifts).avail+points;
-  else { const sh=allShifts.filter(x=>x.badge===badge&&x.end); total=Math.max(0,sh.reduce((a,x)=>a+ptsOf(x),0)-(o.bonusRedeemed||0))+points; }
-  notify('out',o,{start,end,minutes,points,total,forced:!!opt.forced,manual:!!opt.manual});
+  const sp=splitMs(start,end);
+  const base=(badge===myBadge&&me)?statsFor({...me,activeStart:null},myShifts):statsFor({...o,activeStart:null},allShifts.filter(x=>x.badge===badge));
+  const after=accPoints(base.dayMs+sp.day,base.nightMs+sp.night), gained=after-base.points, total=Math.max(0,after-base.redeemed);
+  notify('out',o,{start,end,minutes,points:gained,total,forced:!!opt.forced,manual:!!opt.manual});
 }
 
 /* ---- admin ---- */
@@ -1982,7 +1986,7 @@ function setupAdmin(){
   adminSubs.push(db.doc('config/period').onSnapshot(s=>{periodStart=(s.exists&&s.data().start)||0;deriveAll();renderAdmin()},()=>{}));
   subActivity();
   adminSubs.push(db.collection('caseFeeBackups').orderBy('createdAt','desc').limit(300).onSnapshot(q=>{cfBackups=q.docs.map(d=>({id:d.id,...d.data()}));renderCfHistory();renderCfCutInfo()},()=>{}));
-  adminSubs.push(db.collection('backups').orderBy('createdAt','desc').limit(200).onSnapshot(q=>{backups=q.docs.map(d=>({id:d.id,...d.data()}));renderAdmin()},()=>{}));
+  adminSubs.push(db.collection('backups').orderBy('createdAt','desc').limit(200).onSnapshot(q=>{backups=q.docs.map(d=>recalcBackup({id:d.id,...d.data()}));renderAdmin()},()=>{}));
 }
 $('#aSearch').addEventListener('input',renderAdmin);
 $('#aBody').addEventListener('input',e=>{if(e.target.id==='eBadge')e.target.value=e.target.value.replace(/\D/g,'').slice(0,4)});
@@ -3471,7 +3475,7 @@ function currentRep(){return repSource||buildReport()}
 function renderReport(){
   $('#perRange').textContent=(periodStart?fDate(periodStart)+' '+fTime(periodStart):'เริ่มใช้งานระบบ')+' – ปัจจุบัน';
   const r=currentRep(), el=eligibleOf(r), m=n=>fmtMoney(n,r.currency);
-  $('#repTitle').textContent=repSource?'รายงานโบนัส · ข้อมูลสำรอง':'รายงานโบนัส · รอบปัจจุบัน';
+  $('#repTitle').textContent=repSource?'รายงานโบนัส · ข้อมูลสำรอง'+(repSource.recalc?' (คำนวณแต้มใหม่ตามกติกาปัจจุบัน)':''):'รายงานโบนัส · รอบปัจจุบัน';
   $('#repBack').hidden=!repSource; $('#cutBtn').disabled=!!repSource;
   $('#repCount').textContent=el.length+' คน'; $('#repTotal').textContent=m(totalOf(r)); $('#repRange').textContent=rangeTxt(r);
   $('#repEmpty').hidden=el.length>0;
@@ -3500,15 +3504,27 @@ $('#cutBtn').onclick=async e=>{
 };
 /* ---- hours per officer ---- */
 let hrSrc='current';
+function recalcBackup(k){
+  if(!k||!Array.isArray(k.shifts)||!k.shifts.length||k.shiftsOmitted) return k;
+  const by={}; k.shifts.forEach(x=>(by[x.badge]=by[x.badge]||[]).push(x));
+  const goal=k.goal||GOAL;
+  const rows=(k.rows||[]).map(r=>{
+    const sh=by[r.badge]; if(!sh) return r;
+    const a=accFor(sh), times=Math.floor(a.points/goal);
+    return {...r,points:a.points,times,amount:times*(+r.rate||0),pointsOld:r.points,recalc:true};
+  });
+  const el=rows.filter(x=>x.times>0);
+  return {...k,rows,eligibleCount:el.length,totalAmount:el.reduce((a,x)=>a+x.amount,0),recalc:true,totalAmountOld:k.totalAmount};
+}
 function nightMin(s,e){let m=0;const d0=Date.parse(ymdOf(s)+'T00:00:00+07:00')-DAY;for(let d=d0;d<e;d+=DAY){const a=Math.max(s,d+18*3600000),b=Math.min(e,d+26*3600000);if(b>a)m+=b-a}return Math.round(m/60000)}
 function hoursRows(){
   if(hrSrc==='current'){
     const now=Date.now(), by={}; allShifts.forEach(s=>(by[s.badge]=by[s.badge]||[]).push(s));
     const rows=allOfficers.map(o=>{
-      let mins=0,nm=0,n=0,pts=0,last=null;
-      for(const s of by[o.badge]||[]){const e=s.end||now;mins+=s.end?(s.minutes||0):(now-s.start)/60000;nm+=nightMin(s.start,e);if(s.end){n++;pts+=ptsOf(s)}last=Math.max(last||0,s.start)}
+      let mins=0,nm=0,n=0,dMs=0,nMs=0,last=null;
+      for(const s of by[o.badge]||[]){const e=s.end||now;mins+=s.end?(s.minutes||0):(now-s.start)/60000;nm+=nightMin(s.start,e);if(s.end){n++;const x=splitMs(s.start,s.end);dMs+=x.day;nMs+=x.night}last=Math.max(last||0,s.start)}
       mins=Math.round(mins); nm=Math.min(nm,mins);
-      return {badge:o.badge,name:o.first+' '+o.last,rank:o.rank,order:rankOrder(o.rank),minutes:mins,night:nm,day:mins-nm,shifts:n,points:Math.round(pts*100)/100,last,live:!!o.activeShiftId};
+      return {badge:o.badge,name:o.first+' '+o.last,rank:o.rank,order:rankOrder(o.rank),minutes:mins,night:nm,day:mins-nm,shifts:n,points:accPoints(dMs,nMs),last,live:!!o.activeShiftId};
     });
     return {rows,range:(periodStart?fDate(periodStart)+' '+fTime24(periodStart):'เริ่มใช้งานระบบ')+' – ปัจจุบัน',note:''};
   }
