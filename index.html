@@ -144,6 +144,14 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .arvids a{font-weight:600;color:var(--red)}
 #arForm{padding:18px;display:grid;gap:14px}
 #arForm .acts{display:flex;gap:8px;flex-wrap:wrap}
+.ex-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px 6px;background:var(--sunk);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.ex-h .hint{margin-left:auto;font-size:12px}
+.ex-n{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--red-deep);color:#fff;font-size:12px;font-weight:700}
+.ex-st{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid var(--line);color:var(--muted)}
+.ex-st.ok{background:rgba(46,155,95,.14);border-color:rgba(46,155,95,.5);color:#2E9B5F}
+.ex-st.wait{background:var(--brass-bg);border-color:var(--amber);color:var(--brass)}
+.ex-st.bad{background:rgba(212,39,50,.12);border-color:rgba(212,39,50,.5);color:var(--red)}
+.ex-st.doing{background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc-fg)}
 /* exams */
 .exq{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:10px;background:var(--sunk)}
 .exq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -196,9 +204,12 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 .pf-back{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
 .pf-back[hidden]{display:none}
 .pf-box{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;width:min(480px,100%);max-height:92vh;overflow:auto;padding:18px;display:grid;gap:14px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
-.pf-box form{display:grid;gap:10px}
+.pf-box form{display:grid;gap:10px;padding:0;margin:0}
 .pf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:18px}
 .pf-info{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--sunk)}
+#pLeave .fs-tabs button{flex:0 0 auto;padding:7px 20px}
+.nav-badge{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#F2B705;color:#1B1819;font-size:12px;font-weight:800;display:grid;place-items:center;font-family:var(--f-mono)}
+.nav-badge[hidden]{display:none}
 /* bell notifications */
 .theme-btn.bell-btn{position:relative}
 .theme-btn.bell-btn[hidden]{display:none}
@@ -652,6 +663,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
         <button id="vtCase" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg><span>Case</span></button>
         <button id="vtFs" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2 0-3-1-5 1-8z"/></svg><span>Fire Safety</span></button>
         <button id="vtExam" aria-selected="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14l2 2 4-4"/></svg><span>Exam</span></button>
+        <button id="vtLeave" aria-selected="false" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Leave</span><span class="nav-badge" id="lvBadge" hidden>0</span></button>
         <button id="vtCal" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
       </nav>
     </aside>
@@ -784,6 +796,20 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
           <div class="empty" id="exEmpty">ยังไม่มีข้อสอบ กด “+ สร้างข้อสอบ” เพื่อเริ่มสร้างข้อสอบแรก</div>
         </div>
         <div class="card case-main" id="exMain"></div>
+      </div>
+    </div>
+
+    <!-- leave requests -->
+    <div id="pLeave" hidden>
+      <div class="fs-tabs" role="tablist" style="padding:0 0 12px;max-width:460px"><button type="button" id="lvTabMine" aria-selected="true">ใบลาของฉัน</button><button type="button" id="lvTabAll" aria-selected="false" hidden>จัดการใบลา</button></div>
+      <div class="case-layout">
+        <div class="card">
+          <div class="card-h"><h2>Leave</h2><div class="spacer"></div><button class="btn sm primary" id="lvNew">+ ยื่นใบลา</button></div>
+          <div class="case-filters" id="lvFilterRow" hidden><input id="lvQ" placeholder="ค้นหาชื่อ / Badge / ประเภท" aria-label="ค้นหาใบลา"><select id="lvStatus" aria-label="กรองสถานะ"><option value="pending">รออนุมัติ</option><option value="">ทุกสถานะ</option><option value="approved">อนุมัติแล้ว</option><option value="rejected">ไม่อนุมัติ</option><option value="cancelled">ยกเลิกแล้ว</option></select></div>
+          <div id="lvItems"></div>
+          <div class="empty" id="lvEmpty">ยังไม่มีใบลา</div>
+        </div>
+        <div class="card case-main" id="lvMain"></div>
       </div>
     </div>
 
@@ -1105,6 +1131,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 const $=s=>document.querySelector(s);
 const TZ='Asia/Bangkok', GOAL=30;
 let STATION=null, evLoaded=false, notifOpen=false;
+let leaves=[], lvSel=null, lvMode='none', lvTab='mine', lvSub=null;
 let TF12=(()=>{try{return localStorage.getItem('cad_timefmt')==='12'}catch(e){return false}})();
 let db=null, usr=null, isEditor=false, isOwner=false;
 let myBadge=null, me=null, myShifts=[], allOfficers=[], allShifts=[];
@@ -1208,7 +1235,7 @@ function refreshTimes(){
   }
 }
 function tick(){
-  const now=Date.now(); updateExamNav(); try{pfVis()}catch(e){} try{renderStation()}catch(e){} try{notifVis()}catch(e){}
+  const now=Date.now(); updateExamNav(); try{pfVis()}catch(e){} try{updateLeaveNav();ensureLeaveSub()}catch(e){} try{renderStation()}catch(e){} try{notifVis()}catch(e){}
   $('#clock').textContent=fClock(now);
   $('#clockDate').textContent=fDate(now)+' · เวลาไทย';
   if(!$('#vDash').hidden){
@@ -1819,7 +1846,7 @@ function openCaseForm(c){
   $('#caseMain').scrollIntoView({block:'start',behavior:'smooth'}); $('#cNo').focus({preventScroll:true});
 }
 function showCase(id){caseSel=id;caseMode=id?'view':'none';caseEditing=null;renderCaseList();if(id){renderCaseView();if(window.innerWidth<900)$('#caseMain').scrollIntoView({block:'start',behavior:'smooth'})}}
-function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs();resetEx();resetAr()}
+function resetCases(){cases=[];caseSel=null;caseMode='none';caseEditing=null;resetFs();resetEx();resetAr();resetLv()}
 $('#caseNew').onclick=()=>{if(caseMode==='form'&&!caseEditing){$('#cNo').focus();return}caseSel=null;openCaseForm(null)};
 ['#caseQ','#caseTypeF','#caseMine'].forEach(id=>$(id).addEventListener('input',renderCaseList));
 let leaveArm=null;
@@ -1934,10 +1961,11 @@ async function closeShift(badge,o,opt={}){
 /* ---- admin ---- */
 const canAdmin=()=>mode==='admin';
 function setView(v){
-  [['vtMe','me'],['vtAdmin','admin'],['vtCase','case'],['vtFs','fs'],['vtExam','exam'],['vtCal','cal']].forEach(([id,k])=>$('#'+id).setAttribute('aria-selected',v===k));
-  $('#pMe').hidden=v!=='me';$('#pAdmin').hidden=v!=='admin';$('#pCal').hidden=v!=='cal';$('#pCase').hidden=v!=='case';$('#pFs').hidden=v!=='fs';$('#pExam').hidden=v!=='exam';
+  [['vtMe','me'],['vtAdmin','admin'],['vtCase','case'],['vtFs','fs'],['vtExam','exam'],['vtLeave','leave'],['vtCal','cal']].forEach(([id,k])=>$('#'+id).setAttribute('aria-selected',v===k));
+  $('#pMe').hidden=v!=='me';$('#pAdmin').hidden=v!=='admin';$('#pCal').hidden=v!=='cal';$('#pCase').hidden=v!=='case';$('#pFs').hidden=v!=='fs';$('#pExam').hidden=v!=='exam';$('#pLeave').hidden=v!=='leave';
   if(v==='cal') renderCal();
   if(v==='fs'){renderFsList();if(fsMode==='view')renderFsView()}
+  if(v==='leave'){ensureLeaveSub();renderLvList();if(lvMode==='view')renderLvView()}
   if(v==='exam'){ensureExamSub();renderExList();if(exMode==='view')renderExView()}
   if(v==='case'){if(caseTab==='arson'){renderArList();if(arMode==='view')renderArView()}else{renderCaseList();if(caseMode==='view')renderCaseView()}}
 }
@@ -1945,6 +1973,7 @@ $('#vtCal').onclick=()=>setView('cal');
 $('#vtCase').onclick=()=>setView('case');
 $('#vtFs').onclick=()=>setView('fs');
 $('#vtExam').onclick=()=>setView('exam');
+$('#vtLeave').onclick=()=>setView('leave');
 $('#vtMe').onclick=()=>setView('me');
 $('#vtAdmin').onclick=()=>setView('admin');
 const ADMIN_USER='Admin', ADMIN_DEFAULT={salt:'lsfd-admin-default',pwHash:'7be4d36327d69e1faad94ee38d74d64c7666bff679be86f95c679af32f2d093e'};
@@ -2427,12 +2456,27 @@ function renderExList(){
   const list=exams.filter(e=>(creator||e.open!==false||exMySub(e.id))&&(!q||[e.title,e.author&&e.author.name].join(' ').toLowerCase().includes(q)));
   $('#exEmpty').hidden=list.length>0;
   $('#exEmpty').textContent=exams.length&&q?'ไม่พบข้อสอบที่ตรงกับการค้นหา':creator?'ยังไม่มีข้อสอบ กด “+ สร้างข้อสอบ” เพื่อเริ่มสร้างข้อสอบแรก':'ยังไม่มีข้อสอบที่เปิดให้ทำ';
-  $('#exItems').innerHTML=list.map(e=>{
-    const n=(e.questions||[]).length; let tail;
-    if(creator) tail=`<span>${n} ข้อ</span><span>· ${exTotal(e)} คะแนน</span>${e.timeLimit?`<span>· ⏱ ${e.timeLimit} นาที</span>`:''}<span>· ส่งแล้ว ${exSubs.filter(s=>s.examId===e.id&&s.submittedAt).length} คน</span><span>· ${e.open===false?'ยังไม่เปิด/ปิดรับ':'เปิดอยู่'}</span>`;
-    else{const sub=exMySub(e.id);tail=`<span>${n} ข้อ</span><span>· ${exTotal(e)} คะแนน</span>${e.timeLimit?`<span>· ⏱ ${e.timeLimit} นาที</span>`:''}<span>· ${exDone(sub)?(exVisible(e,sub)?'✓ ประกาศผลแล้ว':'ส่งแล้ว รอประกาศผล'):(sub&&sub.startedAt?'กำลังทำข้อสอบ':'ยังไม่ได้ทำ')}</span>`}
-    return `<button type="button" class="ci${e.id===exSel?' sel':''}" data-id="${esc(e.id)}"><span class="ci-top"><span class="ci-no">EXAM</span><span>${fDate(e.createdAt)}</span></span><span class="ci-title">${esc(e.title)}</span><span class="ci-foot">${tail}</span></button>`;
-  }).join('');
+  const item=(e,tail)=>`<button type="button" class="ci${e.id===exSel?' sel':''}" data-id="${esc(e.id)}"><span class="ci-top"><span class="ci-no">EXAM</span><span>${fDate(e.createdAt)}</span></span><span class="ci-title">${esc(e.title)}</span><span class="ci-foot">${tail}</span></button>`;
+  const base=e=>`<span>${(e.questions||[]).length} ข้อ</span><span>· ${exTotal(e)} คะแนน</span>${e.timeLimit?`<span>· ⏱ ${e.timeLimit} นาที</span>`:''}`;
+  const chip=(e,sub)=>{
+    if(exDone(sub)){
+      if(exVisible(e,sub)){const sc=exScore(e,sub);return {g:'done',h:`<span class="ex-st ok">✅ ส่งคะแนนแล้ว · ${sc.total}/${sc.max}${sc.pending?' (ยังไม่รวมข้อเขียน)':''}</span>`}}
+      return {g:'done',h:'<span class="ex-st wait">⏳ ยังไม่ส่งคะแนน</span>'};
+    }
+    if(sub&&sub.startedAt) return {g:'doing',h:'<span class="ex-st doing">⏱ กำลังทำอยู่</span>'};
+    return {g:'todo',h:'<span class="ex-st todo">📝 ยังไม่ได้ทำ</span>'};
+  };
+  if(creator){
+    $('#exItems').innerHTML=list.map(e=>{
+      const mine=myBadge?exMySub(e.id):null, c=mine?chip(e,mine):null;
+      return item(e,`${base(e)}<span>· ส่งแล้ว ${exSubs.filter(s=>s.examId===e.id&&s.submittedAt).length} คน</span><span>· ${e.open===false?'ยังไม่เปิด/ปิดรับ':'เปิดอยู่'}</span>${c?'<span>· ที่ฉันทำ:</span>'+c.h:''}`);
+    }).join('');
+  }else{
+    const G={doing:[],todo:[],done:[]};
+    list.forEach(e=>{const c=chip(e,exMySub(e.id));G[c.g].push(item(e,base(e)+c.h))});
+    const sec=(k,title,hint)=>G[k].length?`<div class="ex-h"><b>${title}</b> <span class="ex-n">${G[k].length}</span>${hint?`<span class="hint">${hint}</span>`:''}</div>${G[k].join('')}`:'';
+    $('#exItems').innerHTML=sec('doing','⏱ กำลังทำอยู่','เวลากำลังนับถอยหลัง')+sec('todo','📝 ยังไม่ได้ทำ','')+sec('done','✅ ทำแล้ว','✅ = ส่งคะแนนแล้ว · ⏳ = ยังไม่ส่งคะแนน');
+  }
   if(exMode==='none') $('#exMain').innerHTML=creator?'<div class="case-ph">เลือกข้อสอบจากรายการเพื่อดูรายละเอียด<br>หรือกด “+ สร้างข้อสอบ” เพื่อสร้างข้อสอบใหม่</div>':'<div class="case-ph">เลือกข้อสอบจากรายการเพื่อทำข้อสอบหรือดูผลคะแนน</div>';
 }
 function showEx(id){
@@ -3094,8 +3138,8 @@ $('#arMain').addEventListener('submit',async e=>{
 });
 
 /* ---- activity history (audit log) ---- */
-const AC_CATS={login:'เข้า-ออกระบบ',duty:'เข้า-ออกเวร',case:'เคส / ARSON',fs:'Fire Safety',exam:'ข้อสอบ',cal:'ปฏิทิน',station:'สถานี',admin:'การกระทำของ Admin'};
-const AC_CLS={duty:' ct-acc',case:' ct-fire',fs:' ct-shoot',exam:' ct-chem',station:' ct-acc',admin:' ct-fire'};
+const AC_CATS={login:'เข้า-ออกระบบ',duty:'เข้า-ออกเวร',case:'เคส / ARSON',fs:'Fire Safety',exam:'ข้อสอบ',leave:'ลางาน',cal:'ปฏิทิน',station:'สถานี',admin:'การกระทำของ Admin'};
+const AC_CLS={duty:' ct-acc',case:' ct-fire',fs:' ct-shoot',exam:' ct-chem',leave:' ct-acc',station:' ct-acc',admin:' ct-fire'};
 function actor(){
   if(mode==='admin') return {role:'admin',badge:'',name:'Admin'};
   if(me) return {role:'officer',badge:me.badge||myBadge||'',name:((me.first||'')+' '+(me.last||'')).trim()||myBadge||'?'};
@@ -3147,6 +3191,12 @@ function auditDescribe(op,path,a,ac){
         return null;
       }
       return ['exam','ลบคำตอบข้อสอบ',t||id];
+    }
+    case 'leaves':{
+      const l=find(leaves,id);
+      if(op==='set') return ['leave','ยื่นใบลา',tx(d.type,d.start&&(d.start+(d.end&&d.end!==d.start?' – '+d.end:'')))];
+      if(op==='update'&&keys.includes('status')){const m={approved:'อนุมัติใบลา',rejected:'ไม่อนุมัติใบลา',cancelled:'ยกเลิกใบลา'};return ['leave',m[d.status]||'แก้ไขใบลา',tx(l.name,l.type,l.start&&(l.start+(l.end&&l.end!==l.start?' – '+l.end:'')))]}
+      return null;
     }
     case 'caseFeeBackups': return op==='set'?['admin','ตัดยอดค่าเคส',(d&&d.month)||id]:null;
     case 'backups': return op==='set'?['admin','ตัดยอดรอบเวร (สำรองข้อมูล)','']:null;
@@ -3344,6 +3394,129 @@ $('#fPwChange').addEventListener('submit',async e=>{
     toast('เปลี่ยนรหัสผ่านแล้ว ใช้รหัสผ่านใหม่ในการเข้าสู่ระบบครั้งถัดไป'); pfClose();
   }catch(x){err('#pfPwMsg',x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก ตรวจสอบ Rules ใน Firebase':(x.message||'เปลี่ยนรหัสผ่านไม่สำเร็จ'))}
   finally{btn.disabled=false}
+});
+
+/* ---- leave requests (ลงลา) ---- */
+const LV_TYPES=['ลาป่วย','ลากิจ','ลาพักร้อน','ลาอื่นๆ'];
+const LV_ST={pending:{t:'⏳ รออนุมัติ',c:'wait'},approved:{t:'✅ อนุมัติแล้ว',c:'ok'},rejected:{t:'❌ ไม่อนุมัติ',c:'bad'},cancelled:{t:'⚪ ยกเลิกแล้ว',c:'todo'}};
+const lvDays=(a,b)=>dayDiff(b,a)+1;
+const lvRange=l=>l.start===l.end?fmtYmd(l.start):fmtYmd(l.start)+' – '+fmtYmd(l.end);
+function resetLv(){if(lvSub){try{lvSub()}catch(e){}lvSub=null}leaves=[];lvSel=null;lvMode='none';lvTab='mine'}
+function ensureLeaveSub(){
+  if(lvSub||!db||!(mode==='admin'||myBadge)) return;
+  lvSub=db.collection('leaves').orderBy('createdAt','desc').limit(500).onSnapshot(q=>{leaves=q.docs.map(d=>({id:d.id,...d.data()}));renderLvBadge();renderLvList();if(lvMode==='view')renderLvView()},()=>{});
+  unsubs.push(lvSub);
+}
+function updateLeaveNav(){const b=$('#vtLeave');if(!b)return;const ok=mode==='admin'||!!myBadge;if(b.hidden===ok)b.hidden=!ok}
+function renderLvBadge(){
+  const b=$('#lvBadge'); if(!b) return;
+  const n=canExam()?leaves.filter(l=>l.status==='pending'&&l.badge!==myBadge).length:0;
+  b.textContent=n>9?'9+':String(n); b.hidden=!n;
+}
+function lvChip(l){const s=LV_ST[l.status]||LV_ST.pending;return `<span class="ex-st ${s.c}">${s.t}</span>`}
+function renderLvList(){
+  if(!$('#pLeave')||$('#pLeave').hidden) return;
+  const approver=canExam(), isAdmin=mode==='admin';
+  if(isAdmin) lvTab='all'; if(!approver&&lvTab==='all') lvTab='mine';
+  const pend=leaves.filter(l=>l.status==='pending'&&l.badge!==myBadge).length;
+  $('#lvTabMine').hidden=isAdmin; $('#lvTabAll').hidden=!approver;
+  $('#lvTabAll').textContent='จัดการใบลา'+(pend?' ('+pend+')':'');
+  $('#lvTabMine').setAttribute('aria-selected',lvTab==='mine'); $('#lvTabAll').setAttribute('aria-selected',lvTab==='all');
+  $('#lvNew').hidden=isAdmin||!myBadge; $('#lvFilterRow').hidden=lvTab!=='all';
+  const st=$('#lvStatus').value, q=$('#lvQ').value.trim().toLowerCase();
+  let list=lvTab==='mine'?leaves.filter(l=>l.badge===myBadge):leaves.filter(l=>(!st||l.status===st)&&(!q||[l.name,l.badge,l.type,l.reason].join(' ').toLowerCase().includes(q)));
+  $('#lvEmpty').hidden=list.length>0;
+  $('#lvEmpty').textContent=lvTab==='mine'?'ยังไม่มีใบลา กด “+ ยื่นใบลา” เพื่อลงลา':'ไม่มีใบลาตามเงื่อนไขที่เลือก';
+  $('#lvItems').innerHTML=list.map(l=>`<button type="button" class="ci${l.id===lvSel?' sel':''}" data-id="${esc(l.id)}"><span class="ci-top"><span class="ci-no">${esc(l.type)}</span><span>${fDate(l.createdAt)}</span></span><span class="ci-title">${lvTab==='all'?esc(l.name)+' · ':''}${lvRange(l)}</span><span class="ci-foot"><span>${l.days} วัน</span>${lvChip(l)}</span></button>`).join('');
+  if(lvMode==='none') renderLvHome();
+}
+function renderLvHome(){
+  const today=ymdOf(Date.now());
+  const off=leaves.filter(l=>l.status==='approved'&&l.start<=today&&today<=l.end);
+  const soon=leaves.filter(l=>l.status==='approved'&&l.start>today&&dayDiff(l.start,today)<=7).sort((a,b)=>a.start.localeCompare(b.start));
+  $('#lvMain').innerHTML=`<div class="case-sec"><h3>ลาวันนี้ (อนุมัติแล้ว)</h3>${off.length?`<div class="chips-row">${off.map(l=>`<span class="who-chip">${esc(l.name)} <span class="mono">#${esc(l.badge)}</span> · ${esc(l.type)}</span>`).join('')}</div>`:'<span class="hint">วันนี้ไม่มีผู้ลา</span>'}</div>
+  <div class="case-sec"><h3>กำลังจะลา ภายใน 7 วัน</h3>${soon.length?`<div class="chips-row">${soon.map(l=>`<span class="who-chip">${esc(l.name)} · ${esc(l.type)} · ${lvRange(l)}</span>`).join('')}</div>`:'<span class="hint">ไม่มี</span>'}</div>
+  <div class="case-ph" style="padding:18px">เลือกใบลาจากรายการเพื่อดูรายละเอียด${myBadge?'<br>หรือกด “+ ยื่นใบลา” เพื่อลงลา':''}</div>`;
+}
+function showLv(id){lvSel=id;lvMode=id?'view':'none';renderLvList();if(id){renderLvView();if(window.innerWidth<900)$('#lvMain').scrollIntoView({block:'start',behavior:'smooth'})}}
+function renderLvView(){
+  const l=leaves.find(x=>x.id===lvSel);
+  if(!l){lvMode='none';lvSel=null;renderLvList();return}
+  const approver=canExam(), mine=l.badge===myBadge, today=ymdOf(Date.now());
+  const canDecide=approver&&(!mine||mode==='admin');
+  const canCancel=mine&&(l.status==='pending'||(l.status==='approved'&&l.end>=today));
+  $('#lvMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(l.type)}</span><h2>${lvRange(l)}</h2><div class="hint">${l.days} วัน · ยื่นเมื่อ ${fDate(l.createdAt)} ${fTime(l.createdAt)}</div></div><div class="fs-author"><span class="lbl">ผู้ลา</span><div>${whoChip({name:l.name,badge:l.badge})}</div>${lvChip(l)}</div></div>
+  <div class="case-sec"><h3>เหตุผลการลา</h3><p class="case-detail">${esc(l.reason||'-')}</p></div>
+  ${l.status!=='pending'&&l.decidedBy?`<div class="case-sec"><h3>ผลการพิจารณา</h3><p class="case-detail">${esc(LV_ST[l.status].t)} โดย <b>${esc(l.decidedBy)}</b> · ${fDate(l.decidedAt)} ${fTime(l.decidedAt)}${l.note?'<br>หมายเหตุ: '+esc(l.note):''}</p></div>`:''}
+  ${canDecide?`<div class="case-sec"><label>หมายเหตุถึงผู้ลา (ไม่บังคับ)<input id="lvNote" maxlength="200" placeholder="เช่น อนุมัติ / ขอให้เลื่อนวันลา"></label><div class="case-acts" style="margin-top:8px">${l.status!=='approved'?'<button class="btn sm primary" id="lvApprove">✅ อนุมัติ</button>':''}${l.status!=='rejected'?'<button class="btn sm danger" id="lvReject">❌ ไม่อนุมัติ</button>':''}</div></div>`:(approver&&mine?'<div class="case-sec"><span class="hint">ไม่สามารถอนุมัติใบลาของตัวเองได้ ต้องให้ผู้อื่นพิจารณา</span></div>':'')}
+  ${canCancel?'<div class="case-sec"><div class="case-acts"><button class="btn sm danger" id="lvCancel">ยกเลิกใบลา</button></div></div>':''}`;
+}
+function openLvForm(){
+  if(!myBadge||!me) return;
+  lvMode='form'; lvSel=null;
+  const today=ymdOf(Date.now());
+  $('#lvMain').innerHTML=`<div class="card-h"><h2>ยื่นใบลา</h2></div>
+  <form id="lvForm" novalidate style="padding:18px;display:grid;gap:12px">
+    <label>ประเภทการลา<select id="lvType">${LV_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></label>
+    <div class="row2"><label>ลาตั้งแต่วันที่<input type="date" id="lvStart" value="${today}"></label><label>ถึงวันที่<input type="date" id="lvEnd" value="${today}"></label></div>
+    <div class="hint" id="lvDaysTxt">รวม 1 วัน</div>
+    <label>เหตุผลการลา<textarea id="lvReason" rows="3" maxlength="500" placeholder="ระบุเหตุผลการลา"></textarea></label>
+    <div id="lvMsg" class="msg err" hidden></div>
+    <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" id="lvSave">ยื่นใบลา</button><button class="btn" type="button" id="lvFormCancel">ยกเลิก</button></div>
+    <p class="hint" style="margin:0">ใบลาจะส่งให้ Admin และ Command Officer พิจารณา · ลาป่วยย้อนหลังได้ ส่วนลาประเภทอื่นต้องเริ่มวันนี้เป็นต้นไป</p>
+  </form>`;
+  renderLvList(); $('#lvMain').scrollIntoView({block:'start',behavior:'smooth'});
+}
+$('#lvTabMine').onclick=()=>{lvTab='mine';lvMode='none';lvSel=null;renderLvList()};
+$('#lvTabAll').onclick=()=>{lvTab='all';lvMode='none';lvSel=null;renderLvList()};
+$('#lvNew').onclick=()=>{if(lvMode==='form')return;openLvForm()};
+$('#lvStatus').addEventListener('change',renderLvList); $('#lvQ').addEventListener('input',renderLvList);
+$('#lvItems').addEventListener('click',e=>{const b=e.target.closest('.ci');if(b)showLv(b.dataset.id)});
+$('#lvMain').addEventListener('input',e=>{
+  if(e.target.id==='lvStart'||e.target.id==='lvEnd'){
+    const a=$('#lvStart').value,b=$('#lvEnd').value,t=$('#lvDaysTxt');
+    t.textContent=a&&b&&b>=a?'รวม '+lvDays(a,b)+' วัน':'วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม';
+  }
+});
+$('#lvMain').addEventListener('submit',async e=>{
+  if(e.target.id!=='lvForm') return; e.preventDefault(); err('#lvMsg','');
+  const fail=m=>err('#lvMsg',m);
+  if(!myBadge||!me) return fail('ต้องล็อกอินด้วยบัญชีเจ้าหน้าที่');
+  const type=$('#lvType').value, start=$('#lvStart').value, end=$('#lvEnd').value, reason=$('#lvReason').value.trim(), today=ymdOf(Date.now());
+  if(!start||!end) return fail('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด');
+  if(end<start) return fail('วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม');
+  const days=lvDays(start,end);
+  if(days>90) return fail('ลาได้ไม่เกิน 90 วันต่อใบ');
+  if(type!=='ลาป่วย'&&start<today) return fail('ลาประเภทนี้ต้องเริ่มตั้งแต่วันนี้เป็นต้นไป (ลาป่วยเท่านั้นที่ย้อนหลังได้)');
+  if(!reason) return fail('กรุณาระบุเหตุผลการลา');
+  const clash=leaves.find(l=>l.badge===myBadge&&(l.status==='pending'||l.status==='approved')&&l.start<=end&&start<=l.end);
+  if(clash) return fail('ช่วงวันที่นี้ทับกับใบลาที่มีอยู่แล้ว ('+clash.type+' '+lvRange(clash)+' · '+LV_ST[clash.status].t+')');
+  const btn=$('#lvSave'); btn.disabled=true;
+  try{
+    const ref=db.collection('leaves').doc(), now=Date.now();
+    const data={badge:myBadge,name:(me.first+' '+me.last).trim(),rank:me.rank||'',type,start,end,days,reason,status:'pending',createdAt:now};
+    await ref.set(data);
+    if(!leaves.some(x=>x.id===ref.id)) leaves.unshift({id:ref.id,...data});
+    toast('ยื่นใบลาแล้ว รอผู้อนุมัติพิจารณา'); lvTab='mine'; showLv(ref.id);
+  }catch(x){fail(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ตรวจสอบ Rules (ต้องมีส่วน leaves)':'ยื่นใบลาไม่สำเร็จ ['+(x.code||'error')+']');btn.disabled=false}
+});
+$('#lvMain').addEventListener('click',async e=>{
+  const t=e.target;
+  if(t.closest('#lvFormCancel')){lvMode='none';renderLvList();return}
+  const l=leaves.find(x=>x.id===lvSel); if(!l) return;
+  const fail=x=>toast(x&&x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules':'ทำรายการไม่สำเร็จ ลองอีกครั้ง');
+  const decide=async(status,btn)=>{
+    if(!canExam()||(l.badge===myBadge&&mode!=='admin')||!armed(btn)) return;
+    const a=actor(), upd={status,decidedBy:a.name,decidedByBadge:a.badge||'',decidedAt:Date.now(),note:($('#lvNote').value||'').trim()};
+    try{await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);toast(status==='approved'?'อนุมัติใบลาแล้ว':'บันทึกว่าไม่อนุมัติแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
+  };
+  if(t.closest('#lvApprove')) return decide('approved',t.closest('#lvApprove'));
+  if(t.closest('#lvReject')) return decide('rejected',t.closest('#lvReject'));
+  const c=t.closest('#lvCancel');
+  if(c){
+    if(l.badge!==myBadge||!armed(c)) return;
+    try{const upd={status:'cancelled',decidedBy:actor().name,decidedByBadge:myBadge,decidedAt:Date.now(),note:'ผู้ลายกเลิกเอง'};await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);toast('ยกเลิกใบลาแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
+  }
 });
 
 /* ---- case types (admin) ---- */
