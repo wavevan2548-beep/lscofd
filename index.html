@@ -210,6 +210,11 @@ input.badge-in{font-family:var(--f-mono);font-size:20px;letter-spacing:.3em}
 #pLeave .fs-tabs button{flex:0 0 auto;padding:7px 20px}
 .nav-badge{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#F2B705;color:#1B1819;font-size:12px;font-weight:800;display:grid;place-items:center;font-family:var(--f-mono)}
 .nav-badge[hidden]{display:none}
+.pw-wrap{position:relative;display:block;width:100%}
+.pw-wrap input{width:100%;padding-right:46px}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;background:none;color:var(--muted);cursor:pointer;border-radius:8px;padding:0}
+.pw-eye:hover{color:var(--ink);background:var(--sunk)}
+.pw-eye svg{width:20px;height:20px}
 /* bell notifications */
 .theme-btn.bell-btn{position:relative}
 .theme-btn.bell-btn[hidden]{display:none}
@@ -801,13 +806,13 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
 
     <!-- leave requests -->
     <div id="pLeave" hidden>
-      <div class="fs-tabs" role="tablist" style="padding:0 0 12px;max-width:460px"><button type="button" id="lvTabMine" aria-selected="true">ใบลาของฉัน</button><button type="button" id="lvTabAll" aria-selected="false" hidden>จัดการใบลา</button></div>
+      <div class="fs-tabs" role="tablist" style="padding:0 0 12px;max-width:460px"><button type="button" id="lvTabMine" aria-selected="true">รายการลาของฉัน</button><button type="button" id="lvTabAll" aria-selected="false">ทุกคน</button></div>
       <div class="case-layout">
         <div class="card">
-          <div class="card-h"><h2>Leave</h2><div class="spacer"></div><button class="btn sm primary" id="lvNew">+ ยื่นใบลา</button></div>
-          <div class="case-filters" id="lvFilterRow" hidden><input id="lvQ" placeholder="ค้นหาชื่อ / Badge / ประเภท" aria-label="ค้นหาใบลา"><select id="lvStatus" aria-label="กรองสถานะ"><option value="pending">รออนุมัติ</option><option value="">ทุกสถานะ</option><option value="approved">อนุมัติแล้ว</option><option value="rejected">ไม่อนุมัติ</option><option value="cancelled">ยกเลิกแล้ว</option></select></div>
+          <div class="card-h"><h2>Leave</h2><div class="spacer"></div><button class="btn sm primary" id="lvNew">+ ลงลา</button></div>
+          <div class="case-filters" id="lvFilterRow" hidden><input id="lvQ" placeholder="ค้นหาชื่อ / Badge / ประเภท" aria-label="ค้นหาใบลา"><select id="lvStatus" aria-label="กรองสถานะ"><option value="active">ลงลาแล้ว</option><option value="">ทุกสถานะ</option><option value="cancelled">ยกเลิกแล้ว</option></select></div>
           <div id="lvItems"></div>
-          <div class="empty" id="lvEmpty">ยังไม่มีใบลา</div>
+          <div class="empty" id="lvEmpty">ยังไม่มีรายการลา</div>
         </div>
         <div class="card case-main" id="lvMain"></div>
       </div>
@@ -1094,7 +1099,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
               <label class="chk"><input type="checkbox" id="dCase" checked> แจ้งเมื่อมีเคสใหม่</label>
             </div>
             <label>Webhook URL · ห้องประกาศ “สถานีเปิด / ปิด” (คนละห้องกับด้านบน ใช้แจ้งหน่วยงานอื่น)<input id="dStationUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
-            <label>Webhook URL · ห้องแจ้งลา (แจ้งเมื่อมีการยื่นใบลา อนุมัติ ไม่อนุมัติ หรือยกเลิก · ต้องเป็นคนละห้องกับสองช่องด้านบน)<input id="dLeaveUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
+            <label>Webhook URL · ห้องแจ้งลา (แจ้งเมื่อมีการลงลาหรือยกเลิกการลา · ต้องเป็นคนละห้องกับสองช่องด้านบน)<input id="dLeaveUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
             <div id="dMsg" class="msg err" hidden></div>
             <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ (ห้องเข้า-ออกเวร)</button><button class="btn" type="button" id="dStationTest">ทดสอบห้องประกาศสถานีเปิด/ปิด</button><button class="btn" type="button" id="dLeaveTest">ทดสอบห้องแจ้งลา</button></div>
             <p class="hint">สร้าง Webhook ได้ที่ Discord: ตั้งค่าช่อง (Edit Channel) → Integrations → Webhooks → New Webhook → Copy Webhook URL · ข้อความแจ้งเตือนจะมีลิงก์กลับมาที่เว็บนี้</p>
@@ -1490,16 +1495,14 @@ $('#dTest').onclick=async()=>{
 };
 
 const leaveEmbed=(kind,l)=>{
-  const m={new:{t:'📝 ยื่นใบลาใหม่',c:0xF2B705,s:'⏳ รออนุมัติ'},approved:{t:'✅ อนุมัติใบลา',c:0x1D7A4C,s:'✅ อนุมัติแล้ว'},rejected:{t:'❌ ไม่อนุมัติใบลา',c:0xC1121F,s:'❌ ไม่อนุมัติ'},cancelled:{t:'⚪ ยกเลิกใบลา',c:0x808080,s:'⚪ ยกเลิกแล้ว'},test:{t:'✅ ทดสอบห้องแจ้งลา',c:0x9A6A00,s:'-'}}[kind];
+  const m={new:{t:'📝 ลงลา',c:0xF2B705,s:'✅ ลงลาแล้ว'},cancelled:{t:'⚪ ยกเลิกการลา',c:0x808080,s:'⚪ ยกเลิกแล้ว'},test:{t:'✅ ทดสอบห้องแจ้งลา',c:0x9A6A00,s:'-'}}[kind];
   if(kind==='test') return {title:m.t,description:'ห้องนี้ถูกตั้งเป็นห้องแจ้งลาของระบบ CAD',color:m.c,footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()};
   const f=[{name:'ผู้ลา',value:l.name+' #'+l.badge+(l.rank?' · '+l.rank:''),inline:false},{name:'ประเภท',value:l.type,inline:true},{name:'วันที่ลา',value:lvRange(l)+' ('+l.days+' วัน)',inline:true},{name:'สถานะ',value:m.s,inline:true},{name:'เหตุผล',value:String(l.reason||'-').slice(0,900)}];
-  if(kind==='approved'||kind==='rejected') {f.push({name:'พิจารณาโดย',value:l.decidedBy||'-',inline:true});if(l.note)f.push({name:'หมายเหตุ',value:String(l.note).slice(0,300),inline:false})}
-  if(kind==='cancelled') f.push({name:'ยกเลิกโดย',value:l.decidedBy||l.name,inline:true});
   return {title:m.t,color:m.c,fields:f,footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()};
 };
 function leaveNotify(kind,l){
   const url=DISCORD.leaveUrl; if(!url||!validHook(url)) return;
-  postHook(url,{username:'CAD',embeds:[leaveEmbed(kind,l)]}).catch(x=>toast('บันทึกใบลาแล้ว แต่ส่ง Discord ไม่สำเร็จ: '+x.message));
+  postHook(url,{username:'CAD',embeds:[leaveEmbed(kind,l)]}).catch(x=>toast('บันทึกการลาแล้ว แต่ส่ง Discord ไม่สำเร็จ: '+x.message));
 }
 $('#dLeaveTest').onclick=async()=>{
   err('#dMsg',''); const url=$('#dLeaveUrl').value.trim();
@@ -3216,8 +3219,8 @@ function auditDescribe(op,path,a,ac){
     }
     case 'leaves':{
       const l=find(leaves,id);
-      if(op==='set') return ['leave','ยื่นใบลา',tx(d.type,d.start&&(d.start+(d.end&&d.end!==d.start?' – '+d.end:'')))];
-      if(op==='update'&&keys.includes('status')){const m={approved:'อนุมัติใบลา',rejected:'ไม่อนุมัติใบลา',cancelled:'ยกเลิกใบลา'};return ['leave',m[d.status]||'แก้ไขใบลา',tx(l.name,l.type,l.start&&(l.start+(l.end&&l.end!==l.start?' – '+l.end:'')))]}
+      if(op==='set') return ['leave','ลงลา',tx(d.type,d.start&&(d.start+(d.end&&d.end!==d.start?' – '+d.end:'')))];
+      if(op==='update'&&keys.includes('status')&&d.status==='cancelled') return ['leave','ยกเลิกการลา',tx(l.name,l.type,l.start&&(l.start+(l.end&&l.end!==l.start?' – '+l.end:'')))];
       return null;
     }
     case 'caseFeeBackups': return op==='set'?['admin','ตัดยอดค่าเคส',(d&&d.month)||id]:null;
@@ -3373,6 +3376,21 @@ $('#bellBrowser').onclick=async()=>{
 };
 setInterval(()=>{try{notifRefresh(false)}catch(e){}},60000);
 
+/* ---- show/hide password ---- */
+(function(){
+  const EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9.9 9.9 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2M1 1l22 22"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/></svg>';
+  document.querySelectorAll('input[type="password"]').forEach(inp=>{
+    if(inp.parentElement.classList.contains('pw-wrap')) return;
+    const w=document.createElement('span'); w.className='pw-wrap';
+    inp.parentNode.insertBefore(w,inp); w.appendChild(inp);
+    const b=document.createElement('button'); b.type='button'; b.className='pw-eye'; b.tabIndex=0;
+    const paint=()=>{const show=inp.type==='text';b.innerHTML=show?EYE_OFF:EYE;b.title=show?'ซ่อนรหัสผ่าน':'แสดงรหัสผ่าน';b.setAttribute('aria-label',b.title);b.setAttribute('aria-pressed',show)};
+    b.onclick=()=>{inp.type=inp.type==='password'?'text':'password';paint();inp.focus()};
+    paint(); w.appendChild(b);
+  });
+})();
+
 /* ---- my profile (officer) ---- */
 function pfOpen(){
   if(mode!=='officer'||!me) return;
@@ -3418,74 +3436,68 @@ $('#fPwChange').addEventListener('submit',async e=>{
   finally{btn.disabled=false}
 });
 
-/* ---- leave requests (ลงลา) ---- */
+/* ---- leave (ลงลา) · ไม่ต้องอนุมัติ ---- */
 const LV_TYPES=['ลาป่วย','ลากิจ','ลาพักร้อน','ลาอื่นๆ'];
-const LV_ST={pending:{t:'⏳ รออนุมัติ',c:'wait'},approved:{t:'✅ อนุมัติแล้ว',c:'ok'},rejected:{t:'❌ ไม่อนุมัติ',c:'bad'},cancelled:{t:'⚪ ยกเลิกแล้ว',c:'todo'}};
+const LV_ST={active:{t:'✅ ลงลาแล้ว',c:'ok'},cancelled:{t:'⚪ ยกเลิกแล้ว',c:'todo'},rejected:{t:'❌ ไม่อนุมัติ (ใบเดิม)',c:'bad'}};
+const lvState=l=>l.status==='cancelled'?'cancelled':l.status==='rejected'?'rejected':'active';
+const lvLive=l=>lvState(l)==='active';
 const lvDays=(a,b)=>dayDiff(b,a)+1;
 const lvRange=l=>l.start===l.end?fmtYmd(l.start):fmtYmd(l.start)+' – '+fmtYmd(l.end);
 function resetLv(){if(lvSub){try{lvSub()}catch(e){}lvSub=null}leaves=[];lvSel=null;lvMode='none';lvTab='mine'}
 function ensureLeaveSub(){
   if(lvSub||!db||!(mode==='admin'||myBadge)) return;
-  lvSub=db.collection('leaves').orderBy('createdAt','desc').limit(500).onSnapshot(q=>{leaves=q.docs.map(d=>({id:d.id,...d.data()}));renderLvBadge();renderLvList();if(lvMode==='view')renderLvView()},()=>{});
+  lvSub=db.collection('leaves').orderBy('createdAt','desc').limit(500).onSnapshot(q=>{leaves=q.docs.map(d=>({id:d.id,...d.data()}));renderLvList();if(lvMode==='view')renderLvView()},()=>{});
   unsubs.push(lvSub);
 }
 function updateLeaveNav(){const b=$('#vtLeave');if(!b)return;const ok=mode==='admin'||!!myBadge;if(b.hidden===ok)b.hidden=!ok}
-function renderLvBadge(){
-  const b=$('#lvBadge'); if(!b) return;
-  const n=canExam()?leaves.filter(l=>l.status==='pending'&&l.badge!==myBadge).length:0;
-  b.textContent=n>9?'9+':String(n); b.hidden=!n;
-}
-function lvChip(l){const s=LV_ST[l.status]||LV_ST.pending;return `<span class="ex-st ${s.c}">${s.t}</span>`}
+function renderLvBadge(){const b=$('#lvBadge');if(b)b.hidden=true}
+function lvChip(l){const s=LV_ST[lvState(l)];return `<span class="ex-st ${s.c}">${s.t}</span>`}
 function renderLvList(){
   if(!$('#pLeave')||$('#pLeave').hidden) return;
-  const approver=canExam(), isAdmin=mode==='admin';
-  if(isAdmin) lvTab='all'; if(!approver&&lvTab==='all') lvTab='mine';
-  const pend=leaves.filter(l=>l.status==='pending'&&l.badge!==myBadge).length;
-  $('#lvTabMine').hidden=isAdmin; $('#lvTabAll').hidden=!approver;
-  $('#lvTabAll').textContent='จัดการใบลา'+(pend?' ('+pend+')':'');
+  const isAdmin=mode==='admin';
+  if(isAdmin) lvTab='all';
+  $('#lvTabMine').hidden=isAdmin;
   $('#lvTabMine').setAttribute('aria-selected',lvTab==='mine'); $('#lvTabAll').setAttribute('aria-selected',lvTab==='all');
   $('#lvNew').hidden=isAdmin||!myBadge; $('#lvFilterRow').hidden=lvTab!=='all';
   const st=$('#lvStatus').value, q=$('#lvQ').value.trim().toLowerCase();
-  let list=lvTab==='mine'?leaves.filter(l=>l.badge===myBadge):leaves.filter(l=>(!st||l.status===st)&&(!q||[l.name,l.badge,l.type,l.reason].join(' ').toLowerCase().includes(q)));
+  const list=lvTab==='mine'?leaves.filter(l=>l.badge===myBadge):leaves.filter(l=>(!st||lvState(l)===st)&&(!q||[l.name,l.badge,l.type,l.reason].join(' ').toLowerCase().includes(q)));
   $('#lvEmpty').hidden=list.length>0;
-  $('#lvEmpty').textContent=lvTab==='mine'?'ยังไม่มีใบลา กด “+ ยื่นใบลา” เพื่อลงลา':'ไม่มีใบลาตามเงื่อนไขที่เลือก';
+  $('#lvEmpty').textContent=lvTab==='mine'?'ยังไม่มีรายการลา กด “+ ลงลา” เพื่อลงลา':'ไม่มีรายการลาตามเงื่อนไขที่เลือก';
   $('#lvItems').innerHTML=list.map(l=>`<button type="button" class="ci${l.id===lvSel?' sel':''}" data-id="${esc(l.id)}"><span class="ci-top"><span class="ci-no">${esc(l.type)}</span><span>${fDate(l.createdAt)}</span></span><span class="ci-title">${lvTab==='all'?esc(l.name)+' · ':''}${lvRange(l)}</span><span class="ci-foot"><span>${l.days} วัน</span>${lvChip(l)}</span></button>`).join('');
   if(lvMode==='none') renderLvHome();
 }
 function renderLvHome(){
-  const today=ymdOf(Date.now());
-  const off=leaves.filter(l=>l.status==='approved'&&l.start<=today&&today<=l.end);
-  const soon=leaves.filter(l=>l.status==='approved'&&l.start>today&&dayDiff(l.start,today)<=7).sort((a,b)=>a.start.localeCompare(b.start));
-  $('#lvMain').innerHTML=`<div class="case-sec"><h3>ลาวันนี้ (อนุมัติแล้ว)</h3>${off.length?`<div class="chips-row">${off.map(l=>`<span class="who-chip">${esc(l.name)} <span class="mono">#${esc(l.badge)}</span> · ${esc(l.type)}</span>`).join('')}</div>`:'<span class="hint">วันนี้ไม่มีผู้ลา</span>'}</div>
+  const today=ymdOf(Date.now()), live=leaves.filter(lvLive);
+  const off=live.filter(l=>l.start<=today&&today<=l.end);
+  const soon=live.filter(l=>l.start>today&&dayDiff(l.start,today)<=7).sort((a,b)=>a.start.localeCompare(b.start));
+  $('#lvMain').innerHTML=`<div class="case-sec"><h3>ลาวันนี้</h3>${off.length?`<div class="chips-row">${off.map(l=>`<span class="who-chip">${esc(l.name)} <span class="mono">#${esc(l.badge)}</span> · ${esc(l.type)}</span>`).join('')}</div>`:'<span class="hint">วันนี้ไม่มีผู้ลา</span>'}</div>
   <div class="case-sec"><h3>กำลังจะลา ภายใน 7 วัน</h3>${soon.length?`<div class="chips-row">${soon.map(l=>`<span class="who-chip">${esc(l.name)} · ${esc(l.type)} · ${lvRange(l)}</span>`).join('')}</div>`:'<span class="hint">ไม่มี</span>'}</div>
-  <div class="case-ph" style="padding:18px">เลือกใบลาจากรายการเพื่อดูรายละเอียด${myBadge?'<br>หรือกด “+ ยื่นใบลา” เพื่อลงลา':''}</div>`;
+  <div class="case-ph" style="padding:18px">เลือกรายการลาจากรายการเพื่อดูรายละเอียด${myBadge?'<br>หรือกด “+ ลงลา” เพื่อลงลา':''}</div>`;
 }
 function showLv(id){lvSel=id;lvMode=id?'view':'none';renderLvList();if(id){renderLvView();if(window.innerWidth<900)$('#lvMain').scrollIntoView({block:'start',behavior:'smooth'})}}
 function renderLvView(){
   const l=leaves.find(x=>x.id===lvSel);
   if(!l){lvMode='none';lvSel=null;renderLvList();return}
-  const approver=canExam(), mine=l.badge===myBadge, today=ymdOf(Date.now());
-  const canDecide=approver&&(!mine||mode==='admin');
-  const canCancel=mine&&(l.status==='pending'||(l.status==='approved'&&l.end>=today));
-  $('#lvMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(l.type)}</span><h2>${lvRange(l)}</h2><div class="hint">${l.days} วัน · ยื่นเมื่อ ${fDate(l.createdAt)} ${fTime(l.createdAt)}</div></div><div class="fs-author"><span class="lbl">ผู้ลา</span><div>${whoChip({name:l.name,badge:l.badge})}</div>${lvChip(l)}</div></div>
+  const mine=l.badge===myBadge, today=ymdOf(Date.now());
+  const canCancel=mine&&lvLive(l)&&l.end>=today;
+  $('#lvMain').innerHTML=`<div class="case-head"><div style="min-width:0"><span class="caseno">${esc(l.type)}</span><h2>${lvRange(l)}</h2><div class="hint">${l.days} วัน · ลงลาเมื่อ ${fDate(l.createdAt)} ${fTime(l.createdAt)}</div></div><div class="fs-author"><span class="lbl">ผู้ลา</span><div>${whoChip({name:l.name,badge:l.badge})}</div>${lvChip(l)}</div></div>
   <div class="case-sec"><h3>เหตุผลการลา</h3><p class="case-detail">${esc(l.reason||'-')}</p></div>
-  ${l.status!=='pending'&&l.decidedBy?`<div class="case-sec"><h3>ผลการพิจารณา</h3><p class="case-detail">${esc(LV_ST[l.status].t)} โดย <b>${esc(l.decidedBy)}</b> · ${fDate(l.decidedAt)} ${fTime(l.decidedAt)}${l.note?'<br>หมายเหตุ: '+esc(l.note):''}</p></div>`:''}
-  ${canDecide?`<div class="case-sec"><label>หมายเหตุถึงผู้ลา (ไม่บังคับ)<input id="lvNote" maxlength="200" placeholder="เช่น อนุมัติ / ขอให้เลื่อนวันลา"></label><div class="case-acts" style="margin-top:8px">${l.status!=='approved'?'<button class="btn sm primary" id="lvApprove">✅ อนุมัติ</button>':''}${l.status!=='rejected'?'<button class="btn sm danger" id="lvReject">❌ ไม่อนุมัติ</button>':''}</div></div>`:(approver&&mine?'<div class="case-sec"><span class="hint">ไม่สามารถอนุมัติใบลาของตัวเองได้ ต้องให้ผู้อื่นพิจารณา</span></div>':'')}
-  ${canCancel?'<div class="case-sec"><div class="case-acts"><button class="btn sm danger" id="lvCancel">ยกเลิกใบลา</button></div></div>':''}`;
+  ${(lvState(l)!=='active'&&l.decidedBy)?`<div class="case-sec"><h3>รายละเอียด</h3><p class="case-detail">${esc(LV_ST[lvState(l)].t)} โดย <b>${esc(l.decidedBy)}</b> · ${fDate(l.decidedAt)} ${fTime(l.decidedAt)}${l.note?'<br>หมายเหตุ: '+esc(l.note):''}</p></div>`:''}
+  ${canCancel?'<div class="case-sec"><div class="case-acts"><button class="btn sm danger" id="lvCancel">ยกเลิกการลา</button></div></div>':''}`;
 }
 function openLvForm(){
   if(!myBadge||!me) return;
   lvMode='form'; lvSel=null;
   const today=ymdOf(Date.now());
-  $('#lvMain').innerHTML=`<div class="card-h"><h2>ยื่นใบลา</h2></div>
+  $('#lvMain').innerHTML=`<div class="card-h"><h2>ลงลา</h2></div>
   <form id="lvForm" novalidate style="padding:18px;display:grid;gap:12px">
     <label>ประเภทการลา<select id="lvType">${LV_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></label>
     <div class="row2"><label>ลาตั้งแต่วันที่<input type="date" id="lvStart" value="${today}"></label><label>ถึงวันที่<input type="date" id="lvEnd" value="${today}"></label></div>
     <div class="hint" id="lvDaysTxt">รวม 1 วัน</div>
     <label>เหตุผลการลา<textarea id="lvReason" rows="3" maxlength="500" placeholder="ระบุเหตุผลการลา"></textarea></label>
     <div id="lvMsg" class="msg err" hidden></div>
-    <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" id="lvSave">ยื่นใบลา</button><button class="btn" type="button" id="lvFormCancel">ยกเลิก</button></div>
-    <p class="hint" style="margin:0">ใบลาจะส่งให้ Admin และ Command Officer พิจารณา · ลาป่วยย้อนหลังได้ ส่วนลาประเภทอื่นต้องเริ่มวันนี้เป็นต้นไป</p>
+    <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" id="lvSave">ลงลา</button><button class="btn" type="button" id="lvFormCancel">ยกเลิก</button></div>
+    <p class="hint" style="margin:0">ลงลาแล้วมีผลทันที ไม่ต้องรออนุมัติ และระบบจะแจ้งเตือนเข้า Discord ห้องแจ้งลา · ลาป่วยย้อนหลังได้ ส่วนลาประเภทอื่นต้องเริ่มวันนี้เป็นต้นไป</p>
   </form>`;
   renderLvList(); $('#lvMain').scrollIntoView({block:'start',behavior:'smooth'});
 }
@@ -3508,37 +3520,30 @@ $('#lvMain').addEventListener('submit',async e=>{
   if(!start||!end) return fail('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด');
   if(end<start) return fail('วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม');
   const days=lvDays(start,end);
-  if(days>90) return fail('ลาได้ไม่เกิน 90 วันต่อใบ');
+  if(days>90) return fail('ลาได้ไม่เกิน 90 วันต่อครั้ง');
   if(type!=='ลาป่วย'&&start<today) return fail('ลาประเภทนี้ต้องเริ่มตั้งแต่วันนี้เป็นต้นไป (ลาป่วยเท่านั้นที่ย้อนหลังได้)');
   if(!reason) return fail('กรุณาระบุเหตุผลการลา');
-  const clash=leaves.find(l=>l.badge===myBadge&&(l.status==='pending'||l.status==='approved')&&l.start<=end&&start<=l.end);
-  if(clash) return fail('ช่วงวันที่นี้ทับกับใบลาที่มีอยู่แล้ว ('+clash.type+' '+lvRange(clash)+' · '+LV_ST[clash.status].t+')');
+  const clash=leaves.find(l=>l.badge===myBadge&&lvLive(l)&&l.start<=end&&start<=l.end);
+  if(clash) return fail('ช่วงวันที่นี้ทับกับรายการลาที่มีอยู่แล้ว ('+clash.type+' '+lvRange(clash)+')');
   const btn=$('#lvSave'); btn.disabled=true;
   try{
     const ref=db.collection('leaves').doc(), now=Date.now();
-    const data={badge:myBadge,name:(me.first+' '+me.last).trim(),rank:me.rank||'',type,start,end,days,reason,status:'pending',createdAt:now};
+    const data={badge:myBadge,name:(me.first+' '+me.last).trim(),rank:me.rank||'',type,start,end,days,reason,status:'active',createdAt:now};
     await ref.set(data);
     if(!leaves.some(x=>x.id===ref.id)) leaves.unshift({id:ref.id,...data});
     leaveNotify('new',data);
-    toast('ยื่นใบลาแล้ว รอผู้อนุมัติพิจารณา'); lvTab='mine'; showLv(ref.id);
-  }catch(x){fail(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ตรวจสอบ Rules (ต้องมีส่วน leaves)':'ยื่นใบลาไม่สำเร็จ ['+(x.code||'error')+']');btn.disabled=false}
+    toast('ลงลาเรียบร้อยแล้ว'); lvTab='mine'; showLv(ref.id);
+  }catch(x){fail(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ตรวจสอบ Rules (ต้องมีส่วน leaves)':'ลงลาไม่สำเร็จ ['+(x.code||'error')+']');btn.disabled=false}
 });
 $('#lvMain').addEventListener('click',async e=>{
   const t=e.target;
   if(t.closest('#lvFormCancel')){lvMode='none';renderLvList();return}
   const l=leaves.find(x=>x.id===lvSel); if(!l) return;
-  const fail=x=>toast(x&&x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules':'ทำรายการไม่สำเร็จ ลองอีกครั้ง');
-  const decide=async(status,btn)=>{
-    if(!canExam()||(l.badge===myBadge&&mode!=='admin')||!armed(btn)) return;
-    const a=actor(), upd={status,decidedBy:a.name,decidedByBadge:a.badge||'',decidedAt:Date.now(),note:($('#lvNote').value||'').trim()};
-    try{await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);leaveNotify(status,l);toast(status==='approved'?'อนุมัติใบลาแล้ว':'บันทึกว่าไม่อนุมัติแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
-  };
-  if(t.closest('#lvApprove')) return decide('approved',t.closest('#lvApprove'));
-  if(t.closest('#lvReject')) return decide('rejected',t.closest('#lvReject'));
   const c=t.closest('#lvCancel');
   if(c){
     if(l.badge!==myBadge||!armed(c)) return;
-    try{const upd={status:'cancelled',decidedBy:actor().name,decidedByBadge:myBadge,decidedAt:Date.now(),note:'ผู้ลายกเลิกเอง'};await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);leaveNotify('cancelled',l);toast('ยกเลิกใบลาแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
+    try{const upd={status:'cancelled',decidedBy:actor().name,decidedByBadge:myBadge,decidedAt:Date.now(),note:'ผู้ลายกเลิกเอง'};await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);leaveNotify('cancelled',l);toast('ยกเลิกการลาแล้ว');renderLvList();renderLvView()}
+    catch(x){toast(x&&x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาต: ตรวจสอบ Rules':'ทำรายการไม่สำเร็จ ลองอีกครั้ง')}
   }
 });
 
