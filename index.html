@@ -1094,8 +1094,9 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
               <label class="chk"><input type="checkbox" id="dCase" checked> แจ้งเมื่อมีเคสใหม่</label>
             </div>
             <label>Webhook URL · ห้องประกาศ “สถานีเปิด / ปิด” (คนละห้องกับด้านบน ใช้แจ้งหน่วยงานอื่น)<input id="dStationUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
+            <label>Webhook URL · ห้องแจ้งลา (แจ้งเมื่อมีการยื่นใบลา อนุมัติ ไม่อนุมัติ หรือยกเลิก · ต้องเป็นคนละห้องกับสองช่องด้านบน)<input id="dLeaveUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off"></label>
             <div id="dMsg" class="msg err" hidden></div>
-            <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ (ห้องเข้า-ออกเวร)</button><button class="btn" type="button" id="dStationTest">ทดสอบห้องประกาศสถานีเปิด/ปิด</button></div>
+            <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit">บันทึก</button><button class="btn" type="button" id="dTest">ส่งข้อความทดสอบ (ห้องเข้า-ออกเวร)</button><button class="btn" type="button" id="dStationTest">ทดสอบห้องประกาศสถานีเปิด/ปิด</button><button class="btn" type="button" id="dLeaveTest">ทดสอบห้องแจ้งลา</button></div>
             <p class="hint">สร้าง Webhook ได้ที่ Discord: ตั้งค่าช่อง (Edit Channel) → Integrations → Webhooks → New Webhook → Copy Webhook URL · ข้อความแจ้งเตือนจะมีลิงก์กลับมาที่เว็บนี้</p>
           </form>
         </div>
@@ -1417,7 +1418,7 @@ let DISCORD={};
 const siteUrl=()=>location.href.split('#')[0].split('?')[0];
 function renderDiscord(){
   if(!$('#fDiscord')||$('#fDiscord').contains(document.activeElement)) return;
-  $('#dUrl').value=DISCORD.url||''; $('#dStationUrl').value=DISCORD.stationUrl||''; $('#dIn').checked=DISCORD.onIn!==false; $('#dOut').checked=DISCORD.onOut!==false; $('#dCut').checked=DISCORD.onCut!==false; $('#dCal').checked=DISCORD.onCal!==false; $('#dCase').checked=DISCORD.onCase!==false;
+  $('#dUrl').value=DISCORD.url||''; $('#dStationUrl').value=DISCORD.stationUrl||''; $('#dLeaveUrl').value=DISCORD.leaveUrl||''; $('#dIn').checked=DISCORD.onIn!==false; $('#dOut').checked=DISCORD.onOut!==false; $('#dCut').checked=DISCORD.onCut!==false; $('#dCal').checked=DISCORD.onCal!==false; $('#dCase').checked=DISCORD.onCase!==false;
 }
 const validHook=u=>/^https:\/\/(canary\.|ptb\.)?(discord|discordapp)\.com\/api\/webhooks\/\d+\/[\w-]+/.test(u);
 async function postHook(url,payload){
@@ -1472,11 +1473,13 @@ function notify(kind,o,x){
 }
 $('#fDiscord').addEventListener('submit',async e=>{
   e.preventDefault(); err('#dMsg','');
-  const url=$('#dUrl').value.trim(), stationUrl=$('#dStationUrl').value.trim();
+  const url=$('#dUrl').value.trim(), stationUrl=$('#dStationUrl').value.trim(), leaveUrl=$('#dLeaveUrl').value.trim();
   if(url&&!validHook(url)) return err('#dMsg','Webhook URL ห้องเข้า-ออกเวรไม่ถูกต้อง ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/');
   if(stationUrl&&!validHook(stationUrl)) return err('#dMsg','Webhook URL ห้องประกาศสถานีเปิดไม่ถูกต้อง ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/');
   if(url&&stationUrl&&url===stationUrl) return err('#dMsg','ห้องประกาศสถานีเปิดต้องเป็นคนละห้องกับห้องแจ้งเข้า-ออกเวร (ใช้ Webhook คนละอัน)');
-  try{await db.doc('config/bonus').set({discord:{url,stationUrl,onIn:$('#dIn').checked,onOut:$('#dOut').checked,onCut:$('#dCut').checked,onCal:$('#dCal').checked,onCase:$('#dCase').checked}},{merge:true});document.activeElement.blur();toast('บันทึกการแจ้งเตือน Discord แล้ว')}
+  if(leaveUrl&&!validHook(leaveUrl)) return err('#dMsg','Webhook URL ห้องแจ้งลาไม่ถูกต้อง ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/');
+  if(leaveUrl&&(leaveUrl===url||leaveUrl===stationUrl)) return err('#dMsg','ห้องแจ้งลาต้องเป็นคนละห้องกับห้องแจ้งเข้า-ออกเวรและห้องประกาศสถานี (ใช้ Webhook คนละอัน)');
+  try{await db.doc('config/bonus').set({discord:{url,stationUrl,leaveUrl,onIn:$('#dIn').checked,onOut:$('#dOut').checked,onCut:$('#dCut').checked,onCal:$('#dCal').checked,onCase:$('#dCase').checked}},{merge:true});document.activeElement.blur();toast('บันทึกการแจ้งเตือน Discord แล้ว')}
   catch(x){err('#dMsg','บันทึกไม่สำเร็จ ลองอีกครั้ง')}
 });
 $('#dTest').onclick=async()=>{
@@ -1486,6 +1489,25 @@ $('#dTest').onclick=async()=>{
   catch(x){err('#dMsg','ส่งไม่สำเร็จ: '+x.message)}
 };
 
+const leaveEmbed=(kind,l)=>{
+  const m={new:{t:'📝 ยื่นใบลาใหม่',c:0xF2B705,s:'⏳ รออนุมัติ'},approved:{t:'✅ อนุมัติใบลา',c:0x1D7A4C,s:'✅ อนุมัติแล้ว'},rejected:{t:'❌ ไม่อนุมัติใบลา',c:0xC1121F,s:'❌ ไม่อนุมัติ'},cancelled:{t:'⚪ ยกเลิกใบลา',c:0x808080,s:'⚪ ยกเลิกแล้ว'},test:{t:'✅ ทดสอบห้องแจ้งลา',c:0x9A6A00,s:'-'}}[kind];
+  if(kind==='test') return {title:m.t,description:'ห้องนี้ถูกตั้งเป็นห้องแจ้งลาของระบบ CAD',color:m.c,footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()};
+  const f=[{name:'ผู้ลา',value:l.name+' #'+l.badge+(l.rank?' · '+l.rank:''),inline:false},{name:'ประเภท',value:l.type,inline:true},{name:'วันที่ลา',value:lvRange(l)+' ('+l.days+' วัน)',inline:true},{name:'สถานะ',value:m.s,inline:true},{name:'เหตุผล',value:String(l.reason||'-').slice(0,900)}];
+  if(kind==='approved'||kind==='rejected') {f.push({name:'พิจารณาโดย',value:l.decidedBy||'-',inline:true});if(l.note)f.push({name:'หมายเหตุ',value:String(l.note).slice(0,300),inline:false})}
+  if(kind==='cancelled') f.push({name:'ยกเลิกโดย',value:l.decidedBy||l.name,inline:true});
+  return {title:m.t,color:m.c,fields:f,footer:{text:'Los Santos County of Fire Department'},timestamp:new Date().toISOString()};
+};
+function leaveNotify(kind,l){
+  const url=DISCORD.leaveUrl; if(!url||!validHook(url)) return;
+  postHook(url,{username:'CAD',embeds:[leaveEmbed(kind,l)]}).catch(x=>toast('บันทึกใบลาแล้ว แต่ส่ง Discord ไม่สำเร็จ: '+x.message));
+}
+$('#dLeaveTest').onclick=async()=>{
+  err('#dMsg',''); const url=$('#dLeaveUrl').value.trim();
+  if(!validHook(url)) return err('#dMsg','ใส่ Webhook URL ห้องแจ้งลาให้ถูกต้องก่อน');
+  if(url===$('#dUrl').value.trim()||url===$('#dStationUrl').value.trim()) return err('#dMsg','ต้องเป็นคนละห้องกับห้องอื่น');
+  try{await postHook(url,{username:'CAD',embeds:[leaveEmbed('test')]});toast('ส่งข้อความทดสอบแล้ว ตรวจดูใน Discord')}
+  catch(x){err('#dMsg','ส่งไม่สำเร็จ: '+x.message)}
+};
 const durTxt=ms=>{const m=Math.max(0,Math.floor(ms/60000)),h=Math.floor(m/60);return (h?h+' ชม. ':'')+(m%60)+' นาที'};
 function renderStation(){
   const bar=$('#snBar'); if(!bar) return;
@@ -3497,6 +3519,7 @@ $('#lvMain').addEventListener('submit',async e=>{
     const data={badge:myBadge,name:(me.first+' '+me.last).trim(),rank:me.rank||'',type,start,end,days,reason,status:'pending',createdAt:now};
     await ref.set(data);
     if(!leaves.some(x=>x.id===ref.id)) leaves.unshift({id:ref.id,...data});
+    leaveNotify('new',data);
     toast('ยื่นใบลาแล้ว รอผู้อนุมัติพิจารณา'); lvTab='mine'; showLv(ref.id);
   }catch(x){fail(x.code==='permission-denied'?'ฐานข้อมูลไม่อนุญาตให้บันทึก: ตรวจสอบ Rules (ต้องมีส่วน leaves)':'ยื่นใบลาไม่สำเร็จ ['+(x.code||'error')+']');btn.disabled=false}
 });
@@ -3508,14 +3531,14 @@ $('#lvMain').addEventListener('click',async e=>{
   const decide=async(status,btn)=>{
     if(!canExam()||(l.badge===myBadge&&mode!=='admin')||!armed(btn)) return;
     const a=actor(), upd={status,decidedBy:a.name,decidedByBadge:a.badge||'',decidedAt:Date.now(),note:($('#lvNote').value||'').trim()};
-    try{await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);toast(status==='approved'?'อนุมัติใบลาแล้ว':'บันทึกว่าไม่อนุมัติแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
+    try{await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);leaveNotify(status,l);toast(status==='approved'?'อนุมัติใบลาแล้ว':'บันทึกว่าไม่อนุมัติแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
   };
   if(t.closest('#lvApprove')) return decide('approved',t.closest('#lvApprove'));
   if(t.closest('#lvReject')) return decide('rejected',t.closest('#lvReject'));
   const c=t.closest('#lvCancel');
   if(c){
     if(l.badge!==myBadge||!armed(c)) return;
-    try{const upd={status:'cancelled',decidedBy:actor().name,decidedByBadge:myBadge,decidedAt:Date.now(),note:'ผู้ลายกเลิกเอง'};await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);toast('ยกเลิกใบลาแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
+    try{const upd={status:'cancelled',decidedBy:actor().name,decidedByBadge:myBadge,decidedAt:Date.now(),note:'ผู้ลายกเลิกเอง'};await db.doc('leaves/'+l.id).update(upd);Object.assign(l,upd);leaveNotify('cancelled',l);toast('ยกเลิกใบลาแล้ว');renderLvBadge();renderLvList();renderLvView()}catch(x){fail(x)}
   }
 });
 
