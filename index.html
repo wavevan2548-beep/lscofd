@@ -22,7 +22,7 @@
   --red:#D42732; --red-deep:#A4161F; --on-red:#FFFFFF; --amber:#A89058; --brass:#7D6528; --brass-bg:#F5EFDC; color-scheme:light;
   --acc-bg:#E6F1FB; --acc-fg:#2A6AA8; --acc-bd:#C3DCF2; --fire-bg:#FCE9E9; --fire-fg:#B03030; --fire-bd:#F3C9C9; --chem-bg:#F1EAFA; --chem-fg:#6B3FA0; --chem-bd:#DCCCF0; --shoot-bg:#FDEFDF; --shoot-fg:#B5600F; --shoot-bd:#F5D6B0;
   --ok:#1D7A4C; --ok-bg:#E3F4EA; --warn-bg:#FDE8E8;
-  --t-work:#1F5FA8; --t-train:#6B3FA8; --t-event:#8A5B00; --t-mission:#B3101C;
+  --t-work:#1F5FA8; --t-train:#6B3FA8; --t-event:#8A5B00; --t-mission:#B3101C; --t-standby:#0E7C86;
   --f-display:"Saira Condensed","Arial Narrow",sans-serif;
   --f-body:"IBM Plex Sans Thai","Leelawadee UI","Tahoma",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -32,12 +32,12 @@
   --bg:#0E0C0C; --surface:#191515; --sunk:#131010; --ink:#F6F2EA; --muted:#A99F92; --line:#342D2B;
   --red:#EC434D; --red-deep:#8E1520; --on-red:#FFFFFF; --amber:#CDB26A; --brass:#CDB26A; --brass-bg:#2C2611;
   --acc-bg:rgba(90,160,225,.16); --acc-fg:#93C6F3; --acc-bd:rgba(120,180,240,.35); --fire-bg:rgba(236,67,77,.16); --fire-fg:#F5A3A8; --fire-bd:rgba(236,100,110,.38); --chem-bg:rgba(170,120,230,.17); --chem-fg:#C9A8F3; --chem-bd:rgba(180,140,240,.38); --shoot-bg:rgba(240,150,60,.17); --shoot-fg:#F5B877; --shoot-bd:rgba(240,160,80,.38);
-  --ok:#4CC38A; --ok-bg:#12301F; --warn-bg:#3A1416; --t-work:#6EA8EC; --t-train:#B89BEA; --t-event:#E9B949; --t-mission:#F2777A; color-scheme:dark}}
+  --ok:#4CC38A; --ok-bg:#12301F; --warn-bg:#3A1416; --t-work:#6EA8EC; --t-train:#B89BEA; --t-event:#E9B949; --t-mission:#F2777A; --t-standby:#4FC3CC; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E0C0C; --surface:#191515; --sunk:#131010; --ink:#F6F2EA; --muted:#A99F92; --line:#342D2B;
   --red:#EC434D; --red-deep:#8E1520; --on-red:#FFFFFF; --amber:#CDB26A; --brass:#CDB26A; --brass-bg:#2C2611;
   --acc-bg:rgba(90,160,225,.16); --acc-fg:#93C6F3; --acc-bd:rgba(120,180,240,.35); --fire-bg:rgba(236,67,77,.16); --fire-fg:#F5A3A8; --fire-bd:rgba(236,100,110,.38); --chem-bg:rgba(170,120,230,.17); --chem-fg:#C9A8F3; --chem-bd:rgba(180,140,240,.38); --shoot-bg:rgba(240,150,60,.17); --shoot-fg:#F5B877; --shoot-bd:rgba(240,160,80,.38);
-  --ok:#4CC38A; --ok-bg:#12301F; --warn-bg:#3A1416; --t-work:#6EA8EC; --t-train:#B89BEA; --t-event:#E9B949; --t-mission:#F2777A; color-scheme:dark}
+  --ok:#4CC38A; --ok-bg:#12301F; --warn-bg:#3A1416; --t-work:#6EA8EC; --t-train:#B89BEA; --t-event:#E9B949; --t-mission:#F2777A; --t-standby:#4FC3CC; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
@@ -391,7 +391,14 @@ textarea{font:inherit;color:inherit;resize:vertical}
 .manual .acts{display:flex;gap:8px;flex-wrap:wrap}
 .pill.man{color:var(--brass);border-color:var(--brass);font-size:11px;padding:0 7px}
 /* calendar */
-.t-work{--tc:var(--t-work)} .t-train{--tc:var(--t-train)} .t-event{--tc:var(--t-event)} .t-mission{--tc:var(--t-mission)}
+.t-work{--tc:var(--t-work)} #evSb{display:grid;gap:12px}
+#evSb[hidden]{display:none}
+.t-standby{--tc:var(--t-standby);color:var(--tc);background:color-mix(in srgb,var(--tc) 13%,transparent);border-color:transparent}
+.types .tchip.t-standby{grid-column:1/-1}
+.evsb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.ev-sb{display:grid;gap:6px;margin:6px 0}
+.ev-sb .lbl{display:block}
+.t-train{--tc:var(--t-train)} .t-event{--tc:var(--t-event)} .t-mission{--tc:var(--t-mission)}
 .pill.t-work,.pill.t-train,.pill.t-event,.pill.t-mission{color:var(--tc);background:color-mix(in srgb,var(--tc) 13%,transparent);border-color:transparent}
 .cal-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:20px;align-items:start}
 @media (max-width:900px){.cal-layout{grid-template-columns:minmax(0,1fr)}}
@@ -826,7 +833,7 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
             <h2 id="calTitle">—</h2>
             <button class="btn navbtn" id="calNext" aria-label="เดือนถัดไป">›</button>
             <button class="btn sm" id="calToday">วันนี้</button>
-            <div class="legend"><span class="t-work"><i></i>ตารางงาน</span><span class="t-train"><i></i>อบรม</span><span class="t-event"><i></i>อีเว้นท์</span><span class="t-mission"><i></i>ภารกิจ</span></div>
+            <div class="legend"><span class="t-work"><i></i>ตารางงาน</span><span class="t-train"><i></i>อบรม</span><span class="t-event"><i></i>อีเว้นท์</span><span class="t-mission"><i></i>ภารกิจ</span><span class="t-standby"><i></i>Stand By</span></div>
           </div>
           <div class="cal-dow"><span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span></div>
           <div class="cal-grid" id="calGrid"></div>
@@ -844,14 +851,19 @@ label.sg{display:inline-block;position:relative;color:var(--ink);font-weight:500
                 <label class="tchip t-train"><input type="radio" name="evType" value="training">อบรม</label>
                 <label class="tchip t-event"><input type="radio" name="evType" value="event">อีเว้นท์</label>
                 <label class="tchip t-mission"><input type="radio" name="evType" value="mission">ภารกิจ</label>
+                <label class="tchip t-standby"><input type="radio" name="evType" value="standby">Stand By Event</label>
               </div>
-              <label>หัวข้อ<input id="evTitle" maxlength="80" placeholder="เช่น อบรมการใช้บันไดเลื่อน"></label>
+              <label><span id="evTitleLbl">หัวข้อ</span><input id="evTitle" maxlength="80" placeholder="เช่น อบรมการใช้บันไดเลื่อน"></label>
               <label>วันที่<input type="date" id="evDate"></label>
               <div class="row2">
-                <label>เวลาเริ่ม<input type="time" id="evStart"></label>
-                <label>เวลาสิ้นสุด<input type="time" id="evEnd"></label>
+                <label><span id="evStartLbl">เวลาเริ่ม</span><input type="time" id="evStart"></label>
+                <label><span id="evEndLbl">เวลาสิ้นสุด</span><input type="time" id="evEnd"></label>
               </div>
-              <label>สถานที่<input id="evLoc" maxlength="80" placeholder="เช่น Fire Station 7"></label>
+              <label><span id="evLocLbl">สถานที่</span><input id="evLoc" maxlength="80" placeholder="เช่น Fire Station 7"></label>
+              <div id="evSb" hidden>
+                <label>รถที่นำออกปฏิบัติงาน<input id="evVeh" maxlength="160" placeholder="เช่น Engine 7, Rescue 1"><span class="hint">ถ้ามีหลายคัน คั่นด้วยเครื่องหมายจุลภาค ( , )</span></label>
+                <div><span class="lbl">เจ้าหน้าที่ที่ปฏิบัติงาน</span><div class="crew-pick" style="margin-top:6px"><select id="evStaffSel" aria-label="เลือกเจ้าหน้าที่ที่ปฏิบัติงาน"></select></div><div class="chips-row" id="evStaffChips" style="margin-top:8px"></div></div>
+              </div>
               <label>รายละเอียด<textarea id="evDetail" rows="3" maxlength="600" placeholder="ผู้รับผิดชอบ สิ่งที่ต้องเตรียม การแต่งกาย ฯลฯ"></textarea></label>
               <div id="evMsg" class="msg err" hidden></div>
               <div class="acts"><button class="btn primary sm" type="submit" id="evSave">บันทึก</button><button class="btn sm" type="button" id="evCancel">ยกเลิก</button></div>
@@ -1463,9 +1475,14 @@ function notify(kind,o,x){
       {name:'ผู้เขียนเคส',value:x.author?.name||'-',inline:true},{name:'ยูนิต / เจ้าหน้าที่ที่ดูแล',value:caseUnitsOf(x).map(u=>(u.callSign?'**'+u.callSign+'**: ':'')+(u.members.map(m=>m.name).join(', ')||'-')).join('\n').slice(0,1000)||'-',inline:false}]};
   }else if(kind==='cal'){
     const t=EVT[x.type]||EVT.event;
-    embed={title:'📅 ปฏิทิน: '+t.label+'ใหม่',color:t.hex,description:`**${x.title}**`,fields:[
+    embed={title:'📅 ปฏิทิน: '+t.label+(/[A-Za-z]$/.test(t.label)?' ':'')+'ใหม่',color:t.hex,description:`**${x.title}**`,fields:[
       {name:'วันที่',value:dowTh[dowOf(x.date)]+' '+fmtYmd(x.date),inline:true},{name:'เวลา',value:evTimeTxt(x),inline:true},
       {name:'สถานที่',value:x.location||'-',inline:true},{name:'เพิ่มโดย',value:x.by?.name||'-',inline:true}]};
+    if(x.type==='standby'){
+      const dm=evDurMin(x); if(dm) embed.fields.push({name:'รวมเวลา',value:hm(dm),inline:true});
+      embed.fields.push({name:'รถที่นำออกปฏิบัติงาน',value:(x.vehicles||[]).join(', ')||'-'});
+      embed.fields.push({name:'เจ้าหน้าที่ที่ปฏิบัติงาน ('+(x.staff||[]).length+')',value:((x.staff||[]).map(o=>o.name+' #'+o.badge).join('\n')||'-').slice(0,1000)});
+    }
     if(x.detail) embed.fields.push({name:'รายละเอียด',value:x.detail.slice(0,900)});
   }else{
     embed={title:'📋 ตัดยอดรอบเวร',color:0x9A6A00,description:'Admin ตัดยอดและสำรองข้อมูลแล้ว เริ่มนับรอบใหม่',fields:[
@@ -1654,7 +1671,7 @@ $('#manBody').addEventListener('click',async e=>{
 });
 
 /* ---- calendar ---- */
-const EVT={work:{label:'ตารางงาน',cls:'t-work',hex:0x1F5FA8},training:{label:'อบรม',cls:'t-train',hex:0x6B3FA8},event:{label:'อีเว้นท์',cls:'t-event',hex:0xB7791F},mission:{label:'ภารกิจ',cls:'t-mission',hex:0xB3101C}};
+const EVT={work:{label:'ตารางงาน',cls:'t-work',hex:0x1F5FA8},training:{label:'อบรม',cls:'t-train',hex:0x6B3FA8},event:{label:'อีเว้นท์',cls:'t-event',hex:0xB7791F},mission:{label:'ภารกิจ',cls:'t-mission',hex:0xB3101C},standby:{label:'Stand By Event',cls:'t-standby',hex:0x0E7C86}};
 const TH_MON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const TH_MON_S=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const dowTh=['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'];
@@ -1667,6 +1684,10 @@ let events=[], calY=0, calM=0, calSel='', evEditing=null;
 function subEvents(){unsubs.push(db.collection('events').orderBy('date','desc').limit(1000).onSnapshot(q=>{events=q.docs.map(d=>({id:d.id,...d.data()}));evLoaded=true;renderCal();try{notifRefresh(true)}catch(e){}},()=>{}))}
 const evOn=d=>events.filter(e=>e.date===d).sort(evSort);
 const canEditEv=e=>mode==='admin'||(!!myBadge&&!!e.by&&e.by.badge===myBadge);
+function evSbHtml(e){
+  const veh=Array.isArray(e.vehicles)?e.vehicles:evVehList(e.vehicles), staff=Array.isArray(e.staff)?e.staff:[], d=evDurMin(e);
+  return `<div class="ev-sb">${d?`<div class="ev-meta">รวมเวลา: ${hm(d)}</div>`:''}<div><span class="lbl">รถที่นำออกปฏิบัติงาน</span><div class="evsb-chips">${veh.length?veh.map(v=>`<span class="pill t-standby">🚒 ${esc(v)}</span>`).join(''):'<span class="hint">-</span>'}</div></div><div><span class="lbl">เจ้าหน้าที่ที่ปฏิบัติงาน (${staff.length})</span><div class="evsb-chips">${staff.length?staff.map(x=>`<span class="who-chip">${esc(x.name)} <span class="mono">#${esc(x.badge)}</span></span>`).join(''):'<span class="hint">-</span>'}</div></div></div>`;
+}
 function renderCal(){
   if($('#pCal').hidden) return;
   $('#calTitle').textContent=TH_MON[calM]+' '+calY;
@@ -1679,7 +1700,7 @@ function renderCal(){
   $('#calGrid').innerHTML=h;
   $('#dayTitle').textContent=dowTh[dowOf(calSel)]+' '+fmtYmd(calSel);
   const de=evOn(calSel);
-  $('#dayList').innerHTML=de.length?de.map(e=>{const t=EVT[e.type]||EVT.event;return `<div class="ev"><div class="ev-top"><span class="pill ${t.cls}">${t.label}</span><span class="ev-time">${esc(evTimeTxt(e))}</span></div><b class="ev-title">${esc(e.title)}</b>${e.location?`<div class="ev-meta">สถานที่: ${esc(e.location)}</div>`:''}${e.detail?`<p class="ev-detail">${esc(e.detail)}</p>`:''}<div class="ev-foot"><span class="hint">เพิ่มโดย ${esc(e.by?.name||'-')}</span>${canEditEv(e)?`<span class="ev-acts"><button class="btn sm" data-ev="edit" data-id="${esc(e.id)}">แก้ไข</button><button class="btn sm danger" data-ev="del" data-id="${esc(e.id)}">ลบ</button></span>`:''}</div></div>`}).join(''):'<div class="empty">ยังไม่มีรายการในวันนี้ กด “+ เพิ่มรายการ” เพื่อเพิ่ม</div>';
+  $('#dayList').innerHTML=de.length?de.map(e=>{const t=EVT[e.type]||EVT.event;return `<div class="ev"><div class="ev-top"><span class="pill ${t.cls}">${t.label}</span><span class="ev-time">${esc(evTimeTxt(e))}</span></div><b class="ev-title">${esc(e.title)}</b>${e.location?`<div class="ev-meta">สถานที่: ${esc(e.location)}</div>`:''}${e.type==='standby'?evSbHtml(e):''}${e.detail?`<p class="ev-detail">${esc(e.detail)}</p>`:''}<div class="ev-foot"><span class="hint">เพิ่มโดย ${esc(e.by?.name||'-')}</span>${canEditEv(e)?`<span class="ev-acts"><button class="btn sm" data-ev="edit" data-id="${esc(e.id)}">แก้ไข</button><button class="btn sm danger" data-ev="del" data-id="${esc(e.id)}">ลบ</button></span>`:''}</div></div>`}).join(''):'<div class="empty">ยังไม่มีรายการในวันนี้ กด “+ เพิ่มรายการ” เพื่อเพิ่ม</div>';
   const up=events.filter(e=>e.date>=today).sort(evSort).slice(0,8);
   $('#upList').innerHTML=up.length?up.map(e=>{const t=EVT[e.type]||EVT.event;return `<button type="button" class="up" data-d="${e.date}"><span class="up-d"><b>${+e.date.slice(8)}</b>${TH_MON_S[+e.date.slice(5,7)-1]}</span><span class="up-b"><span><span class="pill ${t.cls}">${t.label}</span></span><b>${esc(e.title)}</b><span class="hint">${esc(evTimeTxt(e))}${e.location?' · '+esc(e.location):''}</span></span></button>`}).join(''):'<div class="empty">ยังไม่มีรายการที่กำลังจะมาถึง</div>';
 }
@@ -1689,12 +1710,36 @@ $('#calNext').onclick=()=>{calM++;if(calM>11){calM=0;calY++}renderCal()};
 $('#calToday').onclick=()=>goDate(ymdOf(Date.now()));
 $('#calGrid').addEventListener('click',e=>{const b=e.target.closest('.cday');if(b)goDate(b.dataset.d)});
 $('#upList').addEventListener('click',e=>{const b=e.target.closest('.up');if(b){goDate(b.dataset.d);$('#dayTitle').scrollIntoView({block:'nearest'})}});
+let evStaff=[];
+const evIsSb=()=>((document.querySelector('input[name="evType"]:checked')||{}).value==='standby');
+const evVehList=t=>String(t||'').split(/[,،;、]/).map(x=>x.trim()).filter(Boolean);
+const evDurMin=e=>{if(!e.start||!e.end)return 0;const a=+e.start.slice(0,2)*60+ +e.start.slice(3,5),b=+e.end.slice(0,2)*60+ +e.end.slice(3,5);return b>=a?b-a:b+1440-a};
+function renderEvStaff(){
+  const ch=$('#evStaffChips'), sel=$('#evStaffSel'); if(!ch||!sel) return;
+  ch.innerHTML=evStaff.length?evStaff.map((x,i)=>`<span class="who-chip">${esc(x.name)} <span class="mono">#${esc(x.badge)}</span><button type="button" data-evstaffdel="${i}" aria-label="เอา ${esc(x.name)} ออก">×</button></span>`).join(''):'<span class="hint">ยังไม่ได้เพิ่มเจ้าหน้าที่</span>';
+  const taken=new Set(evStaff.map(x=>x.badge));
+  sel.innerHTML='<option value="">+ เพิ่มเจ้าหน้าที่ที่ปฏิบัติงาน</option>'+officerPool.filter(o=>!taken.has(o.badge)).map(o=>`<option value="${esc(o.badge)}">#${esc(o.badge)} ${esc(o.name)} · ${esc(o.rank)}</option>`).join('');
+}
+function syncEvType(){
+  const sb=evIsSb();
+  $('#evSb').hidden=!sb;
+  $('#evTitleLbl').textContent=sb?'ชื่อกิจกรรม':'หัวข้อ';
+  $('#evTitle').placeholder=sb?'เช่น Stand By งานแข่งรถ Vinewood':'เช่น อบรมการใช้บันไดเลื่อน';
+  $('#evStartLbl').textContent=sb?'เวลาเริ่ม (จำเป็น)':'เวลาเริ่ม';
+  $('#evEndLbl').textContent=sb?'เวลาสิ้นสุด (จำเป็น)':'เวลาสิ้นสุด';
+  $('#evLocLbl').textContent=sb?'สถานที่ (จำเป็น)':'สถานที่';
+  if(sb){renderEvStaff();if(!officerPool.length)loadPool()}
+}
+document.querySelectorAll('input[name="evType"]').forEach(r=>r.addEventListener('change',syncEvType));
+$('#evStaffSel').addEventListener('change',e=>{const o=officerPool.find(x=>x.badge===e.target.value);if(o&&!evStaff.some(x=>x.badge===o.badge))evStaff.push({badge:o.badge,name:o.name});renderEvStaff()});
+$('#evStaffChips').addEventListener('click',e=>{const b=e.target.closest('[data-evstaffdel]');if(b){evStaff.splice(+b.dataset.evstaffdel,1);renderEvStaff()}});
 function openEvForm(ev){
   evEditing=ev||null; err('#evMsg','');
   $('#evFormTitle').textContent=ev?'แก้ไขรายการ':'เพิ่มรายการ';
   const type=ev?.type||'work'; document.querySelectorAll('input[name="evType"]').forEach(r=>r.checked=r.value===type);
   $('#evTitle').value=ev?.title||''; $('#evDate').value=ev?.date||calSel; $('#evStart').value=ev?.start||''; $('#evEnd').value=ev?.end||'';
   $('#evLoc').value=ev?.location||''; $('#evDetail').value=ev?.detail||'';
+  $('#evVeh').value=Array.isArray(ev?.vehicles)?ev.vehicles.join(', '):(ev?.vehicles||''); evStaff=(ev&&Array.isArray(ev.staff))?ev.staff.map(x=>({badge:x.badge,name:x.name})):[]; syncEvType();
   $('#evCard').hidden=false; $('#evTitle').focus();
 }
 function closeEvForm(){evEditing=null;$('#evCard').hidden=true}
@@ -1714,7 +1759,14 @@ $('#fEv').addEventListener('submit',async e=>{
   if(!title) return err('#evMsg','กรุณาใส่หัวข้อ');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err('#evMsg','กรุณาเลือกวันที่');
   if(end&&!start) return err('#evMsg','ใส่เวลาเริ่มด้วย หรือเว้นว่างทั้งสองช่องถ้าเป็นทั้งวัน');
-  const data={type,title,date,start,end,location:$('#evLoc').value.trim(),detail:$('#evDetail').value.trim(),updatedAt:Date.now()};
+  const sb=type==='standby', vehicles=sb?evVehList($('#evVeh').value):[], location=$('#evLoc').value.trim();
+  if(sb){
+    if(!start||!end) return err('#evMsg','Stand By Event: กรุณาระบุเวลาเริ่มและเวลาสิ้นสุด');
+    if(!location) return err('#evMsg','Stand By Event: กรุณาระบุสถานที่');
+    if(!vehicles.length) return err('#evMsg','Stand By Event: กรุณาระบุรถที่นำออกปฏิบัติงาน');
+    if(!evStaff.length) return err('#evMsg','Stand By Event: กรุณาเลือกเจ้าหน้าที่ที่ปฏิบัติงานอย่างน้อย 1 คน');
+  }
+  const data={type,title,date,start,end,location,detail:$('#evDetail').value.trim(),vehicles,staff:sb?evStaff.map(x=>({badge:x.badge,name:x.name})):[],updatedAt:Date.now()};
   const btn=$('#evSave'); btn.disabled=true;
   try{
     if(evEditing){
@@ -1833,6 +1885,7 @@ async function loadPool(){
   if($('#unitList')) renderCrew();
   if($('#fsInspSel')) renderFsInsp();
   if($('#arOffSel')) arRenderOff();
+  if($('#evStaffSel')&&evIsSb()) renderEvStaff();
 }
 function openCaseForm(c){
   caseMode='form'; caseEditing=c||null; caseCrew=[]; caseUnits=c?caseUnitsOf(c):[];
