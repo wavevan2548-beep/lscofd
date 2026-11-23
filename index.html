@@ -1583,7 +1583,9 @@ function openManual(){
   $('#mStill').checked=false; $('#mNote').value='';
   $('#mInD').value=ymdOf(now); $('#mInT').value='';
   $('#mOutD').value=ymdOf(now); $('#mOutT').value=hhmmOf(now);
-  ['#mInD','#mOutD'].forEach(id=>{$(id).max=ymdOf(now);$(id).min=ymdOf(Math.max(now-MAX_BACK,periodStart||0))});
+  const mFloor=Math.max(now-MAX_BACK,periodStart||0);
+  $('#mInD').max=ymdOf(now); $('#mInD').min=ymdOf(mFloor-MAX_SHIFT);
+  $('#mOutD').max=ymdOf(now); $('#mOutD').min=ymdOf(mFloor);
   syncManual(); $('#fManual').hidden=false; $('#manToggle').hidden=true;
   (on?$('#mOutT'):$('#mInT')).focus();
 }
